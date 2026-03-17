@@ -1,8 +1,15 @@
-import { AppState } from './types'
+import { AppState, User } from './types'
 
-const generateId = () => Math.random().toString(36).substring(2, 9)
+export const mockUsers: User[] = [
+  { id: 'u1', email: 'admin@agro.com', name: 'Admin CEO', role: 1 },
+  { id: 'u2', email: 'gerente@agro.com', name: 'Gerente', role: 2 },
+  { id: 'u3', email: 'peao@agro.com', name: 'Operacional', role: 3 },
+]
 
 export const initialData: AppState = {
+  isAuthenticated: false,
+  currentUser: null,
+  notifiedAlertIds: [],
   userRole: 1,
   pastos: [
     {
@@ -27,6 +34,7 @@ export const initialData: AppState = {
       rgn: 'NEL123',
       loteId: 'l1',
       categoria: 'Matriz',
+      pesoEntrada: 400,
       pesoAtual: 550,
       gmd: 0.1,
       status: 'Ativo',
@@ -40,6 +48,7 @@ export const initialData: AppState = {
       rgn: 'NEL124',
       loteId: 'l1',
       categoria: 'Matriz',
+      pesoEntrada: 380,
       pesoAtual: 530,
       gmd: 0.05,
       status: 'Ativo',
@@ -52,6 +61,7 @@ export const initialData: AppState = {
       brinco: '101',
       loteId: 'l2',
       categoria: 'Garrote',
+      pesoEntrada: 250,
       pesoAtual: 320,
       gmd: 1.2,
       status: 'Ativo',
@@ -64,6 +74,7 @@ export const initialData: AppState = {
       brinco: '102',
       loteId: 'l2',
       categoria: 'Garrote',
+      pesoEntrada: 240,
       pesoAtual: 340,
       gmd: 1.1,
       status: 'Ativo',
@@ -72,7 +83,10 @@ export const initialData: AppState = {
       gender: 'M',
     },
   ],
-  pesagens: [],
+  pesagens: [
+    { id: 'ps1', animalId: 'a1', weight: 500, date: '2023-08-01T10:00:00.000Z' },
+    { id: 'ps2', animalId: 'a1', weight: 550, date: '2023-11-01T10:00:00.000Z' },
+  ],
   reproducoes: [
     {
       id: 'r1',
@@ -80,7 +94,7 @@ export const initialData: AppState = {
       type: 'IATF',
       date: '2023-10-01',
       previsaoToque: '2023-10-31',
-      dpp: '2024-07-22',
+      dpp: new Date(new Date().getTime() + 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days from now (Red alert)
       status: 'Prenhe',
     },
     {
@@ -89,8 +103,8 @@ export const initialData: AppState = {
       type: 'Monta',
       date: '2023-11-15',
       previsaoToque: '2023-12-15',
-      dpp: '2024-09-05',
-      status: 'Aguardando Toque',
+      dpp: new Date(new Date().getTime() + 25 * 24 * 60 * 60 * 1000).toISOString(), // 25 days from now (Yellow alert)
+      status: 'Prenhe',
     },
   ],
   estoque: [
@@ -128,8 +142,8 @@ export const initialData: AppState = {
     },
   ],
   maquinario: [
-    { id: 'm1', name: 'Trator John Deere 5075', horimetro: 1450, nextRevision: 1500 },
-    { id: 'm2', name: 'Caminhonete Hilux', horimetro: 80000, nextRevision: 80000 },
+    { id: 'm1', name: 'Trator John Deere 5075', horimetro: 1510, nextRevision: 1500 }, // Needs revision
+    { id: 'm2', name: 'Caminhonete Hilux', horimetro: 78000, nextRevision: 80000 },
   ],
   clima: [{ id: 'c1', date: new Date().toISOString(), pluviometria: 15 }],
 }

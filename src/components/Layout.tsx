@@ -13,27 +13,26 @@ import {
 import {
   Home,
   Map,
-  Box,
   Activity,
-  Stethoscope,
   Baby,
-  Scissors,
   Droplet,
   DollarSign,
   Tractor,
-  CloudRain,
+  Bell,
+  LogOut,
   ShieldAlert,
+  Wrench,
 } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
 import { useEffect } from 'react'
-import { Badge } from '@/components/ui/badge'
+import { useAlerts } from '@/hooks/useAlerts'
+import { Button } from '@/components/ui/button'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
 
 const navItems = [
   { module: 'Dashboard', icon: Home, path: '/', levels: [1, 2] },
@@ -95,9 +94,15 @@ const navItems = [
 ]
 
 export default function Layout() {
-  const { state, setRole } = useAppStore()
+  const { state, dispatch } = useAppStore()
   const navigate = useNavigate()
   const location = useLocation()
+  const alerts = useAlerts()
+
+  const handleLogout = () => {
+    dispatch((s) => ({ ...s, isAuthenticated: false, currentUser: null }))
+    navigate('/login')
+  }
 
   useEffect(() => {
     if (state.userRole === 3) {
@@ -166,28 +171,62 @@ export default function Layout() {
               </h1>
             </div>
             <div className="flex items-center gap-4">
-              <Badge
-                variant={
-                  state.userRole === 1 ? 'default' : state.userRole === 2 ? 'secondary' : 'outline'
-                }
-                className="hidden sm:inline-flex"
-              >
-                {state.userRole === 1
-                  ? 'CEO/Admin'
-                  : state.userRole === 2
-                    ? 'Gerente'
-                    : 'Operacional'}
-              </Badge>
-              <Select value={state.userRole.toString()} onValueChange={(v) => setRole(Number(v))}>
-                <SelectTrigger className="w-[140px] bg-slate-50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">CEO (Nível 1)</SelectItem>
-                  <SelectItem value="2">Gerente (Nível 2)</SelectItem>
-                  <SelectItem value="3">Operação (Nível 3)</SelectItem>
-                </SelectContent>
-              </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="w-5 h-5 text-emerald-900" />
+                    {alerts.length > 0 && (
+                      <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full animate-pulse border border-white" />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto">
+                  {alerts.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      Nenhum alerta crítico ativo.
+                    </div>
+                  ) : (
+                    alerts.map((a) => (
+                      <DropdownMenuItem key={a.id} asChild>
+                        <Link
+                          to={a.link || '#'}
+                          className="flex flex-col gap-1 items-start p-3 cursor-pointer border-b last:border-0"
+                        >
+                          <div className="flex items-center gap-2">
+                            {a.type === 'critical' ? (
+                              <ShieldAlert className="w-4 h-4 text-rose-500" />
+                            ) : (
+                              <Wrench className="w-4 h-4 text-amber-500" />
+                            )}
+                            <span className="font-semibold text-sm">{a.title}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground whitespace-normal">
+                            {a.description}
+                          </span>
+                        </Link>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <div className="flex items-center gap-3 border-l pl-4 border-slate-200">
+                <div className="text-sm text-right hidden sm:block">
+                  <p className="font-semibold text-emerald-900 leading-none">
+                    {state.currentUser?.name}
+                  </p>
+                  <span className="text-xs text-muted-foreground font-medium">
+                    {state.currentUser?.role === 1
+                      ? 'Admin/CEO'
+                      : state.currentUser?.role === 2
+                        ? 'Gerente'
+                        : 'Operacional'}
+                  </span>
+                </div>
+                <Button variant="ghost" size="icon" onClick={handleLogout} title="Sair do Sistema">
+                  <LogOut className="w-5 h-5 text-rose-600" />
+                </Button>
+              </div>
             </div>
           </header>
           <div className="flex-1 overflow-y-auto p-4 md:p-8 animate-fade-in-up">

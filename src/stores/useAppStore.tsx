@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react'
 import { initialData } from './mockData'
-import { AppState } from './types'
+import { AppState, Role } from './types'
 
 type AppContextType = {
   state: AppState
@@ -12,7 +12,7 @@ const AppContext = createContext<AppContextType | null>(null)
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, setState] = useState<AppState>(initialData)
-  const setRole = (role: number) => setState((s) => ({ ...s, userRole: role as any }))
+  const setRole = (role: number) => setState((s) => ({ ...s, userRole: role as Role }))
 
   return (
     <AppContext.Provider value={{ state, dispatch: setState, setRole }}>

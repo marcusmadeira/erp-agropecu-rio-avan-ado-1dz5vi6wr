@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Search } from 'lucide-react'
+import { Search, FileText } from 'lucide-react'
+import { exportAnimalPDF } from '@/lib/pdf'
 
 export default function Animais() {
   const { state } = useAppStore()
@@ -50,6 +51,7 @@ export default function Animais() {
                 <TableHead>C. Custo</TableHead>
                 <TableHead className="text-right">Peso Atual</TableHead>
                 <TableHead className="text-right">GMD</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -71,11 +73,21 @@ export default function Animais() {
                     {a.pesoAtual} kg
                   </TableCell>
                   <TableCell className="text-right font-mono">{a.gmd.toFixed(3)}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      title="Exportar Ficha (PDF)"
+                      onClick={() => exportAnimalPDF(a, state.lotes, state.pesagens, state.animais)}
+                    >
+                      <FileText className="w-4 h-4 text-emerald-700" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-4">
+                  <TableCell colSpan={8} className="text-center py-4">
                     Nenhum animal encontrado.
                   </TableCell>
                 </TableRow>

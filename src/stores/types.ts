@@ -1,5 +1,12 @@
 export type Role = 1 | 2 | 3
 
+export interface User {
+  id: string
+  email: string
+  name: string
+  role: Role
+}
+
 export interface Pasto {
   id: string
   name: string
@@ -19,6 +26,7 @@ export interface Animal {
   rgn?: string
   loteId: string
   categoria: string
+  pesoEntrada?: number
   pesoAtual: number
   gmd: number
   pai?: string
@@ -79,6 +87,9 @@ export interface ClimaLog {
 }
 
 export interface AppState {
+  isAuthenticated: boolean
+  currentUser: User | null
+  notifiedAlertIds: string[]
   userRole: Role
   pastos: Pasto[]
   lotes: Lote[]

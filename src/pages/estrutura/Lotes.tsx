@@ -27,6 +27,8 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
+import { FileText } from 'lucide-react'
+import { exportLotePDF } from '@/lib/pdf'
 
 export default function Lotes() {
   const { state, dispatch } = useAppStore()
@@ -93,6 +95,7 @@ export default function Lotes() {
                 <TableHead>Centro de Custo</TableHead>
                 <TableHead className="text-right">Qtd. Cabeças</TableHead>
                 <TableHead className="text-right">Peso Médio</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -115,6 +118,16 @@ export default function Lotes() {
                     <TableCell className="text-right font-mono">{animals.length}</TableCell>
                     <TableCell className="text-right font-mono">
                       {avgWeight.toFixed(1)} kg
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => exportLotePDF(l, state.animais, state.pastos)}
+                        title="Exportar Relatório PDF"
+                      >
+                        <FileText className="w-4 h-4 mr-2 text-emerald-700" /> Relatório
+                      </Button>
                     </TableCell>
                   </TableRow>
                 )
