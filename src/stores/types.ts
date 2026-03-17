@@ -5,6 +5,7 @@ export interface User {
   email: string
   name: string
   role: Role
+  phone?: string
 }
 
 export interface Pasto {
@@ -57,12 +58,15 @@ export interface EstoqueItem {
   category: string
   quantity: number
   unit: string
+  unitCost: number
 }
 export interface Manejo {
   id: string
   type: string
   details: string
   date: string
+  loteId?: string
+  cost?: number
 }
 export interface Transacao {
   id: string
@@ -85,6 +89,16 @@ export interface ClimaLog {
   date: string
   pluviometria: number
 }
+export interface AuditLog {
+  id: string
+  date: string
+  userName: string
+  action: 'Create' | 'Update' | 'Delete'
+  table: string
+  recordId: string
+  oldValue: string
+  newValue: string
+}
 
 export interface AppState {
   isAuthenticated: boolean
@@ -101,4 +115,5 @@ export interface AppState {
   transacoes: Transacao[]
   maquinario: Maquinario[]
   clima: ClimaLog[]
+  auditLogs: AuditLog[]
 }

@@ -18,15 +18,40 @@ import {
 } from '@/components/ui/select'
 import { format, parseISO } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/components/dashboard/KpiCards'
+import { Check } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 export default function Transacoes() {
-  const { state } = useAppStore()
+  const { state, dispatch } = useAppStore()
+  const { toast } = useToast()
   const [filterCC, setFilterCC] = useState('ALL')
 
   const filtered = state.transacoes
     .filter((t) => (filterCC === 'ALL' ? true : t.costCenter === filterCC))
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+  const handlePay = (id: string, desc: string) => {
+    dispatch((s) => ({
+      ...s,
+      transacoes: s.transacoes.map((t) => (t.id === id ? { ...t, status: 'Pago' } : t)),
+      auditLogs: [
+        {
+          id: Math.random().toString(),
+          date: new Date().toISOString(),
+          userName: s.currentUser?.name || 'Sistema',
+          action: 'Update',
+          table: 'Transacoes',
+          recordId: desc,
+          oldValue: 'Pendente',
+          newValue: 'Pago',
+        },
+        ...s.auditLogs,
+      ],
+    }))
+    toast({ title: 'Transação baixada', description: 'Log de auditoria gerado.' })
+  }
 
   return (
     <div className="space-y-4">
@@ -49,47 +74,53 @@ export default function Transacoes() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Data</TableHead>
+                <TableHead>Venc./Data</TableHead>
                 <TableHead>Descrição</TableHead>
                 <TableHead>Tipo</TableHead>
-                <TableHead>Centro de Custo</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>C.Custo</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((t) => (
                 <TableRow key={t.id}>
-                  <TableCell className="font-mono">
-                    {format(parseISO(t.date), 'dd/MM/yyyy')}
+                  <TableCell className="font-mono text-xs">
+                    {format(parseISO(t.due_date || t.date), 'dd/MM/yyyy')}
                   </TableCell>
                   <TableCell className="font-medium">{t.description}</TableCell>
                   <TableCell>
                     <span
-                      className={`font-semibold text-xs uppercase px-2 py-1 rounded ${t.type === 'Receita' ? 'text-emerald-700 bg-emerald-50' : 'text-rose-700 bg-rose-50'}`}
+                      className={`font-semibold text-[10px] uppercase px-2 py-1 rounded ${t.type === 'Receita' ? 'text-emerald-700 bg-emerald-50' : 'text-rose-700 bg-rose-50'}`}
                     >
                       {t.type}
                     </span>
                   </TableCell>
-                  <TableCell>{t.costCenter}</TableCell>
-                  <TableCell>
-                    <Badge variant={t.status === 'Pago' ? 'default' : 'outline'}>{t.status}</Badge>
-                  </TableCell>
+                  <TableCell className="text-xs">{t.costCenter}</TableCell>
                   <TableCell
                     className={`text-right font-mono font-bold ${t.type === 'Receita' ? 'text-emerald-700' : 'text-rose-700'}`}
                   >
                     {t.type === 'Receita' ? '+' : '-'}
                     {formatCurrency(t.value)}
                   </TableCell>
-                </TableRow>
-              ))}
-              {filtered.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-4">
-                    Nenhuma transação.
+                  <TableCell>
+                    <Badge variant={t.status === 'Pago' ? 'default' : 'outline'}>{t.status}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {t.status === 'Pendente' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                        onClick={() => handlePay(t.id, t.description)}
+                      >
+                        <Check className="w-3 h-3 mr-1" /> Baixar
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
-              )}
+              ))}
             </TableBody>
           </Table>
         </CardContent>

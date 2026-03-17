@@ -1,9 +1,9 @@
 import { AppState, User } from './types'
 
 export const mockUsers: User[] = [
-  { id: 'u1', email: 'admin@agro.com', name: 'Admin CEO', role: 1 },
-  { id: 'u2', email: 'gerente@agro.com', name: 'Gerente', role: 2 },
-  { id: 'u3', email: 'peao@agro.com', name: 'Operacional', role: 3 },
+  { id: 'u1', email: 'admin@agro.com', name: 'Admin CEO', role: 1, phone: '+5511999999991' },
+  { id: 'u2', email: 'gerente@agro.com', name: 'Gerente', role: 2, phone: '+5511999999992' },
+  { id: 'u3', email: 'peao@agro.com', name: 'Operacional', role: 3, phone: '+5511999999993' },
 ]
 
 export const initialData: AppState = {
@@ -21,7 +21,6 @@ export const initialData: AppState = {
       capacity: 50,
     },
     { id: 'p2', name: 'Pasto Fundo', status: 'Livre', grassHeight: 40, capacity: 100 },
-    { id: 'p3', name: 'Pasto Varjão', status: 'Em Descanso', grassHeight: 10, capacity: 80 },
   ],
   lotes: [
     { id: 'l1', name: 'Matrizes PO Elite', costCenter: 'CC01-PO' },
@@ -43,20 +42,6 @@ export const initialData: AppState = {
       gender: 'F',
     },
     {
-      id: 'a2',
-      brinco: '002',
-      rgn: 'NEL124',
-      loteId: 'l1',
-      categoria: 'Matriz',
-      pesoEntrada: 380,
-      pesoAtual: 530,
-      gmd: 0.05,
-      status: 'Ativo',
-      birthDate: '2021-02-15',
-      costCenter: 'CC01-PO',
-      gender: 'F',
-    },
-    {
       id: 'a3',
       brinco: '101',
       loteId: 'l2',
@@ -69,24 +54,8 @@ export const initialData: AppState = {
       costCenter: 'CC02-TIP',
       gender: 'M',
     },
-    {
-      id: 'a4',
-      brinco: '102',
-      loteId: 'l2',
-      categoria: 'Garrote',
-      pesoEntrada: 240,
-      pesoAtual: 340,
-      gmd: 1.1,
-      status: 'Ativo',
-      birthDate: '2023-07-10',
-      costCenter: 'CC02-TIP',
-      gender: 'M',
-    },
   ],
-  pesagens: [
-    { id: 'ps1', animalId: 'a1', weight: 500, date: '2023-08-01T10:00:00.000Z' },
-    { id: 'ps2', animalId: 'a1', weight: 550, date: '2023-11-01T10:00:00.000Z' },
-  ],
+  pesagens: [{ id: 'ps1', animalId: 'a1', weight: 500, date: '2023-08-01T10:00:00.000Z' }],
   reproducoes: [
     {
       id: 'r1',
@@ -94,39 +63,44 @@ export const initialData: AppState = {
       type: 'IATF',
       date: '2023-10-01',
       previsaoToque: '2023-10-31',
-      dpp: new Date(new Date().getTime() + 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days from now (Red alert)
-      status: 'Prenhe',
-    },
-    {
-      id: 'r2',
-      animalId: 'a2',
-      type: 'Monta',
-      date: '2023-11-15',
-      previsaoToque: '2023-12-15',
-      dpp: new Date(new Date().getTime() + 25 * 24 * 60 * 60 * 1000).toISOString(), // 25 days from now (Yellow alert)
+      dpp: new Date(new Date().getTime() + 10 * 24 * 60 * 60 * 1000).toISOString(),
       status: 'Prenhe',
     },
   ],
   estoque: [
-    { id: 'e1', name: 'Ração Proteica TIP', category: 'Nutrição', quantity: 5000, unit: 'Kg' },
-    { id: 'e2', name: 'Vacina Aftosa', category: 'Saúde', quantity: 200, unit: 'Doses' },
+    {
+      id: 'e1',
+      name: 'Ração Proteica TIP',
+      category: 'Nutrição',
+      quantity: 5000,
+      unit: 'Kg',
+      unitCost: 2.5,
+    },
+    {
+      id: 'e2',
+      name: 'Vacina Aftosa',
+      category: 'Saúde',
+      quantity: 200,
+      unit: 'Doses',
+      unitCost: 1.8,
+    },
   ],
-  manejos: [],
+  manejos: [
+    {
+      id: 'mn1',
+      type: 'Nutrição',
+      details: 'Trato Diário',
+      date: new Date().toISOString(),
+      loteId: 'l2',
+      cost: 1250,
+    },
+  ],
   transacoes: [
     {
       id: 't1',
       description: 'Venda Bezerros Mestiços',
       value: 45000,
       type: 'Receita',
-      date: new Date().toISOString(),
-      costCenter: 'CC02-TIP',
-      status: 'Pago',
-    },
-    {
-      id: 't2',
-      description: 'Compra Ração TIP',
-      value: 12000,
-      type: 'Despesa',
       date: new Date().toISOString(),
       costCenter: 'CC02-TIP',
       status: 'Pago',
@@ -139,11 +113,21 @@ export const initialData: AppState = {
       date: new Date().toISOString(),
       costCenter: 'CC01-PO',
       status: 'Pendente',
+      due_date: new Date(new Date().getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(), // Overdue
     },
   ],
-  maquinario: [
-    { id: 'm1', name: 'Trator John Deere 5075', horimetro: 1510, nextRevision: 1500 }, // Needs revision
-    { id: 'm2', name: 'Caminhonete Hilux', horimetro: 78000, nextRevision: 80000 },
-  ],
+  maquinario: [{ id: 'm1', name: 'Trator John Deere 5075', horimetro: 1510, nextRevision: 1500 }],
   clima: [{ id: 'c1', date: new Date().toISOString(), pluviometria: 15 }],
+  auditLogs: [
+    {
+      id: 'al1',
+      date: new Date(new Date().getTime() - 86400000).toISOString(),
+      userName: 'Admin CEO',
+      action: 'Update',
+      table: 'Animais',
+      recordId: '001',
+      oldValue: '540',
+      newValue: '550',
+    },
+  ],
 }

@@ -26,7 +26,19 @@ export default function CurralDigital() {
     dispatch((s) => {
       const a = s.animais.find((x) => x.id === animalId)
       if (!a) return s
-      const newGmd = (p - a.pesoAtual) / 30 // mock calculation 30 days
+      const newGmd = (p - a.pesoAtual) / 30
+
+      const auditLog = {
+        id: Math.random().toString(),
+        date: new Date().toISOString(),
+        userName: s.currentUser?.name || 'Operacional',
+        action: 'Update' as any,
+        table: 'Animais',
+        recordId: a.brinco,
+        oldValue: `${a.pesoAtual} kg`,
+        newValue: `${p} kg`,
+      }
+
       return {
         ...s,
         pesagens: [
@@ -36,12 +48,13 @@ export default function CurralDigital() {
         animais: s.animais.map((x) =>
           x.id === animalId ? { ...x, pesoAtual: p, gmd: newGmd } : x,
         ),
+        auditLogs: [auditLog, ...s.auditLogs],
       }
     })
 
     toast({
-      title: 'Pesagem registrada com sucesso!',
-      description: 'Peso e GMD atualizados automaticamente.',
+      title: 'Pesagem registrada',
+      description: 'Log de auditoria gerado na alteração de peso.',
     })
     setPeso('')
     setAnimalId('')

@@ -22,6 +22,8 @@ import {
   LogOut,
   ShieldAlert,
   Wrench,
+  ShieldCheck,
+  LineChart,
 } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
 import { useEffect } from 'react'
@@ -36,6 +38,7 @@ import {
 
 const navItems = [
   { module: 'Dashboard', icon: Home, path: '/', levels: [1, 2] },
+  { module: 'Desempenho', icon: LineChart, path: '/nutricao', levels: [1, 2] },
   {
     module: 'Estrutura',
     icon: Map,
@@ -91,6 +94,7 @@ const navItems = [
     ],
     levels: [1, 2, 3],
   },
+  { module: 'Auditoria', icon: ShieldCheck, path: '/auditoria', levels: [1] },
 ]
 
 export default function Layout() {
@@ -105,14 +109,13 @@ export default function Layout() {
   }
 
   useEffect(() => {
-    if (state.userRole === 3) {
-      if (
-        location.pathname === '/' ||
+    if (
+      state.userRole === 3 &&
+      (location.pathname === '/' ||
         location.pathname.startsWith('/transacoes') ||
-        location.pathname.startsWith('/eventos-comerciais')
-      ) {
-        navigate('/manejo')
-      }
+        location.pathname.startsWith('/auditoria'))
+    ) {
+      navigate('/manejo')
     }
   }, [state.userRole, location.pathname, navigate])
 
@@ -209,7 +212,6 @@ export default function Layout() {
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
-
               <div className="flex items-center gap-3 border-l pl-4 border-slate-200">
                 <div className="text-sm text-right hidden sm:block">
                   <p className="font-semibold text-emerald-900 leading-none">

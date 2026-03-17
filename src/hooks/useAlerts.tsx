@@ -1,5 +1,6 @@
 import { useMemo, useEffect } from 'react'
 import useAppStore from '@/stores/useAppStore'
+import { toast } from '@/hooks/use-toast'
 
 export interface AlertItem {
   id: string
@@ -8,6 +9,7 @@ export interface AlertItem {
   type: 'critical' | 'warning'
   date: string
   link?: string
+  smsTriggered?: boolean
 }
 
 export function useAlerts() {
@@ -17,6 +19,7 @@ export function useAlerts() {
     if (!state.isAuthenticated) return []
     const newAlerts: AlertItem[] = []
 
+    // Maquinario Alerts
     state.maquinario.forEach((m) => {
       if (m.horimetro >= m.nextRevision) {
         newAlerts.push({
@@ -30,44 +33,47 @@ export function useAlerts() {
       }
     })
 
+    // Repro Alerts
     state.reproducoes.forEach((r) => {
       if (r.status === 'Prenhe') {
         const animal = state.animais.find((a) => a.id === r.animalId)
         const brinco = animal ? animal.brinco : 'Desconhecido'
-
-        const dppDate = new Date(r.dpp)
-        const diffTime = dppDate.getTime() - new Date().getTime()
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        const diffDays = Math.ceil((new Date(r.dpp).getTime() - new Date().getTime()) / 86400000)
 
         if (diffDays <= 15) {
-          const desc =
-            diffDays < 0
-              ? `Matriz ${brinco} com parto atrasado (${Math.abs(diffDays)} dias).`
-              : `Matriz ${brinco} a ${diffDays} dias do parto. Mover p/ Maternidade.`
-
           newAlerts.push({
             id: `repro-red-${r.id}-${diffDays}`,
-            title: 'Alerta Crítico Maternidade',
-            description: desc,
+            title: 'Alerta Maternidade',
+            description: `Matriz ${brinco} a ${Math.max(0, diffDays)} dias do parto. Mover p/ Maternidade.`,
             type: 'critical',
             date: new Date().toISOString(),
             link: '/nascimentos',
+            smsTriggered: true,
           })
-        } else if (diffDays <= 30) {
+        }
+      }
+    })
+
+    // Finance Alerts
+    state.transacoes.forEach((t) => {
+      if (t.status === 'Pendente' && t.due_date) {
+        const isOverdue = new Date(t.due_date).getTime() < new Date().getTime()
+        if (isOverdue) {
           newAlerts.push({
-            id: `repro-yel-${r.id}-${diffDays}`,
-            title: 'Alerta Maternidade',
-            description: `Matriz ${brinco} a ${diffDays} dias do parto.`,
-            type: 'warning',
+            id: `fin-overdue-${t.id}`,
+            title: 'Transação Atrasada',
+            description: `Pagamento pendente: ${t.description} (${t.costCenter})`,
+            type: 'critical',
             date: new Date().toISOString(),
-            link: '/nascimentos',
+            link: '/transacoes',
+            smsTriggered: true,
           })
         }
       }
     })
 
     return newAlerts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  }, [state.isAuthenticated, state.maquinario, state.reproducoes, state.animais])
+  }, [state.isAuthenticated, state.maquinario, state.reproducoes, state.animais, state.transacoes])
 
   useEffect(() => {
     if (alerts.length > 0 && state.isAuthenticated) {
@@ -76,6 +82,13 @@ export function useAlerts() {
         unnotified.forEach((a) => {
           if ('Notification' in window && Notification.permission === 'granted') {
             new Notification(a.title, { body: a.description })
+          }
+          if (a.smsTriggered) {
+            toast({
+              title: '📱 Alerta SMS/WhatsApp Enviado',
+              description: `Aviso enviado para a equipe: ${a.title}`,
+              className: 'border-l-4 border-l-rose-500',
+            })
           }
         })
         dispatch((s) => ({
