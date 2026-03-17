@@ -11,6 +11,9 @@ export const initialData: AppState = {
   currentUser: null,
   notifiedAlertIds: [],
   userRole: 1,
+  isOnline: true,
+  pendingSyncQueue: [],
+  lastSync: new Date().toISOString(),
   pastos: [
     {
       id: 'p1',
@@ -90,9 +93,21 @@ export const initialData: AppState = {
       id: 'mn1',
       type: 'Nutrição',
       details: 'Trato Diário',
-      date: new Date().toISOString(),
+      date: new Date(Date.now() - 2 * 86400000).toISOString(),
       loteId: 'l2',
       cost: 1250,
+      itemId: 'e1',
+      quantity: 500,
+    },
+    {
+      id: 'mn2',
+      type: 'Nutrição',
+      details: 'Trato Diário',
+      date: new Date(Date.now() - 1 * 86400000).toISOString(),
+      loteId: 'l2',
+      cost: 1300,
+      itemId: 'e1',
+      quantity: 520,
     },
   ],
   transacoes: [
@@ -113,7 +128,7 @@ export const initialData: AppState = {
       date: new Date().toISOString(),
       costCenter: 'CC01-PO',
       status: 'Pendente',
-      due_date: new Date(new Date().getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(), // Overdue
+      due_date: new Date(new Date().getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     },
   ],
   maquinario: [{ id: 'm1', name: 'Trator John Deere 5075', horimetro: 1510, nextRevision: 1500 }],

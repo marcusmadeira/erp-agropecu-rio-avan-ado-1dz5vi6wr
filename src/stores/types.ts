@@ -67,6 +67,8 @@ export interface Manejo {
   date: string
   loteId?: string
   cost?: number
+  itemId?: string
+  quantity?: number
 }
 export interface Transacao {
   id: string
@@ -100,11 +102,21 @@ export interface AuditLog {
   newValue: string
 }
 
+export interface SyncAction {
+  id: string
+  type: string
+  payload: any
+  timestamp: string
+}
+
 export interface AppState {
   isAuthenticated: boolean
   currentUser: User | null
   notifiedAlertIds: string[]
   userRole: Role
+  isOnline: boolean
+  pendingSyncQueue: SyncAction[]
+  lastSync: string | null
   pastos: Pasto[]
   lotes: Lote[]
   animais: Animal[]

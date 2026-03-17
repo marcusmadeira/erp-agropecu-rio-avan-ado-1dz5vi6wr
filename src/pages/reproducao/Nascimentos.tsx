@@ -53,23 +53,37 @@ export default function Nascimentos() {
         costCenter: matriz.costCenter,
         gender: form.sexo as any,
       }
-      return { ...s, reproducoes: repros, animais: [...s.animais, novoBezerro] }
+
+      const offlineAction = {
+        id: Math.random().toString(),
+        type: 'CREATE_NASCIMENTO',
+        payload: { maeId: matriz.id, peso: Number(form.peso), sexo: form.sexo },
+        timestamp: new Date().toISOString(),
+      }
+
+      return {
+        ...s,
+        reproducoes: repros,
+        animais: [...s.animais, novoBezerro],
+        pendingSyncQueue: s.isOnline ? s.pendingSyncQueue : [...s.pendingSyncQueue, offlineAction],
+      }
     })
     setOpen(false)
     toast({
-      title: 'Nascimento Registrado',
-      description: 'Bezerro criado e herdou genealogia da mãe.',
+      title: state.isOnline ? 'Nascimento Registrado' : 'Salvo no Dispositivo',
+      description: 'Ficha do bezerro criada na maternidade.',
     })
+    setForm({ peso: '', sexo: 'M' })
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-emerald-900">Nascimentos e Desmame</h2>
+    <div className="space-y-4 p-4 md:p-0">
+      <h2 className="text-2xl font-bold text-emerald-900">Nascimentos e Maternidade</h2>
       <Card className="shadow-subtle">
         <CardHeader>
           <CardTitle>Matrizes Próximas ao Parto</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -83,18 +97,20 @@ export default function Nascimentos() {
                 const a = state.animais.find((x) => x.id === r.animalId)
                 return (
                   <TableRow key={r.id}>
-                    <TableCell className="font-bold">{a?.brinco}</TableCell>
-                    <TableCell>{format(parseISO(r.dpp), 'dd/MM/yyyy')}</TableCell>
+                    <TableCell className="font-bold text-lg">{a?.brinco}</TableCell>
+                    <TableCell className="text-slate-600">
+                      {format(parseISO(r.dpp), 'dd/MM/yyyy')}
+                    </TableCell>
                     <TableCell className="text-right">
                       <Button
-                        size="sm"
+                        size="lg"
                         onClick={() => {
                           setSelectedRepro(r)
                           setOpen(true)
                         }}
-                        className="bg-emerald-800"
+                        className="bg-emerald-800 rounded-lg shadow font-semibold"
                       >
-                        Registrar Parto
+                        Registrar
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -102,8 +118,8 @@ export default function Nascimentos() {
               })}
               {prenhes.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center">
-                    Nenhuma matriz prenhe.
+                  <TableCell colSpan={3} className="text-center py-6">
+                    Nenhuma matriz prenhe registrada.
                   </TableCell>
                 </TableRow>
               )}
@@ -113,28 +129,44 @@ export default function Nascimentos() {
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md w-[95vw] rounded-xl p-6">
           <DialogHeader>
-            <DialogTitle>Registrar Nascimento</DialogTitle>
+            <DialogTitle className="text-2xl text-emerald-900">Registrar Nascimento</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <Input
-              type="number"
-              placeholder="Peso ao Nascer (Kg)"
-              value={form.peso}
-              onChange={(e) => setForm({ ...form, peso: e.target.value })}
-            />
-            <Select value={form.sexo} onValueChange={(v) => setForm({ ...form, sexo: v })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sexo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="M">Macho</SelectItem>
-                <SelectItem value="F">Fêmea</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button onClick={handleRegistrar} className="w-full bg-emerald-800">
-              Salvar e Criar Ficha do Bezerro
+          <div className="space-y-6 mt-4">
+            <div className="space-y-3">
+              <label className="text-base font-semibold text-emerald-950">
+                Peso ao Nascer (Kg)
+              </label>
+              <Input
+                type="number"
+                placeholder="Ex: 35"
+                className="h-16 text-2xl text-center rounded-xl font-mono bg-slate-50 border-slate-200"
+                value={form.peso}
+                onChange={(e) => setForm({ ...form, peso: e.target.value })}
+              />
+            </div>
+            <div className="space-y-3">
+              <label className="text-base font-semibold text-emerald-950">Sexo do Bezerro</label>
+              <Select value={form.sexo} onValueChange={(v) => setForm({ ...form, sexo: v })}>
+                <SelectTrigger className="h-16 text-xl rounded-xl bg-slate-50 border-slate-200">
+                  <SelectValue placeholder="Sexo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="M" className="text-lg py-3">
+                    Macho
+                  </SelectItem>
+                  <SelectItem value="F" className="text-lg py-3">
+                    Fêmea
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              onClick={handleRegistrar}
+              className="w-full h-16 text-xl font-bold bg-emerald-800 rounded-xl mt-4 active:scale-[0.98] transition-transform"
+            >
+              Salvar Bezerro
             </Button>
           </div>
         </DialogContent>

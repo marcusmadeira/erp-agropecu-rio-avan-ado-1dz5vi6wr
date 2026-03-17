@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { Scale } from 'lucide-react'
+import { Scale, CloudOff } from 'lucide-react'
 
 export default function CurralDigital() {
   const { state, dispatch } = useAppStore()
@@ -39,6 +39,13 @@ export default function CurralDigital() {
         newValue: `${p} kg`,
       }
 
+      const offlineAction = {
+        id: Math.random().toString(),
+        type: 'CREATE_PESAGEM',
+        payload: { animalId, peso: p },
+        timestamp: new Date().toISOString(),
+      }
+
       return {
         ...s,
         pesagens: [
@@ -49,59 +56,72 @@ export default function CurralDigital() {
           x.id === animalId ? { ...x, pesoAtual: p, gmd: newGmd } : x,
         ),
         auditLogs: [auditLog, ...s.auditLogs],
+        pendingSyncQueue: s.isOnline ? s.pendingSyncQueue : [...s.pendingSyncQueue, offlineAction],
       }
     })
 
     toast({
-      title: 'Pesagem registrada',
-      description: 'Log de auditoria gerado na alteração de peso.',
+      title: state.isOnline ? 'Pesagem Registrada' : 'Salvo Offline',
+      description: state.isOnline ? 'Dados salvos na nuvem.' : 'Será sincronizado automaticamente.',
+      className: !state.isOnline ? 'border-amber-500' : '',
     })
     setPeso('')
     setAnimalId('')
   }
 
   return (
-    <div className="flex justify-center pt-10">
-      <Card className="w-full max-w-md shadow-elevation border-t-4 border-t-emerald-700">
-        <CardHeader className="text-center">
-          <div className="mx-auto bg-emerald-100 p-3 rounded-full w-fit mb-2">
-            <Scale className="w-8 h-8 text-emerald-800" />
+    <div className="flex justify-center sm:pt-6 h-full sm:h-auto">
+      <Card className="w-full max-w-md shadow-elevation border-t-4 border-t-emerald-700 rounded-none sm:rounded-xl flex flex-col h-full sm:h-auto border-x-0 border-b-0 sm:border-x sm:border-b">
+        <CardHeader className="text-center pt-8 pb-4">
+          <div className="mx-auto bg-emerald-100 p-4 rounded-full w-fit mb-4">
+            <Scale className="w-10 h-10 text-emerald-800" />
           </div>
-          <CardTitle className="text-2xl text-emerald-900">Curral Digital</CardTitle>
-          <p className="text-sm text-muted-foreground">Registre a pesagem de forma rápida.</p>
+          <CardTitle className="text-3xl text-emerald-900 tracking-tight">Curral Digital</CardTitle>
+          <p className="text-base text-muted-foreground mt-2">
+            Módulo de pesagem otimizado p/ campo.
+          </p>
+          {!state.isOnline && (
+            <div className="mt-4 inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-md text-sm font-medium">
+              <CloudOff className="w-4 h-4" /> Operando Offline
+            </div>
+          )}
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Selecione o Animal (Brinco)</label>
+        <CardContent className="space-y-6 flex-1 flex flex-col pt-4">
+          <div className="space-y-3">
+            <label className="text-base font-semibold text-emerald-950">
+              Selecione o Animal (Brinco)
+            </label>
             <Select value={animalId} onValueChange={setAnimalId}>
-              <SelectTrigger className="text-lg h-12">
-                <SelectValue placeholder="Selecione..." />
+              <SelectTrigger className="text-xl h-16 rounded-xl bg-slate-50 border-slate-200 shadow-sm focus:ring-emerald-500 focus:border-emerald-500">
+                <SelectValue placeholder="Toque para selecionar..." />
               </SelectTrigger>
               <SelectContent>
                 {state.animais.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    {a.brinco} - {a.categoria} ({a.pesoAtual}kg atual)
+                  <SelectItem key={a.id} value={a.id} className="text-lg py-3">
+                    {a.brinco} - {a.categoria} ({a.pesoAtual}kg)
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Novo Peso (Kg)</label>
+          <div className="space-y-3">
+            <label className="text-base font-semibold text-emerald-950">Novo Peso (Kg)</label>
             <Input
               type="number"
-              className="text-3xl font-mono text-center h-16 text-emerald-900 font-bold"
+              className="text-5xl font-mono text-center h-24 text-emerald-900 font-bold rounded-xl bg-slate-50 border-slate-200 shadow-sm focus-visible:ring-emerald-500"
               placeholder="000"
               value={peso}
               onChange={(e) => setPeso(e.target.value)}
             />
           </div>
-          <Button
-            className="w-full h-14 text-lg bg-emerald-800 hover:bg-emerald-900"
-            onClick={handleSave}
-          >
-            Salvar Pesagem
-          </Button>
+          <div className="mt-auto pt-6 pb-8 sm:pb-0">
+            <Button
+              className="w-full h-16 text-xl font-bold bg-emerald-800 hover:bg-emerald-900 rounded-xl shadow-lg active:scale-[0.98] transition-transform"
+              onClick={handleSave}
+            >
+              Gravar Pesagem
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

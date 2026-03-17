@@ -24,17 +24,39 @@ import {
   Wrench,
   ShieldCheck,
   LineChart,
+  Cloud,
+  CloudOff,
+  RefreshCw,
+  AlertTriangle,
 } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAlerts } from '@/hooks/useAlerts'
 import { Button } from '@/components/ui/button'
+import { useToast } from '@/hooks/use-toast'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { format, parseISO } from 'date-fns'
 
 const navItems = [
   { module: 'Dashboard', icon: Home, path: '/', levels: [1, 2] },
@@ -72,6 +94,7 @@ const navItems = [
     icon: Droplet,
     items: [
       { name: 'Estoque', path: '/estoque' },
+      { name: 'Previsão de Demanda', path: '/previsao-demanda' },
       { name: 'Manejo', path: '/manejo' },
     ],
     levels: [1, 2, 3],
@@ -102,6 +125,10 @@ export default function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
   const alerts = useAlerts()
+  const { toast } = useToast()
+
+  const [syncModalOpen, setSyncModalOpen] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
 
   const handleLogout = () => {
     dispatch((s) => ({ ...s, isAuthenticated: false, currentUser: null }))
@@ -113,11 +140,57 @@ export default function Layout() {
       state.userRole === 3 &&
       (location.pathname === '/' ||
         location.pathname.startsWith('/transacoes') ||
-        location.pathname.startsWith('/auditoria'))
+        location.pathname.startsWith('/auditoria') ||
+        location.pathname.startsWith('/previsao-demanda'))
     ) {
-      navigate('/manejo')
+      navigate('/pesagem')
     }
   }, [state.userRole, location.pathname, navigate])
+
+  // Offline Data Synchronization Engine
+  useEffect(() => {
+    if (state.isOnline && state.pendingSyncQueue.length > 0 && !isSyncing) {
+      // Auto-trigger sync when online
+      handleManualSync()
+    }
+  }, [state.isOnline, state.pendingSyncQueue.length])
+
+  const handleManualSync = () => {
+    if (!state.isOnline) {
+      toast({ title: 'Aviso', description: 'Você está offline.', variant: 'destructive' })
+      return
+    }
+
+    setIsSyncing(true)
+
+    // Simulate network request and conflict check
+    setTimeout(() => {
+      const hasConflict = Math.random() > 0.8 // 20% chance of a mock validation conflict
+
+      if (hasConflict && state.pendingSyncQueue.length > 0) {
+        setIsSyncing(false)
+        setSyncModalOpen(true)
+        toast({
+          title: 'Erro de Sincronização',
+          description: 'Foram encontrados conflitos ou erros de validação nos registros pendentes.',
+          variant: 'destructive',
+        })
+      } else {
+        dispatch((s) => ({ ...s, pendingSyncQueue: [], lastSync: new Date().toISOString() }))
+        setIsSyncing(false)
+        toast({
+          title: 'Sincronização Nuvem Concluída',
+          description: 'Todos os registros em cache foram enviados com sucesso.',
+        })
+      }
+    }, 1500)
+  }
+
+  const clearQueue = () => {
+    dispatch((s) => ({ ...s, pendingSyncQueue: [] }))
+    setSyncModalOpen(false)
+    toast({ title: 'Fila Limpa', description: 'Os registros pendentes foram descartados.' })
+  }
 
   return (
     <SidebarProvider>
@@ -137,17 +210,21 @@ export default function Layout() {
                   </div>
                   <SidebarMenu>
                     {mod.items ? (
-                      mod.items.map((i) => (
-                        <SidebarMenuItem key={i.path}>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={location.pathname === i.path}
-                            className="rounded-md"
-                          >
-                            <Link to={i.path}>{i.name}</Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))
+                      mod.items.map((i) => {
+                        // Hide AI Forecast from level 3 strictly
+                        if (i.path === '/previsao-demanda' && state.userRole === 3) return null
+                        return (
+                          <SidebarMenuItem key={i.path}>
+                            <SidebarMenuButton
+                              asChild
+                              isActive={location.pathname === i.path}
+                              className="rounded-md"
+                            >
+                              <Link to={i.path}>{i.name}</Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        )
+                      })
                     ) : (
                       <SidebarMenuItem>
                         <SidebarMenuButton
@@ -166,14 +243,59 @@ export default function Layout() {
         </Sidebar>
 
         <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-          <header className="h-16 flex items-center justify-between px-6 border-b bg-white shadow-subtle z-10 shrink-0">
+          <header className="h-16 flex items-center justify-between px-4 sm:px-6 border-b bg-white shadow-subtle z-10 shrink-0">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <h1 className="font-semibold text-lg text-emerald-900 hidden sm:block">
                 Painel de Gestão Avançado
               </h1>
             </div>
-            <div className="flex items-center gap-4">
+
+            <div className="flex items-center gap-3 sm:gap-4">
+              {/* Sync Status Dashboard */}
+              <button
+                className="hidden sm:flex items-center cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setSyncModalOpen(true)}
+              >
+                {!state.isOnline ? (
+                  <div className="flex items-center gap-1.5 text-rose-600 bg-rose-50 px-3 py-1.5 rounded-full text-xs font-medium border border-rose-100">
+                    <CloudOff className="w-4 h-4" />
+                    <span>Offline ({state.pendingSyncQueue.length} pendentes)</span>
+                  </div>
+                ) : isSyncing ? (
+                  <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full text-xs font-medium border border-amber-100">
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Sincronizando...</span>
+                  </div>
+                ) : state.pendingSyncQueue.length > 0 ? (
+                  <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full text-xs font-medium border border-amber-100">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Ação Pendente ({state.pendingSyncQueue.length})</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full text-xs font-medium border border-emerald-100">
+                    <Cloud className="w-4 h-4" />
+                    <span>Sincronizado</span>
+                  </div>
+                )}
+              </button>
+
+              {/* Mobile Compact Sync Status */}
+              <button
+                className="flex sm:hidden items-center cursor-pointer"
+                onClick={() => setSyncModalOpen(true)}
+              >
+                {!state.isOnline ? (
+                  <CloudOff className="w-5 h-5 text-rose-500" />
+                ) : isSyncing ? (
+                  <RefreshCw className="w-5 h-5 text-amber-500 animate-spin" />
+                ) : state.pendingSyncQueue.length > 0 ? (
+                  <AlertTriangle className="w-5 h-5 text-amber-500" />
+                ) : (
+                  <Cloud className="w-5 h-5 text-emerald-600" />
+                )}
+              </button>
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative">
@@ -212,7 +334,8 @@ export default function Layout() {
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <div className="flex items-center gap-3 border-l pl-4 border-slate-200">
+
+              <div className="flex items-center gap-3 border-l pl-3 sm:pl-4 border-slate-200">
                 <div className="text-sm text-right hidden sm:block">
                   <p className="font-semibold text-emerald-900 leading-none">
                     {state.currentUser?.name}
@@ -231,11 +354,91 @@ export default function Layout() {
               </div>
             </div>
           </header>
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 animate-fade-in-up">
+          <div className="flex-1 overflow-y-auto p-0 sm:p-4 md:p-8 animate-fade-in-up relative">
             <Outlet />
           </div>
         </main>
       </div>
+
+      {/* Conflict Management & Sync Queue Dialog */}
+      <Dialog open={syncModalOpen} onOpenChange={setSyncModalOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RefreshCw
+                className={`w-5 h-5 ${isSyncing ? 'animate-spin text-amber-500' : 'text-emerald-700'}`}
+              />
+              Central de Sincronização Local
+            </DialogTitle>
+            <DialogDescription>
+              {state.isOnline ? 'Você está online.' : 'Você está offline. Operando em Cache Local.'}
+              {state.lastSync &&
+                ` Última sincronização com sucesso: ${format(parseISO(state.lastSync), 'dd/MM/yyyy HH:mm')}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto mt-4">
+            <h4 className="font-semibold text-sm text-slate-700 mb-2">
+              Registros Pendentes ({state.pendingSyncQueue.length})
+            </h4>
+            {state.pendingSyncQueue.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ação</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {state.pendingSyncQueue.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell>
+                        <span className="font-medium text-xs">{item.type}</span>
+                        <div className="text-xs text-muted-foreground truncate max-w-[200px]">
+                          {JSON.stringify(item.payload)}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {format(parseISO(item.timestamp), 'dd/MM HH:mm')}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className="text-amber-600 border-amber-300 bg-amber-50"
+                        >
+                          Na Fila
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground text-sm border border-dashed rounded-lg">
+                Nenhum registro pendente na fila.
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-between items-center mt-6 pt-4 border-t">
+            <Button
+              variant="ghost"
+              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+              onClick={clearQueue}
+            >
+              Descartar Pendentes
+            </Button>
+            <Button
+              className="bg-emerald-800"
+              onClick={handleManualSync}
+              disabled={!state.isOnline || isSyncing || state.pendingSyncQueue.length === 0}
+            >
+              {isSyncing ? 'Enviando...' : 'Forçar Sincronização'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   )
 }
