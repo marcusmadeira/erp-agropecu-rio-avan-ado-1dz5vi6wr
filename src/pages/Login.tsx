@@ -53,7 +53,7 @@ export default function Login() {
     } else {
       toast({
         title: 'Erro de autenticação',
-        description: 'Credenciais inválidas.',
+        description: 'Credenciais inválidas. Por favor, tente novamente.',
         variant: 'destructive',
       })
     }
