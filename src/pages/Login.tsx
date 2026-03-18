@@ -19,9 +19,16 @@ export default function Login() {
     if (e) e.preventDefault()
 
     const targetEmail = mockEmail || email
-    const user = mockUsers.find((u) => u.email === targetEmail)
+    let user = mockUsers.find((u) => u.email === targetEmail)
 
-    if (user && (mockEmail || password === '123')) {
+    if (targetEmail === 'adm' && password === 'adm123') {
+      user = { id: 'admin-1', email: 'adm', name: 'Administrador (Super)', role: 1 }
+    }
+
+    if (
+      user &&
+      (mockEmail || password === '123' || (targetEmail === 'adm' && password === 'adm123'))
+    ) {
       dispatch((s) => ({
         ...s,
         isAuthenticated: true,
@@ -67,10 +74,10 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">E-mail Corporativo</label>
+              <label className="text-sm font-medium">Usuário ou E-mail</label>
               <Input
-                type="email"
-                placeholder="usuario@agro.com"
+                type="text"
+                placeholder="adm ou usuario@agro.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

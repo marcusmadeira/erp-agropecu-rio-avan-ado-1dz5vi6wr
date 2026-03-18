@@ -15,6 +15,10 @@ export interface Pasto {
   loteId?: string
   grassHeight: number
   capacity: number
+  area: number
+  taxaLotacao: number
+  idealEntryHeight: number
+  minExitHeight: number
 }
 export interface Lote {
   id: string
