@@ -59,7 +59,7 @@ import { Badge } from '@/components/ui/badge'
 import { format, parseISO } from 'date-fns'
 
 const navItems = [
-  { module: 'Dashboard', icon: Home, path: '/', levels: [1, 2] },
+  { module: 'Dashboard', icon: Home, path: '/', levels: [1, 2, 3] },
   { module: 'Desempenho', icon: LineChart, path: '/nutricao', levels: [1, 2] },
   {
     module: 'Estrutura',
@@ -138,12 +138,11 @@ export default function Layout() {
   useEffect(() => {
     if (
       state.userRole === 3 &&
-      (location.pathname === '/' ||
-        location.pathname.startsWith('/transacoes') ||
+      (location.pathname.startsWith('/transacoes') ||
         location.pathname.startsWith('/auditoria') ||
         location.pathname.startsWith('/previsao-demanda'))
     ) {
-      navigate('/pesagem')
+      navigate('/')
     }
   }, [state.userRole, location.pathname, navigate])
 
@@ -232,7 +231,7 @@ export default function Layout() {
                           isActive={location.pathname === mod.path}
                           className="rounded-md"
                         >
-                          <Link to={mod.path!}>Acessar Panel</Link>
+                          <Link to={mod.path!}>Acessar Painel</Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     )}
@@ -247,7 +246,11 @@ export default function Layout() {
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <h1 className="font-semibold text-lg text-emerald-900 hidden sm:block">
-                Painel de Gestão Avançado
+                {state.userRole === 1
+                  ? 'Gestão Executiva'
+                  : state.userRole === 2
+                    ? 'Gestão de Produção'
+                    : 'Operação de Campo'}
               </h1>
             </div>
 
@@ -354,6 +357,17 @@ export default function Layout() {
               </div>
             </div>
           </header>
+
+          {!state.isOnline && (
+            <div className="bg-amber-100 border-b border-amber-200 px-4 py-2.5 flex items-center justify-center text-amber-800 text-xs sm:text-sm font-medium z-20 shrink-0 shadow-sm animate-fade-in">
+              <CloudOff className="w-5 h-5 mr-2 shrink-0" />
+              <span className="text-center">
+                <strong>Modo Offline:</strong> Você está visualizando dados em cache. As alterações
+                locais serão sincronizadas quando a conexão for restaurada.
+              </span>
+            </div>
+          )}
+
           <div className="flex-1 overflow-y-auto p-0 sm:p-4 md:p-8 animate-fade-in-up relative">
             <Outlet />
           </div>

@@ -66,11 +66,7 @@ export default function Login() {
           description: `Bem-vindo, ${user.name}`,
         })
 
-        if (user.role === 3) {
-          navigate('/manejo', { replace: true })
-        } else {
-          navigate('/', { replace: true })
-        }
+        navigate('/', { replace: true })
       } else {
         toast({
           title: 'Erro de autenticação',

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { Tractor, Loader2 } from 'lucide-react'
+import { PasswordStrength } from '@/components/auth/PasswordStrength'
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('')
@@ -72,6 +73,7 @@ export default function ResetPassword() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <PasswordStrength password={password} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
