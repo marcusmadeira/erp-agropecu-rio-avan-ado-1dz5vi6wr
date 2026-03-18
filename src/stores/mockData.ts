@@ -1,9 +1,30 @@
 import { AppState, User } from './types'
 
 export const mockUsers: User[] = [
-  { id: 'u1', email: 'admin@agro.com', name: 'Admin CEO', role: 1, phone: '+5511999999991' },
-  { id: 'u2', email: 'gerente@agro.com', name: 'Gerente', role: 2, phone: '+5511999999992' },
-  { id: 'u3', email: 'peao@agro.com', name: 'Operacional', role: 3, phone: '+5511999999993' },
+  {
+    id: 'u1',
+    email: 'admin@agro.com',
+    name: 'Admin CEO',
+    role: 1,
+    phone: '+5511999999991',
+    password: '123',
+  },
+  {
+    id: 'u2',
+    email: 'gerente@agro.com',
+    name: 'Gerente',
+    role: 2,
+    phone: '+5511999999992',
+    password: '123',
+  },
+  {
+    id: 'u3',
+    email: 'peao@agro.com',
+    name: 'Operacional',
+    role: 3,
+    phone: '+5511999999993',
+    password: '123',
+  },
 ]
 
 export const initialData: AppState = {
@@ -14,6 +35,7 @@ export const initialData: AppState = {
   isOnline: true,
   pendingSyncQueue: [],
   lastSync: new Date().toISOString(),
+  users: mockUsers,
   pastos: [
     {
       id: 'p1',

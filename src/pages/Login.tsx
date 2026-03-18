@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { mockUsers } from '@/stores/mockData'
 import { useToast } from '@/hooks/use-toast'
 import { Tractor, Loader2 } from 'lucide-react'
 
@@ -13,7 +12,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const { dispatch } = useAppStore()
+  const { state, dispatch } = useAppStore()
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -24,21 +23,38 @@ export default function Login() {
     // Simulate network delay for better UX
     setTimeout(() => {
       const targetEmail = mockEmail || email
-      let user = mockUsers.find((u) => u.email === targetEmail)
 
+      // Fallback to empty array if state.users is undefined from older local storage
+      const userList = state.users || []
+
+      let user = userList.find((u) => u.email === targetEmail)
+
+      // Admin default override
       if (targetEmail === 'adm' && password === 'adm123') {
-        user = { id: 'admin-1', email: 'adm', name: 'Administrador (Super)', role: 1 }
+        user = {
+          id: 'admin-1',
+          email: 'adm',
+          name: 'Administrador (Super)',
+          role: 1,
+          password: 'adm123',
+        }
       }
 
-      if (
-        user &&
-        (mockEmail || password === '123' || (targetEmail === 'adm' && password === 'adm123'))
-      ) {
+      let isValidPassword = false
+      if (user) {
+        if (targetEmail === 'adm' && password === 'adm123') isValidPassword = true
+        else if (mockEmail)
+          isValidPassword = true // Auto-login buttons
+        else if (user.password && user.password === password) isValidPassword = true
+        else if (!user.password && password === '123') isValidPassword = true // Fallback for old mock data
+      }
+
+      if (user && isValidPassword) {
         dispatch((s) => ({
           ...s,
           isAuthenticated: true,
           currentUser: user,
-          userRole: user.role,
+          userRole: user!.role,
         }))
 
         if ('Notification' in window && Notification.permission === 'default') {
@@ -127,6 +143,16 @@ export default function Login() {
               )}
             </Button>
           </form>
+
+          <div className="mt-4 text-center text-sm">
+            <span className="text-muted-foreground">Não tem uma conta? </span>
+            <Link
+              to="/register"
+              className="font-medium text-emerald-700 hover:text-emerald-900 transition-colors"
+            >
+              Cadastrar-se
+            </Link>
+          </div>
 
           <div className="mt-8 pt-6 border-t border-slate-100">
             <p className="text-xs text-center text-muted-foreground mb-3 font-medium">

@@ -17,7 +17,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY)
       if (saved) {
         const parsed = JSON.parse(saved)
-        return { ...parsed, isOnline: navigator.onLine }
+        // Merge with initialData to ensure new fields like `users` are available
+        return { ...initialData, ...parsed, isOnline: navigator.onLine }
       }
     } catch (e) {
       console.error('Failed to parse local storage state', e)

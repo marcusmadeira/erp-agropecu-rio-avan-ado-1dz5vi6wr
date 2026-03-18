@@ -6,6 +6,7 @@ export interface User {
   name: string
   role: Role
   phone?: string
+  password?: string
 }
 
 export interface Pasto {
@@ -121,6 +122,7 @@ export interface AppState {
   isOnline: boolean
   pendingSyncQueue: SyncAction[]
   lastSync: string | null
+  users: User[]
   pastos: Pasto[]
   lotes: Lote[]
   animais: Animal[]
