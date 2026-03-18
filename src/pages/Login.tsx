@@ -67,9 +67,9 @@ export default function Login() {
         })
 
         if (user.role === 3) {
-          navigate('/manejo')
+          navigate('/manejo', { replace: true })
         } else {
-          navigate('/')
+          navigate('/', { replace: true })
         }
       } else {
         toast({
@@ -160,6 +160,7 @@ export default function Login() {
             </p>
             <div className="grid grid-cols-3 gap-2">
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => handleLogin(undefined, 'admin@agro.com')}
@@ -169,6 +170,7 @@ export default function Login() {
                 CEO
               </Button>
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => handleLogin(undefined, 'gerente@agro.com')}
@@ -178,6 +180,7 @@ export default function Login() {
                 Gerente
               </Button>
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => handleLogin(undefined, 'peao@agro.com')}

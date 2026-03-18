@@ -30,17 +30,51 @@ import Maquinario from './pages/operacoes/Maquinario'
 import Clima from './pages/operacoes/Clima'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const state = useAppStore((s) => s.state)
+  const { state } = useAppStore()
   if (!state.isAuthenticated) return <Navigate to="/login" replace />
+  return <>{children}</>
+}
+
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { state } = useAppStore()
+  if (state.isAuthenticated) return <Navigate to="/" replace />
   return <>{children}</>
 }
 
 const AppRoutes = () => (
   <Routes>
-    <Route path="/login" element={<Login />} />
-    <Route path="/register" element={<Register />} />
-    <Route path="/forgot-password" element={<ForgotPassword />} />
-    <Route path="/reset-password" element={<ResetPassword />} />
+    <Route
+      path="/login"
+      element={
+        <PublicRoute>
+          <Login />
+        </PublicRoute>
+      }
+    />
+    <Route
+      path="/register"
+      element={
+        <PublicRoute>
+          <Register />
+        </PublicRoute>
+      }
+    />
+    <Route
+      path="/forgot-password"
+      element={
+        <PublicRoute>
+          <ForgotPassword />
+        </PublicRoute>
+      }
+    />
+    <Route
+      path="/reset-password"
+      element={
+        <PublicRoute>
+          <ResetPassword />
+        </PublicRoute>
+      }
+    />
     <Route
       element={
         <ProtectedRoute>

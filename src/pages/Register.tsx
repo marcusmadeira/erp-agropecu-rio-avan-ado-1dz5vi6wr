@@ -73,7 +73,7 @@ export default function Register() {
       })
 
       setIsLoading(false)
-      navigate('/login')
+      navigate('/login', { replace: true })
     }, 1000)
   }
 
