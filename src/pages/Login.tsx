@@ -1,62 +1,69 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import useAppStore from '@/stores/useAppStore'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { mockUsers } from '@/stores/mockData'
 import { useToast } from '@/hooks/use-toast'
-import { Tractor } from 'lucide-react'
+import { Tractor, Loader2 } from 'lucide-react'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const { dispatch } = useAppStore()
   const navigate = useNavigate()
   const { toast } = useToast()
 
   const handleLogin = (e?: React.FormEvent, mockEmail?: string) => {
     if (e) e.preventDefault()
+    setIsLoading(true)
 
-    const targetEmail = mockEmail || email
-    let user = mockUsers.find((u) => u.email === targetEmail)
+    // Simulate network delay for better UX
+    setTimeout(() => {
+      const targetEmail = mockEmail || email
+      let user = mockUsers.find((u) => u.email === targetEmail)
 
-    if (targetEmail === 'adm' && password === 'adm123') {
-      user = { id: 'admin-1', email: 'adm', name: 'Administrador (Super)', role: 1 }
-    }
-
-    if (
-      user &&
-      (mockEmail || password === '123' || (targetEmail === 'adm' && password === 'adm123'))
-    ) {
-      dispatch((s) => ({
-        ...s,
-        isAuthenticated: true,
-        currentUser: user,
-        userRole: user.role,
-      }))
-
-      if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission()
+      if (targetEmail === 'adm' && password === 'adm123') {
+        user = { id: 'admin-1', email: 'adm', name: 'Administrador (Super)', role: 1 }
       }
 
-      toast({
-        title: 'Login realizado com sucesso!',
-        description: `Bem-vindo, ${user.name}`,
-      })
+      if (
+        user &&
+        (mockEmail || password === '123' || (targetEmail === 'adm' && password === 'adm123'))
+      ) {
+        dispatch((s) => ({
+          ...s,
+          isAuthenticated: true,
+          currentUser: user,
+          userRole: user.role,
+        }))
 
-      if (user.role === 3) {
-        navigate('/manejo')
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission()
+        }
+
+        toast({
+          title: 'Login realizado com sucesso!',
+          description: `Bem-vindo, ${user.name}`,
+        })
+
+        if (user.role === 3) {
+          navigate('/manejo')
+        } else {
+          navigate('/')
+        }
       } else {
-        navigate('/')
+        toast({
+          title: 'Erro de autenticação',
+          description: 'Usuário ou senha inválidos.',
+          variant: 'destructive',
+        })
       }
-    } else {
-      toast({
-        title: 'Erro de autenticação',
-        description: 'Credenciais inválidas. Por favor, tente novamente.',
-        variant: 'destructive',
-      })
-    }
+      setIsLoading(false)
+    }, 800)
   }
 
   return (
@@ -74,8 +81,9 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Usuário ou E-mail</label>
+              <Label htmlFor="email">Usuário ou E-mail</Label>
               <Input
+                id="email"
                 type="text"
                 placeholder="adm ou usuario@agro.com"
                 value={email}
@@ -84,17 +92,39 @@ export default function Login() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Senha</label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Senha</Label>
+              </div>
               <Input
+                id="password"
                 type="password"
                 placeholder="***"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <div className="text-right">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm font-medium text-emerald-700 hover:text-emerald-900 transition-colors"
+                >
+                  Esqueci minha senha
+                </Link>
+              </div>
             </div>
-            <Button type="submit" className="w-full bg-emerald-800 hover:bg-emerald-900 h-12">
-              Acessar Painel
+            <Button
+              type="submit"
+              className="w-full bg-emerald-800 hover:bg-emerald-900 h-12"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Autenticando...
+                </>
+              ) : (
+                'Acessar Painel'
+              )}
             </Button>
           </form>
 
@@ -108,6 +138,7 @@ export default function Login() {
                 size="sm"
                 onClick={() => handleLogin(undefined, 'admin@agro.com')}
                 className="text-xs"
+                disabled={isLoading}
               >
                 CEO
               </Button>
@@ -116,6 +147,7 @@ export default function Login() {
                 size="sm"
                 onClick={() => handleLogin(undefined, 'gerente@agro.com')}
                 className="text-xs"
+                disabled={isLoading}
               >
                 Gerente
               </Button>
@@ -124,6 +156,7 @@ export default function Login() {
                 size="sm"
                 onClick={() => handleLogin(undefined, 'peao@agro.com')}
                 className="text-xs"
+                disabled={isLoading}
               >
                 Operação
               </Button>
