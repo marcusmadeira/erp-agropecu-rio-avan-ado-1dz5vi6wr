@@ -24,7 +24,7 @@ export function useAlerts() {
       if (m.horimetro >= m.nextRevision) {
         newAlerts.push({
           id: `maq-${m.id}-${m.horimetro}`,
-          title: 'Revisão de Maquinário',
+          title: 'Revisão de Maquinário (Manutenção)',
           description: `${m.name} atingiu a hora de revisão (${m.horimetro}h).`,
           type: 'critical',
           date: new Date().toISOString(),

@@ -21,6 +21,7 @@ import Lotes from './pages/estrutura/Lotes'
 import Animais from './pages/rebanho/Animais'
 import CurralDigital from './pages/rebanho/CurralDigital'
 import Reclassificacao from './pages/rebanho/Reclassificacao'
+import Apartacao from './pages/rebanho/Apartacao'
 import EventosRepro from './pages/reproducao/Eventos'
 import Nascimentos from './pages/reproducao/Nascimentos'
 import Estoque from './pages/suprimentos/Estoque'
@@ -95,6 +96,7 @@ const AppRoutes = () => (
       <Route path="/animais" element={<Animais />} />
       <Route path="/pesagem" element={<CurralDigital />} />
       <Route path="/reclassificacao" element={<Reclassificacao />} />
+      <Route path="/apartacao" element={<Apartacao />} />
       <Route path="/eventos-repro" element={<EventosRepro />} />
       <Route path="/nascimentos" element={<Nascimentos />} />
       <Route path="/estoque" element={<Estoque />} />

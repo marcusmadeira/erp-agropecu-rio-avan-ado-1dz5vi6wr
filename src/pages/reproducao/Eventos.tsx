@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { format, addDays, parseISO } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
@@ -33,7 +34,9 @@ export default function EventosRepro() {
   const { state, dispatch } = useAppStore()
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({ animalId: '', type: 'IATF', touro: '' })
+  const [form, setForm] = useState({ animalId: '', type: 'IATF', touro: '', semenId: 'none' })
+
+  const semenStock = state.estoque.filter((e) => e.category === 'Sêmen' && e.quantity > 0)
 
   const handleSave = () => {
     if (!form.animalId) return
@@ -41,27 +44,68 @@ export default function EventosRepro() {
     const prevToque = addDays(new Date(), 30).toISOString()
     const dpp = addDays(new Date(), 295).toISOString()
 
-    dispatch((s) => ({
-      ...s,
-      reproducoes: [
-        ...s.reproducoes,
-        {
-          id: Math.random().toString(),
-          animalId: form.animalId,
-          type: form.type as any,
-          touro: form.touro,
-          date,
-          previsaoToque: prevToque,
-          dpp,
-          status: 'Aguardando Toque',
-        },
-      ],
-    }))
+    let touroName = form.touro
+    let semenItem = null
+
+    if (form.type === 'IATF' && form.semenId !== 'none') {
+      semenItem = state.estoque.find((e) => e.id === form.semenId)
+      if (semenItem) {
+        touroName = semenItem.name
+      }
+    }
+
+    dispatch((s) => {
+      let updatedEstoque = s.estoque
+      let auditLogs = [...s.auditLogs]
+
+      // Deduct semen if selected
+      if (semenItem) {
+        updatedEstoque = s.estoque.map((e) =>
+          e.id === form.semenId ? { ...e, quantity: e.quantity - 1 } : e,
+        )
+        auditLogs = [
+          {
+            id: Math.random().toString(),
+            date: new Date().toISOString(),
+            userName: s.currentUser?.name || 'Sistema',
+            action: 'Update',
+            table: 'Estoque',
+            recordId: semenItem.name,
+            oldValue: `${semenItem.quantity} Doses`,
+            newValue: `${semenItem.quantity - 1} Doses (IATF)`,
+          },
+          ...auditLogs,
+        ]
+      }
+
+      return {
+        ...s,
+        estoque: updatedEstoque,
+        auditLogs,
+        reproducoes: [
+          ...s.reproducoes,
+          {
+            id: Math.random().toString(),
+            animalId: form.animalId,
+            type: form.type as any,
+            touro: touroName,
+            date,
+            previsaoToque: prevToque,
+            dpp,
+            status: 'Aguardando Toque',
+          },
+        ],
+      }
+    })
+
     setOpen(false)
     toast({
       title: 'Evento Reprodutivo Registrado',
-      description: 'Previsões de Toque e DPP calculadas automaticamente.',
+      description: semenItem
+        ? `Previsões calculadas. 1 dose de ${semenItem.name} debitada do estoque.`
+        : 'Previsões de Toque e DPP calculadas automaticamente.',
     })
+    setForm({ animalId: '', type: 'IATF', touro: '', semenId: 'none' })
   }
 
   const matrizes = state.animais.filter((a) => a.categoria === 'Matriz' && a.status === 'Ativo')
@@ -79,35 +123,71 @@ export default function EventosRepro() {
               <DialogTitle>Novo Evento (IATF / Monta)</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-4">
-              <Select
-                value={form.animalId}
-                onValueChange={(v) => setForm({ ...form, animalId: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a Matriz" />
-                </SelectTrigger>
-                <SelectContent>
-                  {matrizes.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      Brinco: {m.brinco}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Tipo de Evento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="IATF">Inseminação (IATF)</SelectItem>
-                  <SelectItem value="Monta">Monta Natural</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
-                placeholder="Touro Utilizado / Sêmen (Opcional)"
-                value={form.touro}
-                onChange={(e) => setForm({ ...form, touro: e.target.value })}
-              />
+              <div className="space-y-1">
+                <Label>Matriz (Fêmea)</Label>
+                <Select
+                  value={form.animalId}
+                  onValueChange={(v) => setForm({ ...form, animalId: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a Matriz" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {matrizes.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        Brinco: {m.brinco}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Tipo de Evento</Label>
+                <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="IATF">Inseminação (IATF)</SelectItem>
+                    <SelectItem value="Monta">Monta Natural</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {form.type === 'IATF' ? (
+                <div className="space-y-1">
+                  <Label>Sêmen Utilizado (Baixa Automática no Estoque)</Label>
+                  <Select
+                    value={form.semenId}
+                    onValueChange={(v) => setForm({ ...form, semenId: v, touro: '' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Outro / Lançamento Manual</SelectItem>
+                      {semenStock.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name} ({s.quantity} doses disp.)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : null}
+
+              {(form.type === 'Monta' || form.semenId === 'none') && (
+                <div className="space-y-1">
+                  <Label>Touro / Sêmen (Descrição Manual)</Label>
+                  <Input
+                    placeholder="Identificação do Touro/Sêmen"
+                    value={form.touro}
+                    onChange={(e) => setForm({ ...form, touro: e.target.value })}
+                  />
+                </div>
+              )}
+
               <Button onClick={handleSave} className="w-full bg-emerald-800">
                 Salvar Evento
               </Button>
@@ -122,7 +202,7 @@ export default function EventosRepro() {
             <TableHeader>
               <TableRow>
                 <TableHead>Brinco da Matriz</TableHead>
-                <TableHead>Tipo / Touro</TableHead>
+                <TableHead>Tipo / Touro (Sêmen)</TableHead>
                 <TableHead>Data do Evento</TableHead>
                 <TableHead>Previsão Toque (+30d)</TableHead>
                 <TableHead>Status</TableHead>

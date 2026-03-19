@@ -77,6 +77,7 @@ const navItems = [
     items: [
       { name: 'Animais', path: '/animais' },
       { name: 'Curral Digital', path: '/pesagem' },
+      { name: 'Apartação', path: '/apartacao' },
       { name: 'Reclassificação', path: '/reclassificacao' },
     ],
     levels: [1, 2, 3],
@@ -128,7 +129,7 @@ const navItems = [
     ],
     levels: [1],
   },
-  { module: 'Auditoria', icon: ShieldCheck, path: '/auditoria', levels: [1] },
+  { module: 'Auditoria & Config', icon: ShieldCheck, path: '/auditoria', levels: [1] },
 ]
 
 export default function Layout() {
