@@ -205,22 +205,31 @@ export default function Importacao() {
         // Routine 4: Financial Transactions
         if (dataType === '4-Financeiro') {
           rows.forEach((row, i) => {
-            const desc = row['Descricao']
-            const val = Number(row['Valor_Parcela'])
+            const desc = row['Descricao_Lancamento'] || row['Descricao']
+            const val = Number(row['Valor_Total'] || row['Valor_Parcela'])
             if (!desc || isNaN(val)) {
-              errors.push(`Linha ${i + 1}: Descrição ou Valor_Parcela inválidos`)
+              errors.push(`Linha ${i + 1}: Descricao_Lancamento ou Valor_Total inválidos`)
               return
             }
 
             newState.transacoes.push({
               id: Math.random().toString(),
-              description: desc,
-              value: val,
-              type: row['Tipo'] === 'Despesa' ? 'Despesa' : 'Receita',
-              date: row['Data_Competencia'] || new Date().toISOString(),
-              due_date: row['Data_Vencimento'] || new Date().toISOString(),
-              costCenter: row['Centro_Custo'] || 'CC01-PO',
-              status: row['Status_Pagamento'] === 'Pago' ? 'Pago' : 'Pendente',
+              Descricao_Lancamento: desc,
+              Valor_Total: val,
+              Tipo_Movimento: row['Tipo_Movimento'] === 'Despesa' ? 'Despesa' : 'Receita',
+              Data_Competencia: row['Data_Competencia'] || new Date().toISOString(),
+              Data_Vencimento: row['Data_Vencimento'] || new Date().toISOString(),
+              Data_Efetivacao_Real: row['Data_Efetivacao_Real'] || undefined,
+              Centro_Custo_Direcionado: row['Centro_Custo_Direcionado'] || 'CC01-Nelore PO',
+              Status_Pagamento:
+                row['Status_Pagamento'] === 'Efetivado'
+                  ? 'Efetivado'
+                  : row['Status_Pagamento'] === 'Atrasado'
+                    ? 'Atrasado'
+                    : 'Pendente',
+              Macroconta_Inttegra: row['CENTROS DE CUSTO PAI'] || '7. OUTROS CRÉDITOS/DÉBITOS',
+              Categoria_Inttegra: row['CENTROS DE CUSTO'] || 'Outros',
+              Subcategoria_Detalhe: row['Subcategoria_Detalhe'] || '',
             })
             successCount++
           })
@@ -294,8 +303,8 @@ export default function Importacao() {
         break
       case '4':
         headers =
-          'Data_Competencia,Data_Vencimento,Descricao,Tipo,Centro_Custo,Valor_Parcela,Status_Pagamento'
-        filename = 'Template_Financeiro.csv'
+          'Data_Competencia,Data_Vencimento,Data_Efetivacao_Real,Descricao_Lancamento,Tipo_Movimento,Centro_Custo_Direcionado,Valor_Total,Status_Pagamento,CENTROS DE CUSTO PAI,CENTROS DE CUSTO,Subcategoria_Detalhe'
+        filename = 'Template_Financeiro_DRE.csv'
         break
     }
     const blob = new Blob([headers], { type: 'text/csv;charset=utf-8;' })
@@ -430,7 +439,7 @@ export default function Importacao() {
               onClick={() => downloadTemplate('4')}
             >
               <Download className="w-4 h-4 mr-3 text-emerald-600" />
-              Template Financeiro
+              Template Financeiro DRE
             </Button>
           </CardContent>
         </Card>

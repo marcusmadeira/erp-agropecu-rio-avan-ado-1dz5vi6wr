@@ -9,8 +9,8 @@ export default function KpiCards() {
   const { state } = useAppStore()
 
   const caixaRealizado = state.transacoes.reduce((acc, t) => {
-    if (t.status !== 'Pago') return acc
-    return t.type === 'Receita' ? acc + t.value : acc - t.value
+    if (t.Status_Pagamento !== 'Efetivado') return acc
+    return t.Tipo_Movimento === 'Receita' ? acc + t.Valor_Total : acc - t.Valor_Total
   }, 0)
 
   const activeAnimals = state.animais.filter((a) => a.status === 'Ativo').length
@@ -19,9 +19,11 @@ export default function KpiCards() {
   const desembolso = state.transacoes
     .filter(
       (t) =>
-        t.type === 'Despesa' && t.status === 'Pago' && new Date(t.date).getMonth() === currentMonth,
+        t.Tipo_Movimento === 'Despesa' &&
+        t.Status_Pagamento === 'Efetivado' &&
+        new Date(t.Data_Competencia).getMonth() === currentMonth,
     )
-    .reduce((acc, t) => acc + t.value, 0)
+    .reduce((acc, t) => acc + t.Valor_Total, 0)
   const desembolsoPorCabeca = activeAnimals > 0 ? desembolso / activeAnimals : 0
 
   const gmdMedio =

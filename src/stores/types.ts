@@ -77,13 +77,21 @@ export interface Manejo {
 }
 export interface Transacao {
   id: string
-  description: string
-  value: number
-  type: 'Receita' | 'Despesa'
-  date: string
-  costCenter: string
-  status: 'Pago' | 'Pendente'
-  due_date?: string
+  Descricao_Lancamento: string
+  Valor_Total: number
+  Tipo_Movimento: 'Receita' | 'Despesa'
+  Data_Competencia: string
+  Data_Vencimento: string
+  Data_Efetivacao_Real?: string
+  Centro_Custo_Direcionado:
+    | 'CC01-Nelore PO'
+    | 'CC02-Comercial TIP'
+    | 'CC03-Estrutural/Rateio'
+    | string
+  Status_Pagamento: 'Pendente' | 'Atrasado' | 'Efetivado'
+  Macroconta_Inttegra: string
+  Categoria_Inttegra: string
+  Subcategoria_Detalhe?: string
 }
 export interface Maquinario {
   id: string
