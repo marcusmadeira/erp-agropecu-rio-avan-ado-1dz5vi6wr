@@ -39,11 +39,22 @@ export default function DashboardCharts() {
 
   const cashData = Array.from({ length: 4 }).map((_, i) => {
     const m = (currentMonth + i) % 12
-    const txs = state.transacoes.filter((t) => new Date(t.date).getMonth() === m)
+    const txs = state.transacoes.filter((t) => {
+      try {
+        if (!t.Data_Vencimento) return false
+        return new Date(t.Data_Vencimento).getMonth() === m
+      } catch (e) {
+        return false
+      }
+    })
     return {
       name: months[m],
-      receita: txs.filter((t) => t.type === 'Receita').reduce((a, b) => a + b.value, 0),
-      despesa: txs.filter((t) => t.type === 'Despesa').reduce((a, b) => a + b.value, 0),
+      receita: txs
+        .filter((t) => t.Tipo_Movimento === 'Receita')
+        .reduce((a, b) => a + b.Valor_Total, 0),
+      despesa: txs
+        .filter((t) => t.Tipo_Movimento === 'Despesa')
+        .reduce((a, b) => a + b.Valor_Total, 0),
     }
   })
 

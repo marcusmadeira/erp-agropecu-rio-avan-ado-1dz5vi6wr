@@ -24,6 +24,7 @@ import { format, parseISO } from 'date-fns'
 
 type DataType =
   | '1-Cadastro de Animais'
+  | '1.1-Importação ABCZ (PO)'
   | '2-Histórico de Pesagem'
   | '3-Eventos Reprodutivos'
   | '4-Financeiro'
@@ -106,7 +107,57 @@ export default function Importacao() {
         const newState = { ...s }
         let successCount = 0
 
-        if (dataType === '1-Cadastro de Animais') {
+        if (dataType === '1.1-Importação ABCZ (PO)') {
+          rows.forEach((row, i) => {
+            const rgn = row['Série/RGD'] || row['RGD']
+            const brinco = row['Brinco'] || `PO-${rgn}`
+            if (!rgn) {
+              errors.push(`Linha ${i + 1}: Série/RGD vazio`)
+              return
+            }
+            const existing = newState.animais.find((a) => a.rgn === rgn || a.brinco === brinco)
+
+            const category =
+              row['Sexo'] === 'Macho' ? 'Touro' : row['Sexo'] === 'Fêmea' ? 'Matriz' : 'Bezerro'
+            const gender = row['Sexo'] === 'Macho' ? 'M' : 'F'
+            const loteId =
+              newState.lotes.find((l) => l.costCenter === 'CC01-PO')?.id ||
+              newState.lotes[0]?.id ||
+              'l1'
+
+            if (existing) {
+              // Upsert existing PO animal
+              existing.nomeAnimal = row['Nome do Animal'] || existing.nomeAnimal
+              existing.categoria = category
+              existing.rgn = rgn
+              existing.costCenter = 'CC01-PO'
+              existing.gender = gender as any
+              successCount++
+            } else {
+              const pai = newState.animais.find((a) => a.brinco === row['Pai'])?.id
+              const mae = newState.animais.find((a) => a.brinco === row['Mãe'])?.id
+
+              newState.animais.push({
+                id: Math.random().toString(),
+                brinco: brinco,
+                rgn: rgn,
+                nomeAnimal: row['Nome do Animal'] || '',
+                loteId: loteId,
+                categoria: category,
+                pesoAtual: Number(row['Peso']) || 0,
+                pesoEntrada: Number(row['Peso']) || 0,
+                gmd: 0,
+                status: 'Ativo',
+                birthDate: new Date().toISOString(),
+                costCenter: 'CC01-PO',
+                gender: gender as any,
+                pai: pai,
+                mae: mae,
+              })
+              successCount++
+            }
+          })
+        } else if (dataType === '1-Cadastro de Animais') {
           rows.forEach((row, i) => {
             const brinco = row['Brinco']
             if (!brinco) {
@@ -124,12 +175,14 @@ export default function Importacao() {
               animal.loteId = loteId
               animal.pesoAtual = Number(row['Peso_Atual']) || animal.pesoAtual
               animal.categoria = row['Categoria'] || animal.categoria
+              animal.nomeAnimal = row['Nome_Animal'] || animal.nomeAnimal
               successCount++
             } else {
               const newAnimal = {
                 id: Math.random().toString(),
                 brinco: brinco,
                 rgn: row['RGD'] || '',
+                nomeAnimal: row['Nome_Animal'] || '',
                 loteId: loteId,
                 categoria: row['Categoria'] || 'Bezerro',
                 pesoAtual: Number(row['Peso_Atual']) || 0,
@@ -293,7 +346,7 @@ export default function Importacao() {
               table: 'Múltiplas (Importação)',
               recordId: 'ETL-CSV',
               oldValue: '-',
-              newValue: `Importação em massa realizada via CSV. Total de linhas: ${successCount}`,
+              newValue: `Importação em massa realizada via CSV. Total: ${successCount}`,
             },
             ...newState.auditLogs,
           ]
@@ -321,8 +374,12 @@ export default function Importacao() {
     let filename = ''
     switch (type) {
       case '1':
-        headers = 'Brinco,RGD,Categoria,Sexo,Peso_Atual,Lote_Atual'
+        headers = 'Brinco,RGD,Nome_Animal,Categoria,Sexo,Peso_Atual,Lote_Atual'
         filename = 'Template_Animais.csv'
+        break
+      case '1.1':
+        headers = 'Série/RGD,Nome do Animal,Sexo,Pai,Mãe,Peso,Brinco'
+        filename = 'Template_ABCZ.csv'
         break
       case '2':
         headers = 'Brinco_Animal,Data_Pesagem,Peso_Registrado'
@@ -360,7 +417,7 @@ export default function Importacao() {
             Central de Importação (ETL)
           </h2>
           <p className="text-sm text-muted-foreground">
-            Migração em massa de dados via planilhas CSV. Mapeamento Inttegra embutido.
+            Migração em massa de dados com lógica Upsert e integração ABCZ.
           </p>
         </div>
       </div>
@@ -379,7 +436,10 @@ export default function Importacao() {
                   <SelectValue placeholder="Selecione o módulo de destino..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1-Cadastro de Animais">1-Cadastro de Animais</SelectItem>
+                  <SelectItem value="1-Cadastro de Animais">
+                    1-Cadastro de Animais (Geral)
+                  </SelectItem>
+                  <SelectItem value="1.1-Importação ABCZ (PO)">1.1-Importação ABCZ (PO)</SelectItem>
                   <SelectItem value="2-Histórico de Pesagem">2-Histórico de Pesagem</SelectItem>
                   <SelectItem value="3-Eventos Reprodutivos">3-Eventos Reprodutivos</SelectItem>
                   <SelectItem value="4-Financeiro">4-Financeiro</SelectItem>
@@ -443,10 +503,18 @@ export default function Importacao() {
           <CardHeader>
             <CardTitle>Modelos de Planilha</CardTitle>
             <CardDescription>
-              Faça o download dos templates vazios padronizados para garantir sucesso.
+              Faça o download dos templates padronizados para garantir sucesso.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
+            <Button
+              variant="outline"
+              className="w-full justify-start text-slate-700"
+              onClick={() => downloadTemplate('1.1')}
+            >
+              <Download className="w-4 h-4 mr-3 text-emerald-600" />
+              Template ABCZ (Nelore PO)
+            </Button>
             <Button
               variant="outline"
               className="w-full justify-start text-slate-700"
@@ -466,26 +534,10 @@ export default function Importacao() {
             <Button
               variant="outline"
               className="w-full justify-start text-slate-700"
-              onClick={() => downloadTemplate('3')}
-            >
-              <Download className="w-4 h-4 mr-3 text-emerald-600" />
-              Template Eventos Reprodutivos
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-slate-700"
               onClick={() => downloadTemplate('4')}
             >
               <Download className="w-4 h-4 mr-3 text-emerald-600" />
               Template Financeiro DRE
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-slate-700"
-              onClick={() => downloadTemplate('5')}
-            >
-              <Download className="w-4 h-4 mr-3 text-emerald-600" />
-              Template Parceiros de Negócios
             </Button>
           </CardContent>
         </Card>
@@ -493,7 +545,7 @@ export default function Importacao() {
 
       <Card className="shadow-subtle mt-6">
         <CardHeader>
-          <CardTitle>Log de Importações (Tabela 16)</CardTitle>
+          <CardTitle>Log de Importações</CardTitle>
           <CardDescription>Histórico de operações em massa realizadas no sistema.</CardDescription>
         </CardHeader>
         <CardContent className="p-0 overflow-auto">

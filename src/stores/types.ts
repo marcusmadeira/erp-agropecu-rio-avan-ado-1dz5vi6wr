@@ -30,6 +30,7 @@ export interface Animal {
   id: string
   brinco: string
   rgn?: string
+  nomeAnimal?: string
   loteId: string
   categoria: string
   pesoEntrada?: number

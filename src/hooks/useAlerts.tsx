@@ -29,11 +29,12 @@ export function useAlerts() {
           type: 'critical',
           date: new Date().toISOString(),
           link: '/maquinario',
+          smsTriggered: true,
         })
       }
     })
 
-    // Repro Alerts
+    // Repro Alerts (Alerta Maternidade Vermelho)
     state.reproducoes.forEach((r) => {
       if (r.status === 'Prenhe') {
         const animal = state.animais.find((a) => a.id === r.animalId)
@@ -43,27 +44,39 @@ export function useAlerts() {
         if (diffDays <= 15) {
           newAlerts.push({
             id: `repro-red-${r.id}-${diffDays}`,
-            title: 'Alerta Maternidade',
+            title: 'Alerta Maternidade (🔴)',
             description: `Matriz ${brinco} a ${Math.max(0, diffDays)} dias do parto. Mover p/ Maternidade.`,
             type: 'critical',
             date: new Date().toISOString(),
             link: '/nascimentos',
-            smsTriggered: true,
+            smsTriggered: true, // Trigger to Vaqueiro/Gerente
           })
         }
       }
     })
 
-    // Finance Alerts
+    // Finance Alerts (CEO Notification)
     state.transacoes.forEach((t) => {
-      if (t.status === 'Pendente' && t.due_date) {
-        const isOverdue = new Date(t.due_date).getTime() < new Date().getTime()
-        if (isOverdue) {
+      if (t.Status_Pagamento === 'Pendente' && t.Data_Vencimento) {
+        const diffTime = new Date(t.Data_Vencimento).getTime() - new Date().getTime()
+        const diffDays = Math.ceil(diffTime / 86400000)
+
+        if (diffTime < 0) {
           newAlerts.push({
             id: `fin-overdue-${t.id}`,
             title: 'Transação Atrasada',
-            description: `Pagamento pendente: ${t.description} (${t.costCenter})`,
+            description: `Pagamento pendente: ${t.Descricao_Lancamento} (${t.Centro_Custo_Direcionado})`,
             type: 'critical',
+            date: new Date().toISOString(),
+            link: '/transacoes',
+          })
+        } else if (diffDays <= 1 && t.Valor_Total > 5000) {
+          // Trigger to CEO when Bill > 5000 is due next day
+          newAlerts.push({
+            id: `fin-due-tomorrow-${t.id}`,
+            title: 'Alerta CEO: Conta de Alto Valor',
+            description: `Atenção: ${t.Descricao_Lancamento} no valor de R$ ${t.Valor_Total.toFixed(2)} vence amanhã.`,
+            type: 'warning',
             date: new Date().toISOString(),
             link: '/transacoes',
             smsTriggered: true,
@@ -85,8 +98,8 @@ export function useAlerts() {
           }
           if (a.smsTriggered) {
             toast({
-              title: '📱 Alerta SMS/WhatsApp Enviado',
-              description: `Aviso enviado para a equipe: ${a.title}`,
+              title: '📱 Webhook WhatsApp Enviado',
+              description: `Notificação enviada: ${a.title}`,
               className: 'border-l-4 border-l-rose-500',
             })
           }

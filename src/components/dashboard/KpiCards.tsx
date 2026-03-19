@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { DollarSign, Activity, Users, Box } from 'lucide-react'
+import { DollarSign, Activity, Users } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
 
 export const formatCurrency = (val: number) =>
@@ -17,13 +17,20 @@ export default function KpiCards() {
 
   const currentMonth = new Date().getMonth()
   const desembolso = state.transacoes
-    .filter(
-      (t) =>
-        t.Tipo_Movimento === 'Despesa' &&
-        t.Status_Pagamento === 'Efetivado' &&
-        new Date(t.Data_Competencia).getMonth() === currentMonth,
-    )
+    .filter((t) => {
+      try {
+        if (!t.Data_Competencia) return false
+        return (
+          t.Tipo_Movimento === 'Despesa' &&
+          t.Status_Pagamento === 'Efetivado' &&
+          new Date(t.Data_Competencia).getMonth() === currentMonth
+        )
+      } catch (e) {
+        return false
+      }
+    })
     .reduce((acc, t) => acc + t.Valor_Total, 0)
+
   const desembolsoPorCabeca = activeAnimals > 0 ? desembolso / activeAnimals : 0
 
   const gmdMedio =

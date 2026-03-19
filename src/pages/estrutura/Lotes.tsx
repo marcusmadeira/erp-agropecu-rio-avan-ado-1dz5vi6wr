@@ -87,7 +87,7 @@ export default function Lotes() {
       </div>
 
       <Card className="shadow-subtle">
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -123,7 +123,7 @@ export default function Lotes() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => exportLotePDF(l, state.animais, state.pastos)}
+                        onClick={() => exportLotePDF(l, state)}
                         title="Exportar Relatório PDF"
                       >
                         <FileText className="w-4 h-4 mr-2 text-emerald-700" /> Relatório

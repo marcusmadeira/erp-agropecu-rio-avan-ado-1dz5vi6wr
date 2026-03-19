@@ -35,8 +35,8 @@ export default function Transacoes() {
   const filtered = state.transacoes
     .filter((t) => (filterCC === 'ALL' ? true : t.Centro_Custo_Direcionado === filterCC))
     .sort((a, b) => {
-      const dateA = a.Data_Competencia ? new Date(a.Data_Competencia).getTime() : 0
-      const dateB = b.Data_Competencia ? new Date(b.Data_Competencia).getTime() : 0
+      const dateA = a.Data_Vencimento ? new Date(a.Data_Vencimento).getTime() : 0
+      const dateB = b.Data_Vencimento ? new Date(b.Data_Vencimento).getTime() : 0
       return dateB - dateA
     })
 
@@ -111,11 +111,11 @@ export default function Transacoes() {
       </div>
 
       <Card className="shadow-subtle">
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Competência</TableHead>
+                <TableHead>Vencimento</TableHead>
                 <TableHead>Descrição / Parceiro</TableHead>
                 <TableHead>DRE (Conta/Cat)</TableHead>
                 <TableHead>C.Custo</TableHead>
@@ -133,7 +133,7 @@ export default function Transacoes() {
                 return (
                   <TableRow key={t.id}>
                     <TableCell className="font-mono text-xs">
-                      {safeFormatDate(t.Data_Competencia)}
+                      {safeFormatDate(t.Data_Vencimento)}
                     </TableCell>
                     <TableCell className="font-medium">
                       {t.Descricao_Lancamento}

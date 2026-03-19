@@ -13,39 +13,33 @@ import useAppStore from '@/stores/useAppStore'
 export default function MaternidadeAlerts() {
   const { state } = useAppStore()
 
-  // Include recent births visually
+  // Include recent births visually and sort by alert status
   const events = state.reproducoes
     .filter((r) => r.status === 'Prenhe' || r.status === 'Parida')
     .sort((a, b) => new Date(a.dpp).getTime() - new Date(b.dpp).getTime())
-    .slice(0, 6)
+    .slice(0, 8)
 
   const getAlertStatus = (dpp: string, status: string) => {
-    if (status === 'Parida')
-      return (
-        <span
-          className="w-3 h-3 rounded-full bg-white border border-slate-400 block"
-          title="Parto Realizado (Branco)"
-        />
-      )
+    if (status === 'Parida') return <span title="Parto Realizado">⚪</span>
 
     const days = differenceInDays(parseISO(dpp), new Date())
     if (days <= 15)
       return (
-        <span
-          className="w-3 h-3 rounded-full bg-red-500 animate-pulse block"
-          title="Alerta Vermelho: <= 15 dias"
-        />
+        <span className="animate-pulse block text-lg" title="Alerta Vermelho: <= 15 dias">
+          🔴
+        </span>
       )
     if (days <= 30)
       return (
-        <span
-          className="w-3 h-3 rounded-full bg-amber-500 block"
-          title="Alerta Amarelo: <= 30 dias"
-        />
+        <span className="block text-lg" title="Alerta Amarelo: 16-30 dias">
+          🟡
+        </span>
       )
 
     return (
-      <span className="w-3 h-3 rounded-full bg-emerald-500 block" title="Alerta Verde: > 30 dias" />
+      <span className="block text-lg" title="Alerta Verde: > 30 dias">
+        🟢
+      </span>
     )
   }
 
@@ -53,14 +47,14 @@ export default function MaternidadeAlerts() {
     <Card className="shadow-subtle mt-4 border-l-4 border-l-amber-500">
       <CardHeader>
         <CardTitle className="text-emerald-900 flex items-center gap-2">
-          Alertas de Maternidade (Próximos Partos)
+          Painel de Maternidade
         </CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]"></TableHead>
+              <TableHead className="w-[60px]">Status</TableHead>
               <TableHead>Matriz (Brinco)</TableHead>
               <TableHead>DPP</TableHead>
               <TableHead>Dias Restantes</TableHead>
@@ -79,7 +73,7 @@ export default function MaternidadeAlerts() {
               const days = differenceInDays(parseISO(r.dpp), new Date())
               return (
                 <TableRow key={r.id}>
-                  <TableCell>{getAlertStatus(r.dpp, r.status)}</TableCell>
+                  <TableCell className="text-center">{getAlertStatus(r.dpp, r.status)}</TableCell>
                   <TableCell className="font-medium">{animal?.brinco || 'Desconhecido'}</TableCell>
                   <TableCell>{format(parseISO(r.dpp), 'dd/MM/yyyy')}</TableCell>
                   <TableCell className="font-mono">

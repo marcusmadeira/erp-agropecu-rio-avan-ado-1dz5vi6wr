@@ -20,6 +20,14 @@ import useAppStore from '@/stores/useAppStore'
 import { Plus } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 
+const safeDate = () => {
+  try {
+    return new Date().toISOString().split('T')[0]
+  } catch (e) {
+    return ''
+  }
+}
+
 export function TransactionForm() {
   const { state, dispatch } = useAppStore()
   const [open, setOpen] = useState(false)
@@ -27,8 +35,8 @@ export function TransactionForm() {
     Descricao_Lancamento: '',
     Valor_Total: '',
     Tipo_Movimento: 'Despesa',
-    Data_Competencia: new Date().toISOString().split('T')[0],
-    Data_Vencimento: new Date().toISOString().split('T')[0],
+    Data_Competencia: safeDate(),
+    Data_Vencimento: safeDate(),
     Centro_Custo_Direcionado: 'CC01-Nelore PO',
     Status_Pagamento: 'Pendente',
     Macroconta_Inttegra: '',
@@ -50,7 +58,13 @@ export function TransactionForm() {
     const newTxs: any[] = []
 
     for (let i = 0; i < pCount; i++) {
-      const d = new Date(form.Data_Vencimento)
+      let d = new Date()
+      try {
+        if (form.Data_Vencimento) {
+          d = new Date(form.Data_Vencimento)
+        }
+      } catch (e) {}
+
       d.setMonth(d.getMonth() + i)
       newTxs.push({
         ...form,
@@ -60,7 +74,9 @@ export function TransactionForm() {
           pCount > 1
             ? `${form.Descricao_Lancamento} (Parc ${i + 1}/${pCount})`
             : form.Descricao_Lancamento,
-        Data_Competencia: new Date(form.Data_Competencia).toISOString(),
+        Data_Competencia: form.Data_Competencia
+          ? new Date(form.Data_Competencia).toISOString()
+          : new Date().toISOString(),
         Data_Vencimento: d.toISOString(),
         Data_Efetivacao_Real:
           i === 0 && form.Status_Pagamento === 'Efetivado' ? new Date().toISOString() : undefined,
@@ -91,12 +107,14 @@ export function TransactionForm() {
     setOpen(false)
   }
 
-  // Filter Business Partners based on transaction type (Acceptance Criteria 2)
+  // Filter Business Partners based on transaction type
   const parceirosDisponiveis = state.parceiros.filter((p) => {
     if (p.Status !== 'Ativo') return false
     if (form.Tipo_Movimento === 'Despesa') {
       return (
-        p.Categoria_Parceiro.includes('Fornecedor') || p.Categoria_Parceiro.includes('Funcionário')
+        p.Categoria_Parceiro.includes('Fornecedor') ||
+        p.Categoria_Parceiro.includes('Funcionário') ||
+        p.Categoria_Parceiro.includes('Transportadora')
       )
     } else {
       return p.Categoria_Parceiro.includes('Cliente')
@@ -115,7 +133,7 @@ export function TransactionForm() {
         <DialogHeader>
           <DialogTitle>Lançamento Financeiro DRE</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3 mt-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Tipo</Label>
@@ -186,6 +204,7 @@ export function TransactionForm() {
                   <SelectItem value="3">3x Mensais</SelectItem>
                   <SelectItem value="6">6x Mensais</SelectItem>
                   <SelectItem value="12">12x Mensais</SelectItem>
+                  <SelectItem value="30">30x Mensais</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -232,7 +251,7 @@ export function TransactionForm() {
               </Select>
             </div>
             <div>
-              <Label>Status Atual</Label>
+              <Label>Status Inicial</Label>
               <Select
                 value={form.Status_Pagamento}
                 onValueChange={(v) => setForm({ ...form, Status_Pagamento: v })}

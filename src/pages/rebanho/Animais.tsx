@@ -40,6 +40,7 @@ export default function Animais() {
   const [form, setForm] = useState({
     brinco: '',
     rgn: '',
+    nomeAnimal: '',
     loteId: '',
     categoria: 'Matriz',
     pesoAtual: '',
@@ -50,7 +51,10 @@ export default function Animais() {
   })
 
   const filtered = state.animais.filter(
-    (a) => a.brinco.includes(search) || (a.rgn && a.rgn.includes(search)),
+    (a) =>
+      a.brinco.includes(search) ||
+      (a.rgn && a.rgn.includes(search)) ||
+      (a.nomeAnimal && a.nomeAnimal.toLowerCase().includes(search.toLowerCase())),
   )
 
   const matrizes = state.animais.filter((a) => a.gender === 'F' && a.status === 'Ativo')
@@ -105,7 +109,7 @@ export default function Animais() {
           <Search className="w-4 h-4 absolute left-3 text-muted-foreground" />
           <Input
             className="pl-9 w-full sm:w-64"
-            placeholder="Buscar Brinco / RGN..."
+            placeholder="Buscar Brinco / RGN / Nome..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -115,7 +119,7 @@ export default function Animais() {
                 <Plus className="w-4 h-4 mr-2" /> Novo Animal
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Registrar Animal</DialogTitle>
               </DialogHeader>
@@ -136,6 +140,13 @@ export default function Animais() {
                       onChange={(e) => setForm({ ...form, rgn: e.target.value })}
                     />
                   </div>
+                </div>
+                <div>
+                  <Label>Nome do Animal (Opcional)</Label>
+                  <Input
+                    value={form.nomeAnimal}
+                    onChange={(e) => setForm({ ...form, nomeAnimal: e.target.value })}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -266,7 +277,7 @@ export default function Animais() {
             <TableHeader>
               <TableRow>
                 <TableHead>Brinco</TableHead>
-                <TableHead>RGN</TableHead>
+                <TableHead>Nome / RGN</TableHead>
                 <TableHead>Lote</TableHead>
                 <TableHead>Categoria</TableHead>
                 <TableHead>Genealogia (P/M)</TableHead>
@@ -282,7 +293,10 @@ export default function Animais() {
                 return (
                   <TableRow key={a.id}>
                     <TableCell className="font-bold">{a.brinco}</TableCell>
-                    <TableCell>{a.rgn || '-'}</TableCell>
+                    <TableCell>
+                      <div className="font-medium text-slate-800">{a.nomeAnimal || '-'}</div>
+                      <div className="text-[10px] text-muted-foreground">{a.rgn || 'S/ RGN'}</div>
+                    </TableCell>
                     <TableCell>
                       {state.lotes.find((l) => l.id === a.loteId)?.name || '-'}
                       <div className="mt-1">
@@ -311,9 +325,7 @@ export default function Animais() {
                         variant="ghost"
                         size="sm"
                         title="Exportar Ficha (PDF)"
-                        onClick={() =>
-                          exportAnimalPDF(a, state.lotes, state.pesagens, state.animais)
-                        }
+                        onClick={() => exportAnimalPDF(a, state)}
                       >
                         <FileText className="w-4 h-4 text-emerald-700" />
                       </Button>

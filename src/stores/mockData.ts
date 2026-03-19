@@ -70,6 +70,7 @@ export const initialData: AppState = {
       id: 'a1',
       brinco: '001',
       rgn: 'NEL123',
+      nomeAnimal: 'Matriz Alfa PO',
       loteId: 'l1',
       categoria: 'Matriz',
       pesoEntrada: 400,
@@ -83,6 +84,7 @@ export const initialData: AppState = {
     {
       id: 'a3',
       brinco: '101',
+      nomeAnimal: 'Garrote Beta',
       loteId: 'l2',
       categoria: 'Garrote',
       pesoEntrada: 250,

@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { format, parseISO } from 'date-fns'
+import { format, parseISO, isValid } from 'date-fns'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 
@@ -20,22 +20,42 @@ export default function ManagerDashboard() {
   const { state } = useAppStore()
 
   const currentMonth = new Date().getMonth()
-  const txsMes = state.transacoes.filter((t) => new Date(t.date).getMonth() === currentMonth)
+
+  const txsMes = state.transacoes.filter((t) => {
+    try {
+      if (!t.Data_Competencia) return false
+      return new Date(t.Data_Competencia).getMonth() === currentMonth
+    } catch (e) {
+      return false
+    }
+  })
 
   const receitasMes = txsMes
-    .filter((t) => t.type === 'Receita' && t.status === 'Pago')
-    .reduce((a, b) => a + b.value, 0)
+    .filter((t) => t.Tipo_Movimento === 'Receita' && t.Status_Pagamento === 'Efetivado')
+    .reduce((a, b) => a + b.Valor_Total, 0)
   const despesasMes = txsMes
-    .filter((t) => t.type === 'Despesa' && t.status === 'Pago')
-    .reduce((a, b) => a + b.value, 0)
+    .filter((t) => t.Tipo_Movimento === 'Despesa' && t.Status_Pagamento === 'Efetivado')
+    .reduce((a, b) => a + b.Valor_Total, 0)
   const saldoMes = receitasMes - despesasMes
 
   const pendentes = state.transacoes
-    .filter((t) => t.status === 'Pendente')
-    .sort(
-      (a, b) => new Date(a.due_date || a.date).getTime() - new Date(b.due_date || b.date).getTime(),
-    )
+    .filter((t) => t.Status_Pagamento === 'Pendente')
+    .sort((a, b) => {
+      const dateA = a.Data_Vencimento ? new Date(a.Data_Vencimento).getTime() : 0
+      const dateB = b.Data_Vencimento ? new Date(b.Data_Vencimento).getTime() : 0
+      return dateA - dateB
+    })
     .slice(0, 5)
+
+  const safeFormatDate = (dateString?: string) => {
+    if (!dateString) return '-'
+    try {
+      const date = parseISO(dateString)
+      return isValid(date) ? format(date, 'dd/MM/yyyy') : '-'
+    } catch {
+      return '-'
+    }
+  }
 
   return (
     <div className="space-y-4 pb-10 animate-fade-in">
@@ -121,30 +141,34 @@ export default function ManagerDashboard() {
                 </TableRow>
               )}
               {pendentes.map((t) => {
-                const isOverdue = new Date(t.due_date || t.date).getTime() < new Date().getTime()
+                let isOverdue = false
+                try {
+                  isOverdue = new Date(t.Data_Vencimento).getTime() < new Date().getTime()
+                } catch (e) {}
+
                 return (
                   <TableRow key={t.id}>
                     <TableCell className="font-mono text-xs">
-                      {format(parseISO(t.due_date || t.date), 'dd/MM/yyyy')}
+                      {safeFormatDate(t.Data_Vencimento)}
                       {isOverdue && (
                         <Badge variant="destructive" className="ml-2 px-1 text-[10px]">
                           Atrasado
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="font-medium">{t.description}</TableCell>
+                    <TableCell className="font-medium">{t.Descricao_Lancamento}</TableCell>
                     <TableCell>
                       <span
-                        className={`font-semibold text-[10px] uppercase px-2 py-1 rounded ${t.type === 'Receita' ? 'text-emerald-700 bg-emerald-50' : 'text-rose-700 bg-rose-50'}`}
+                        className={`font-semibold text-[10px] uppercase px-2 py-1 rounded ${t.Tipo_Movimento === 'Receita' ? 'text-emerald-700 bg-emerald-50' : 'text-rose-700 bg-rose-50'}`}
                       >
-                        {t.type}
+                        {t.Tipo_Movimento}
                       </span>
                     </TableCell>
                     <TableCell
-                      className={`text-right font-mono font-bold ${t.type === 'Receita' ? 'text-emerald-700' : 'text-rose-700'}`}
+                      className={`text-right font-mono font-bold ${t.Tipo_Movimento === 'Receita' ? 'text-emerald-700' : 'text-rose-700'}`}
                     >
-                      {t.type === 'Receita' ? '+' : '-'}
-                      {formatCurrency(t.value)}
+                      {t.Tipo_Movimento === 'Receita' ? '+' : '-'}
+                      {formatCurrency(t.Valor_Total)}
                     </TableCell>
                   </TableRow>
                 )

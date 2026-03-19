@@ -60,7 +60,7 @@ export default function Nascimentos() {
       gmd: 0,
       mae: matriz.id,
       pai: selectedRepro.touro,
-      status: 'Lactente', // Status para visualização na Desmama
+      status: 'Lactente',
       birthDate: now,
       costCenter: matriz.costCenter,
       gender: formNasc.sexo as any,
@@ -97,7 +97,8 @@ export default function Nascimentos() {
               rgn: formDesmama.rgn,
               loteId: formDesmama.loteId,
               categoria: selectedBezerro.gender === 'M' ? 'Garrote' : 'Novilha',
-              status: 'Ativo',
+              status: 'Desmamado',
+              // Mae property already exists from creation (Lactente state)
             }
           : a,
       ),
@@ -117,7 +118,10 @@ export default function Nascimentos() {
     }))
 
     setOpenDesmama(false)
-    toast({ title: 'Desmama Realizada', description: 'Animal efetivado no rebanho principal.' })
+    toast({
+      title: 'Desmama Realizada',
+      description: 'Animal efetivado no rebanho principal com genealogia.',
+    })
     setFormDesmama({ brinco: '', rgn: '', loteId: '' })
   }
 
@@ -215,7 +219,7 @@ export default function Nascimentos() {
                               setOpenDesmama(true)
                             }}
                           >
-                            Processar Desmama
+                            Realizar Desmama
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -291,17 +295,18 @@ export default function Nascimentos() {
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <p className="text-sm text-muted-foreground">
-              Insira o brinco definitivo e defina o lote para efetivar o animal no rebanho.
+              Insira o brinco definitivo e defina o lote para efetivar o animal no rebanho. A
+              genealogia (Matriz Mãe) será associada automaticamente.
             </p>
             <div>
-              <Label>Brinco Definitivo</Label>
+              <Label>Brinco Definitivo (ID Manejo)</Label>
               <Input
                 value={formDesmama.brinco}
                 onChange={(e) => setFormDesmama({ ...formDesmama, brinco: e.target.value })}
               />
             </div>
             <div>
-              <Label>RGN (Opcional)</Label>
+              <Label>RGN ABCZ (Opcional)</Label>
               <Input
                 value={formDesmama.rgn}
                 onChange={(e) => setFormDesmama({ ...formDesmama, rgn: e.target.value })}
