@@ -101,9 +101,10 @@ const navItems = [
     levels: [1, 2, 3],
   },
   {
-    module: 'Financeiro',
+    module: 'Financeiro / Cadastros',
     icon: DollarSign,
     items: [
+      { name: 'Parceiros de Negócios', path: '/parceiros' },
       { name: 'Transações', path: '/transacoes' },
       { name: 'Eventos Comerciais', path: '/eventos-comerciais' },
     ],
@@ -149,6 +150,7 @@ export default function Layout() {
     if (
       state.userRole === 3 &&
       (location.pathname.startsWith('/transacoes') ||
+        location.pathname.startsWith('/parceiros') ||
         location.pathname.startsWith('/auditoria') ||
         location.pathname.startsWith('/inttegra') ||
         location.pathname.startsWith('/importacao') ||

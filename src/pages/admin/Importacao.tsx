@@ -27,6 +27,7 @@ type DataType =
   | '2-Histórico de Pesagem'
   | '3-Eventos Reprodutivos'
   | '4-Financeiro'
+  | '5-Parceiros de Negócios'
 
 export default function Importacao() {
   const { state, dispatch } = useAppStore()
@@ -105,7 +106,6 @@ export default function Importacao() {
         const newState = { ...s }
         let successCount = 0
 
-        // Routine 1: Animal Inventory
         if (dataType === '1-Cadastro de Animais') {
           rows.forEach((row, i) => {
             const brinco = row['Brinco']
@@ -146,7 +146,6 @@ export default function Importacao() {
           })
         }
 
-        // Routine 2: Weighing History
         if (dataType === '2-Histórico de Pesagem') {
           rows.forEach((row, i) => {
             const brinco = row['Brinco_Animal']
@@ -175,7 +174,6 @@ export default function Importacao() {
           })
         }
 
-        // Routine 3: Reproductive Events
         if (dataType === '3-Eventos Reprodutivos') {
           rows.forEach((row, i) => {
             const brinco = row['Brinco_Matriz']
@@ -202,7 +200,6 @@ export default function Importacao() {
           })
         }
 
-        // Routine 4: Financial Transactions
         if (dataType === '4-Financeiro') {
           rows.forEach((row, i) => {
             const desc = row['Descricao_Lancamento'] || row['Descricao']
@@ -232,6 +229,40 @@ export default function Importacao() {
               Subcategoria_Detalhe: row['Subcategoria_Detalhe'] || '',
             })
             successCount++
+          })
+        }
+
+        if (dataType === '5-Parceiros de Negócios') {
+          rows.forEach((row, i) => {
+            const doc = row['Nº DOCUMENTO']
+            if (!doc) {
+              errors.push(`Linha ${i + 1}: Nº DOCUMENTO obrigatório`)
+              return
+            }
+            const existing = newState.parceiros.find((p) => p.Numero_Documento === doc)
+            const categorias = row['TIPO']
+              ? row['TIPO'].split(';').map((c: string) => c.trim())
+              : []
+
+            if (existing) {
+              existing.Nome_Razao_Social = row['NOME'] || existing.Nome_Razao_Social
+              existing.Categoria_Parceiro =
+                categorias.length > 0 ? categorias : existing.Categoria_Parceiro
+              existing.Status = row['SITUAÇÃO'] === 'Inativo' ? 'Inativo' : 'Ativo'
+              existing.ID_Inttegra = row['AÇÕES'] || existing.ID_Inttegra
+              successCount++
+            } else {
+              newState.parceiros.push({
+                id: Math.random().toString(),
+                Nome_Razao_Social: row['NOME'] || 'Desconhecido',
+                Tipo_Documento: row['TIPO DE DOC'] === 'CNPJ' ? 'CNPJ' : 'CPF',
+                Numero_Documento: doc,
+                Categoria_Parceiro: categorias.length > 0 ? categorias : ['Fornecedor'],
+                Status: row['SITUAÇÃO'] === 'Inativo' ? 'Inativo' : 'Ativo',
+                ID_Inttegra: row['AÇÕES'] || '',
+              })
+              successCount++
+            }
           })
         }
 
@@ -306,6 +337,10 @@ export default function Importacao() {
           'Data_Competencia,Data_Vencimento,Data_Efetivacao_Real,Descricao_Lancamento,Tipo_Movimento,Centro_Custo_Direcionado,Valor_Total,Status_Pagamento,CENTROS DE CUSTO PAI,CENTROS DE CUSTO,Subcategoria_Detalhe'
         filename = 'Template_Financeiro_DRE.csv'
         break
+      case '5':
+        headers = 'NOME,TIPO DE DOC,Nº DOCUMENTO,TIPO,SITUAÇÃO,AÇÕES'
+        filename = 'Template_Parceiros.csv'
+        break
     }
     const blob = new Blob([headers], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -348,6 +383,9 @@ export default function Importacao() {
                   <SelectItem value="2-Histórico de Pesagem">2-Histórico de Pesagem</SelectItem>
                   <SelectItem value="3-Eventos Reprodutivos">3-Eventos Reprodutivos</SelectItem>
                   <SelectItem value="4-Financeiro">4-Financeiro</SelectItem>
+                  <SelectItem value="5-Parceiros de Negócios">
+                    5-Parceiros de Negócios (Fornecedores/Clientes)
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -441,11 +479,19 @@ export default function Importacao() {
               <Download className="w-4 h-4 mr-3 text-emerald-600" />
               Template Financeiro DRE
             </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-slate-700"
+              onClick={() => downloadTemplate('5')}
+            >
+              <Download className="w-4 h-4 mr-3 text-emerald-600" />
+              Template Parceiros de Negócios
+            </Button>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="shadow-subtle">
+      <Card className="shadow-subtle mt-6">
         <CardHeader>
           <CardTitle>Log de Importações (Tabela 16)</CardTitle>
           <CardDescription>Histórico de operações em massa realizadas no sistema.</CardDescription>

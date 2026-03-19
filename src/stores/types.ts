@@ -75,6 +75,15 @@ export interface Manejo {
   itemId?: string
   quantity?: number
 }
+export interface ParceiroNegocio {
+  id: string
+  Nome_Razao_Social: string
+  Tipo_Documento: 'CPF' | 'CNPJ'
+  Numero_Documento: string
+  Categoria_Parceiro: string[]
+  Status: 'Ativo' | 'Inativo'
+  ID_Inttegra?: string
+}
 export interface Transacao {
   id: string
   Descricao_Lancamento: string
@@ -92,6 +101,7 @@ export interface Transacao {
   Macroconta_Inttegra: string
   Categoria_Inttegra: string
   Subcategoria_Detalhe?: string
+  Parceiro_Vinculado?: string
 }
 export interface Maquinario {
   id: string
@@ -165,6 +175,7 @@ export interface AppState {
   reproducoes: Reproducao[]
   estoque: EstoqueItem[]
   manejos: Manejo[]
+  parceiros: ParceiroNegocio[]
   transacoes: Transacao[]
   maquinario: Maquinario[]
   clima: ClimaLog[]

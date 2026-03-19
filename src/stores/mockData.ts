@@ -146,6 +146,26 @@ export const initialData: AppState = {
       quantity: 520,
     },
   ],
+  parceiros: [
+    {
+      id: 'parc1',
+      Nome_Razao_Social: 'Agropecuária Boi Gordo Ltda',
+      Tipo_Documento: 'CNPJ',
+      Numero_Documento: '12.345.678/0001-90',
+      Categoria_Parceiro: ['Cliente'],
+      Status: 'Ativo',
+      ID_Inttegra: 'INT-C01',
+    },
+    {
+      id: 'parc2',
+      Nome_Razao_Social: 'Nutrição Animal S.A.',
+      Tipo_Documento: 'CNPJ',
+      Numero_Documento: '98.765.432/0001-10',
+      Categoria_Parceiro: ['Fornecedor'],
+      Status: 'Ativo',
+      ID_Inttegra: 'INT-F01',
+    },
+  ],
   transacoes: [
     {
       id: 't1',
@@ -160,6 +180,7 @@ export const initialData: AppState = {
       Macroconta_Inttegra: '1. RECEITAS',
       Categoria_Inttegra: 'Receitas Pecuárias',
       Subcategoria_Detalhe: 'Machos Abate',
+      Parceiro_Vinculado: 'parc1',
     },
     {
       id: 't3',
@@ -173,6 +194,7 @@ export const initialData: AppState = {
       Macroconta_Inttegra: '5. PECUÁRIA (Custos Diretos)',
       Categoria_Inttegra: 'Insumos Rebanho Genética',
       Subcategoria_Detalhe: 'Sêmen',
+      Parceiro_Vinculado: 'parc2',
     },
   ],
   maquinario: [{ id: 'm1', name: 'Trator John Deere 5075', horimetro: 1510, nextRevision: 1500 }],

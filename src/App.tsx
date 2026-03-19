@@ -28,6 +28,7 @@ import Manejo from './pages/suprimentos/Manejo'
 import PrevisaoDemanda from './pages/suprimentos/PrevisaoDemanda'
 import Transacoes from './pages/financeiro/Transacoes'
 import EventosComerciais from './pages/financeiro/EventosComerciais'
+import Parceiros from './pages/financeiro/Parceiros'
 import Maquinario from './pages/operacoes/Maquinario'
 import Clima from './pages/operacoes/Clima'
 
@@ -100,6 +101,7 @@ const AppRoutes = () => (
       <Route path="/previsao-demanda" element={<PrevisaoDemanda />} />
       <Route path="/manejo" element={<Manejo />} />
       <Route path="/transacoes" element={<Transacoes />} />
+      <Route path="/parceiros" element={<Parceiros />} />
       <Route path="/eventos-comerciais" element={<EventosComerciais />} />
       <Route path="/maquinario" element={<Maquinario />} />
       <Route path="/clima" element={<Clima />} />

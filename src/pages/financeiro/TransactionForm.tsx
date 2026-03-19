@@ -21,7 +21,7 @@ import { Plus } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 
 export function TransactionForm() {
-  const { dispatch } = useAppStore()
+  const { state, dispatch } = useAppStore()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({
     Descricao_Lancamento: '',
@@ -34,6 +34,7 @@ export function TransactionForm() {
     Macroconta_Inttegra: '',
     Categoria_Inttegra: '',
     Subcategoria_Detalhe: '',
+    Parceiro_Vinculado: 'none',
   })
 
   const cats = CATEGORIAS[form.Macroconta_Inttegra] || []
@@ -52,12 +53,26 @@ export function TransactionForm() {
           Data_Vencimento: new Date(form.Data_Vencimento).toISOString(),
           Data_Efetivacao_Real:
             form.Status_Pagamento === 'Efetivado' ? new Date().toISOString() : undefined,
+          Parceiro_Vinculado:
+            form.Parceiro_Vinculado === 'none' ? undefined : form.Parceiro_Vinculado,
         } as any,
         ...s.transacoes,
       ],
     }))
     setOpen(false)
   }
+
+  // Filter Business Partners based on transaction type (Acceptance Criteria 2)
+  const parceirosDisponiveis = state.parceiros.filter((p) => {
+    if (p.Status !== 'Ativo') return false
+    if (form.Tipo_Movimento === 'Despesa') {
+      return (
+        p.Categoria_Parceiro.includes('Fornecedor') || p.Categoria_Parceiro.includes('Funcionário')
+      )
+    } else {
+      return p.Categoria_Parceiro.includes('Cliente')
+    }
+  })
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -77,7 +92,9 @@ export function TransactionForm() {
               <Label>Tipo</Label>
               <Select
                 value={form.Tipo_Movimento}
-                onValueChange={(v) => setForm({ ...form, Tipo_Movimento: v })}
+                onValueChange={(v) =>
+                  setForm({ ...form, Tipo_Movimento: v, Parceiro_Vinculado: 'none' })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -107,6 +124,32 @@ export function TransactionForm() {
               onChange={(e) => setForm({ ...form, Descricao_Lancamento: e.target.value })}
             />
           </div>
+
+          <div>
+            <Label>Parceiro de Negócio (Opcional)</Label>
+            <Select
+              value={form.Parceiro_Vinculado}
+              onValueChange={(v) => setForm({ ...form, Parceiro_Vinculado: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um parceiro..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum / Não Aplicável</SelectItem>
+                {parceirosDisponiveis.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.Nome_Razao_Social}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              {form.Tipo_Movimento === 'Despesa'
+                ? 'Sugestões: Fornecedores e Funcionários'
+                : 'Sugestões: Clientes'}
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Competência</Label>

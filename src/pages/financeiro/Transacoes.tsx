@@ -20,7 +20,7 @@ import { format, parseISO } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/components/dashboard/KpiCards'
-import { Check } from 'lucide-react'
+import { Check, User } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { TransactionForm } from './TransactionForm'
 import { CENTROS_CUSTO } from './constants'
@@ -102,7 +102,7 @@ export default function Transacoes() {
             <TableHeader>
               <TableRow>
                 <TableHead>Competência</TableHead>
-                <TableHead>Descrição</TableHead>
+                <TableHead>Descrição / Parceiro</TableHead>
                 <TableHead>DRE (Conta/Cat)</TableHead>
                 <TableHead>C.Custo</TableHead>
                 <TableHead className="text-right">Valor Total</TableHead>
@@ -111,66 +111,79 @@ export default function Transacoes() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((t) => (
-                <TableRow key={t.id}>
-                  <TableCell className="font-mono text-xs">
-                    {format(parseISO(t.Data_Competencia), 'dd/MM/yyyy')}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {t.Descricao_Lancamento}
-                    <div className="text-[10px] uppercase mt-0.5">
-                      <span
-                        className={
-                          t.Tipo_Movimento === 'Receita' ? 'text-emerald-600' : 'text-rose-600'
+              {filtered.map((t) => {
+                const partner = t.Parceiro_Vinculado
+                  ? state.parceiros.find((p) => p.id === t.Parceiro_Vinculado)
+                  : null
+
+                return (
+                  <TableRow key={t.id}>
+                    <TableCell className="font-mono text-xs">
+                      {format(parseISO(t.Data_Competencia), 'dd/MM/yyyy')}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {t.Descricao_Lancamento}
+                      {partner && (
+                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1 font-normal">
+                          <User className="w-3 h-3" /> {partner.Nome_Razao_Social}
+                        </div>
+                      )}
+                      <div className="text-[10px] uppercase mt-1">
+                        <span
+                          className={
+                            t.Tipo_Movimento === 'Receita'
+                              ? 'text-emerald-600 font-bold'
+                              : 'text-rose-600 font-bold'
+                          }
+                        >
+                          {t.Tipo_Movimento}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-xs font-semibold text-slate-700">
+                        {t.Macroconta_Inttegra}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {t.Categoria_Inttegra}{' '}
+                        {t.Subcategoria_Detalhe ? ` > ${t.Subcategoria_Detalhe}` : ''}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-xs">{t.Centro_Custo_Direcionado}</TableCell>
+                    <TableCell
+                      className={`text-right font-mono font-bold ${t.Tipo_Movimento === 'Receita' ? 'text-emerald-700' : 'text-rose-700'}`}
+                    >
+                      {t.Tipo_Movimento === 'Receita' ? '+' : '-'}
+                      {formatCurrency(t.Valor_Total)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          t.Status_Pagamento === 'Efetivado'
+                            ? 'default'
+                            : t.Status_Pagamento === 'Atrasado'
+                              ? 'destructive'
+                              : 'outline'
                         }
                       >
-                        {t.Tipo_Movimento}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-xs font-semibold text-slate-700">
-                      {t.Macroconta_Inttegra}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {t.Categoria_Inttegra}{' '}
-                      {t.Subcategoria_Detalhe ? ` > ${t.Subcategoria_Detalhe}` : ''}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-xs">{t.Centro_Custo_Direcionado}</TableCell>
-                  <TableCell
-                    className={`text-right font-mono font-bold ${t.Tipo_Movimento === 'Receita' ? 'text-emerald-700' : 'text-rose-700'}`}
-                  >
-                    {t.Tipo_Movimento === 'Receita' ? '+' : '-'}
-                    {formatCurrency(t.Valor_Total)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        t.Status_Pagamento === 'Efetivado'
-                          ? 'default'
-                          : t.Status_Pagamento === 'Atrasado'
-                            ? 'destructive'
-                            : 'outline'
-                      }
-                    >
-                      {t.Status_Pagamento}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {t.Status_Pagamento !== 'Efetivado' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
-                        onClick={() => handlePay(t.id, t.Descricao_Lancamento)}
-                      >
-                        <Check className="w-3 h-3 mr-1" /> Efetivar
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
+                        {t.Status_Pagamento}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {t.Status_Pagamento !== 'Efetivado' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                          onClick={() => handlePay(t.id, t.Descricao_Lancamento)}
+                        >
+                          <Check className="w-3 h-3 mr-1" /> Efetivar
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </CardContent>
