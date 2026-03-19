@@ -130,6 +130,17 @@ export interface SyncMapping {
   errorLog: string
 }
 
+export interface ImportLog {
+  id: string
+  Data_Upload: string
+  Usuario_Responsavel: string
+  Tipo_de_Dado: string
+  Arquivo_Upload: string
+  Status_Importacao: 'Pendente' | 'Processando' | 'Concluído' | 'Com Erros'
+  Total_Linhas_Processadas: number
+  Relatorio_de_Erros: string
+}
+
 export interface AppState {
   isAuthenticated: boolean
   currentUser: User | null
@@ -152,4 +163,5 @@ export interface AppState {
   auditLogs: AuditLog[]
   inttegraConfig: InttegraConfig
   syncMappings: SyncMapping[]
+  importLogs: ImportLog[]
 }

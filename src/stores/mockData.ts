@@ -188,4 +188,5 @@ export const initialData: AppState = {
     lastSync: null,
   },
   syncMappings: [],
+  importLogs: [],
 }

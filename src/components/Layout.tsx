@@ -121,7 +121,10 @@ const navItems = [
   {
     module: 'Integrações',
     icon: Network,
-    items: [{ name: 'Inttegra API', path: '/inttegra' }],
+    items: [
+      { name: 'Inttegra API', path: '/inttegra' },
+      { name: 'Importação (ETL)', path: '/importacao' },
+    ],
     levels: [1],
   },
   { module: 'Auditoria', icon: ShieldCheck, path: '/auditoria', levels: [1] },
@@ -148,6 +151,7 @@ export default function Layout() {
       (location.pathname.startsWith('/transacoes') ||
         location.pathname.startsWith('/auditoria') ||
         location.pathname.startsWith('/inttegra') ||
+        location.pathname.startsWith('/importacao') ||
         location.pathname.startsWith('/previsao-demanda'))
     ) {
       navigate('/')
@@ -218,8 +222,9 @@ export default function Layout() {
                   <SidebarMenu>
                     {mod.items ? (
                       mod.items.map((i) => {
-                        // Hide AI Forecast from level 3 strictly
+                        // Hide specific modules from level 3
                         if (i.path === '/previsao-demanda' && state.userRole === 3) return null
+                        if (i.path === '/importacao' && state.userRole !== 1) return null
                         return (
                           <SidebarMenuItem key={i.path}>
                             <SidebarMenuButton
