@@ -147,7 +147,7 @@ export default function DashboardCharts() {
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip content={<ChartTooltipContent />} />
+              <ChartTooltip content={<ChartTooltipContent />} />
               <Bar dataKey="custoArroba" fill="var(--color-custoArroba)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ChartContainer>
