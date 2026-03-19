@@ -63,7 +63,9 @@ export function TransactionForm() {
         if (form.Data_Vencimento) {
           d = new Date(form.Data_Vencimento)
         }
-      } catch (e) {}
+      } catch (e) {
+        /* ignore invalid date */
+      }
 
       d.setMonth(d.getMonth() + i)
       newTxs.push({

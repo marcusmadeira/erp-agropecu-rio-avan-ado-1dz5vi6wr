@@ -144,7 +144,9 @@ export default function ManagerDashboard() {
                 let isOverdue = false
                 try {
                   isOverdue = new Date(t.Data_Vencimento).getTime() < new Date().getTime()
-                } catch (e) {}
+                } catch (e) {
+                  /* ignore */
+                }
 
                 return (
                   <TableRow key={t.id}>
