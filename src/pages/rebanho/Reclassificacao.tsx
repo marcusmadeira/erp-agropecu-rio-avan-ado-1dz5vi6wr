@@ -19,16 +19,31 @@ export default function Reclassificacao() {
 
   const poAnimals = state.animais.filter((a) => a.costCenter === 'CC01-PO' && a.status === 'Ativo')
 
-  const handleReclassificar = (animalId: string) => {
+  const handleReclassificar = (animal: any) => {
     dispatch((s) => ({
       ...s,
       animais: s.animais.map((a) =>
-        a.id === animalId ? { ...a, costCenter: 'CC02-TIP', status: 'Reclassificado (TIP)' } : a,
+        a.id === animal.id
+          ? { ...a, costCenter: 'CC02-TIP', status: 'Reclassificado (TIP)', categoria: 'Descarte' }
+          : a,
       ),
+      auditLogs: [
+        {
+          id: Math.random().toString(),
+          date: new Date().toISOString(),
+          userName: s.currentUser?.name || 'Sistema',
+          action: 'Update',
+          table: 'Animais',
+          recordId: animal.brinco,
+          oldValue: 'CC01-PO',
+          newValue: 'CC02-TIP (Reclassificado)',
+        },
+        ...s.auditLogs,
+      ],
     }))
     toast({
       title: 'Animal Reclassificado!',
-      description: 'Movido para o Centro de Custo Comercial TIP.',
+      description: 'Movido para o Centro de Custo Comercial TIP e registrado na auditoria.',
     })
   }
 
@@ -74,7 +89,7 @@ export default function Reclassificacao() {
                       variant="outline"
                       size="sm"
                       className="text-amber-700 border-amber-300 hover:bg-amber-50"
-                      onClick={() => handleReclassificar(a.id)}
+                      onClick={() => handleReclassificar(a)}
                     >
                       Mover p/ TIP <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>

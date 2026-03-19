@@ -36,27 +36,56 @@ export function TransactionForm() {
     Subcategoria_Detalhe: '',
     Parceiro_Vinculado: 'none',
   })
+  const [parcelas, setParcelas] = useState('1')
 
   const cats = CATEGORIAS[form.Macroconta_Inttegra] || []
   const subCats = SUBCATEGORIAS[form.Categoria_Inttegra] || []
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    const pCount = parseInt(parcelas) || 1
+    const valTotal = Number(form.Valor_Total)
+    const valPerParcel = valTotal / pCount
+    const newTxs: any[] = []
+
+    for (let i = 0; i < pCount; i++) {
+      const d = new Date(form.Data_Vencimento)
+      d.setMonth(d.getMonth() + i)
+      newTxs.push({
+        ...form,
+        id: Math.random().toString(),
+        Valor_Total: valPerParcel,
+        Descricao_Lancamento:
+          pCount > 1
+            ? `${form.Descricao_Lancamento} (Parc ${i + 1}/${pCount})`
+            : form.Descricao_Lancamento,
+        Data_Competencia: new Date(form.Data_Competencia).toISOString(),
+        Data_Vencimento: d.toISOString(),
+        Data_Efetivacao_Real:
+          i === 0 && form.Status_Pagamento === 'Efetivado' ? new Date().toISOString() : undefined,
+        Status_Pagamento:
+          i === 0 && form.Status_Pagamento === 'Efetivado' ? 'Efetivado' : 'Pendente',
+        Parceiro_Vinculado:
+          form.Parceiro_Vinculado === 'none' ? undefined : form.Parceiro_Vinculado,
+      })
+    }
+
     dispatch((s) => ({
       ...s,
-      transacoes: [
+      transacoes: [...newTxs, ...s.transacoes],
+      auditLogs: [
         {
-          ...form,
           id: Math.random().toString(),
-          Valor_Total: Number(form.Valor_Total),
-          Data_Competencia: new Date(form.Data_Competencia).toISOString(),
-          Data_Vencimento: new Date(form.Data_Vencimento).toISOString(),
-          Data_Efetivacao_Real:
-            form.Status_Pagamento === 'Efetivado' ? new Date().toISOString() : undefined,
-          Parceiro_Vinculado:
-            form.Parceiro_Vinculado === 'none' ? undefined : form.Parceiro_Vinculado,
-        } as any,
-        ...s.transacoes,
+          date: new Date().toISOString(),
+          userName: s.currentUser?.name || 'Sistema',
+          action: 'Create',
+          table: 'Financeiro',
+          recordId: form.Descricao_Lancamento,
+          oldValue: '-',
+          newValue: `Valor: ${valTotal} (${pCount}x)`,
+        },
+        ...s.auditLogs,
       ],
     }))
     setOpen(false)
@@ -82,7 +111,7 @@ export function TransactionForm() {
           Nova Transação DRE
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Lançamento Financeiro DRE</DialogTitle>
         </DialogHeader>
@@ -106,7 +135,7 @@ export function TransactionForm() {
               </Select>
             </div>
             <div>
-              <Label>Valor Total</Label>
+              <Label>Valor Total Geral</Label>
               <Input
                 required
                 type="number"
@@ -125,34 +154,46 @@ export function TransactionForm() {
             />
           </div>
 
-          <div>
-            <Label>Parceiro de Negócio (Opcional)</Label>
-            <Select
-              value={form.Parceiro_Vinculado}
-              onValueChange={(v) => setForm({ ...form, Parceiro_Vinculado: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um parceiro..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Nenhum / Não Aplicável</SelectItem>
-                {parceirosDisponiveis.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.Nome_Razao_Social}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              {form.Tipo_Movimento === 'Despesa'
-                ? 'Sugestões: Fornecedores e Funcionários'
-                : 'Sugestões: Clientes'}
-            </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Parceiro (Filtrado)</Label>
+              <Select
+                value={form.Parceiro_Vinculado}
+                onValueChange={(v) => setForm({ ...form, Parceiro_Vinculado: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  {parceirosDisponiveis.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.Nome_Razao_Social}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Parcelamento Automático</Label>
+              <Select value={parcelas} onValueChange={setParcelas}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">À Vista (1x)</SelectItem>
+                  <SelectItem value="2">2x Mensais</SelectItem>
+                  <SelectItem value="3">3x Mensais</SelectItem>
+                  <SelectItem value="6">6x Mensais</SelectItem>
+                  <SelectItem value="12">12x Mensais</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Competência</Label>
+              <Label>Data Competência</Label>
               <Input
                 required
                 type="date"
@@ -160,6 +201,18 @@ export function TransactionForm() {
                 onChange={(e) => setForm({ ...form, Data_Competencia: e.target.value })}
               />
             </div>
+            <div>
+              <Label>Primeiro Vencimento</Label>
+              <Input
+                required
+                type="date"
+                value={form.Data_Vencimento}
+                onChange={(e) => setForm({ ...form, Data_Vencimento: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Centro Custo</Label>
               <Select
@@ -178,7 +231,23 @@ export function TransactionForm() {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label>Status Atual</Label>
+              <Select
+                value={form.Status_Pagamento}
+                onValueChange={(v) => setForm({ ...form, Status_Pagamento: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Efetivado">Efetivado (Pago)</SelectItem>
+                  <SelectItem value="Pendente">Pendente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
           <div>
             <Label>Macroconta (Inttegra)</Label>
             <Select
@@ -193,7 +262,7 @@ export function TransactionForm() {
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione a macroconta..." />
+                <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
               <SelectContent>
                 {MACRO_CONTAS.map((m) => (
@@ -214,7 +283,7 @@ export function TransactionForm() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione a categoria..." />
+                  <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
                   {cats.map((c) => (
@@ -250,7 +319,7 @@ export function TransactionForm() {
             </div>
           )}
           <Button type="submit" className="w-full mt-4 bg-emerald-700 hover:bg-emerald-800">
-            Salvar Lançamento
+            Salvar Lançamento(s)
           </Button>
         </form>
       </DialogContent>

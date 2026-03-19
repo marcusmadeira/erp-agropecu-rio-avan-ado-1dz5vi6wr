@@ -52,6 +52,7 @@ export interface Reproducao {
   id: string
   animalId: string
   type: 'IATF' | 'Monta'
+  touro?: string
   date: string
   previsaoToque: string
   dpp: string

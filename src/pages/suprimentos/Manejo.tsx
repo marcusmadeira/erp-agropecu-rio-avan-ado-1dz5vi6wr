@@ -48,17 +48,28 @@ export default function Manejo() {
         timestamp: now,
       }
 
+      const auditLog = {
+        id: Math.random().toString(),
+        date: now,
+        userName: s.currentUser?.name || 'Operacional',
+        action: 'Update' as any,
+        table: 'Estoque',
+        recordId: item?.name || form.itemId,
+        oldValue: `${item?.quantity || 0}`,
+        newValue: `${(item?.quantity || 0) - q}`,
+      }
+
       return {
         ...s,
         estoque: s.estoque.map((e) =>
           e.id === form.itemId ? { ...e, quantity: e.quantity - q } : e,
         ),
         manejos: [...s.manejos, newManejo],
+        auditLogs: [auditLog, ...s.auditLogs],
         pendingSyncQueue: s.isOnline ? s.pendingSyncQueue : [...s.pendingSyncQueue, offlineAction],
       }
     })
 
-    // Sincronização Inttegra (Tabela Especificada: Manejo_Diario_Cocho_Sanidade)
     pushRecord('Manejo_Diario_Cocho_Sanidade', manejoId, newManejo)
 
     toast({

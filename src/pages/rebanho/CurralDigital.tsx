@@ -29,7 +29,18 @@ export default function CurralDigital() {
     const now = new Date().toISOString()
     const a = state.animais.find((x) => x.id === animalId)
     if (!a) return
-    const newGmd = (p - a.pesoAtual) / 30
+
+    // Calculate exact days since last weighing
+    const lastPesagem = state.pesagens
+      .filter((px) => px.animalId === animalId)
+      .sort((pa, pb) => new Date(pb.date).getTime() - new Date(pa.date).getTime())[0]
+
+    let daysSinceLast = 30 // fallback
+    if (lastPesagem) {
+      const diffTime = new Date(now).getTime() - new Date(lastPesagem.date).getTime()
+      daysSinceLast = Math.max(1, Math.round(diffTime / (1000 * 3600 * 24)))
+    }
+    const newGmd = (p - a.pesoAtual) / daysSinceLast
 
     const newPesagem = { id: pesagemId, animalId, weight: p, date: now }
 
@@ -69,7 +80,7 @@ export default function CurralDigital() {
     toast({
       title: state.isOnline ? 'Pesagem Registrada' : 'Salvo Offline',
       description: state.isOnline
-        ? 'Dados salvos na nuvem e no Inttegra.'
+        ? `GMD Atualizado: ${newGmd.toFixed(3)} kg/dia.`
         : 'Será sincronizado automaticamente.',
       className: !state.isOnline ? 'border-amber-500' : '',
     })

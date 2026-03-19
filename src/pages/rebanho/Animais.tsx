@@ -12,16 +12,90 @@ import {
 } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Search, FileText } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
+import { useToast } from '@/hooks/use-toast'
+import { Search, FileText, Plus } from 'lucide-react'
 import { exportAnimalPDF } from '@/lib/pdf'
 
 export default function Animais() {
-  const { state } = useAppStore()
+  const { state, dispatch } = useAppStore()
+  const { toast } = useToast()
   const [search, setSearch] = useState('')
+  const [open, setOpen] = useState(false)
+
+  const [form, setForm] = useState({
+    brinco: '',
+    rgn: '',
+    loteId: '',
+    categoria: 'Matriz',
+    pesoAtual: '',
+    costCenter: 'CC01-PO',
+    gender: 'F',
+    pai: 'none',
+    mae: 'none',
+  })
 
   const filtered = state.animais.filter(
     (a) => a.brinco.includes(search) || (a.rgn && a.rgn.includes(search)),
   )
+
+  const matrizes = state.animais.filter((a) => a.gender === 'F' && a.status === 'Ativo')
+  const touros = state.animais.filter((a) => a.gender === 'M' && a.status === 'Ativo')
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form.brinco || !form.loteId || !form.pesoAtual) return
+
+    const newId = Math.random().toString()
+    const peso = Number(form.pesoAtual)
+
+    dispatch((s) => ({
+      ...s,
+      animais: [
+        {
+          ...form,
+          id: newId,
+          pesoAtual: peso,
+          pesoEntrada: peso,
+          gmd: 0,
+          status: 'Ativo',
+          birthDate: new Date().toISOString(),
+          pai: form.pai === 'none' ? undefined : form.pai,
+          mae: form.mae === 'none' ? undefined : form.mae,
+        } as any,
+        ...s.animais,
+      ],
+      auditLogs: [
+        {
+          id: Math.random().toString(),
+          date: new Date().toISOString(),
+          userName: s.currentUser?.name || 'Sistema',
+          action: 'Create',
+          table: 'Animais',
+          recordId: form.brinco,
+          oldValue: '-',
+          newValue: `Cadastrado: ${peso}kg`,
+        },
+        ...s.auditLogs,
+      ],
+    }))
+    toast({ title: 'Animal Cadastrado', description: `Brinco ${form.brinco} salvo com sucesso.` })
+    setOpen(false)
+  }
 
   return (
     <div className="space-y-4">
@@ -35,7 +109,154 @@ export default function Animais() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <Button className="bg-emerald-800 hidden sm:inline-flex">Novo Animal</Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-emerald-800 hidden sm:inline-flex">
+                <Plus className="w-4 h-4 mr-2" /> Novo Animal
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Registrar Animal</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSave} className="space-y-3 mt-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Brinco (ID)</Label>
+                    <Input
+                      required
+                      value={form.brinco}
+                      onChange={(e) => setForm({ ...form, brinco: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>RGD/RGN</Label>
+                    <Input
+                      value={form.rgn}
+                      onChange={(e) => setForm({ ...form, rgn: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Lote</Label>
+                    <Select
+                      required
+                      value={form.loteId}
+                      onValueChange={(v) => setForm({ ...form, loteId: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {state.lotes.map((l) => (
+                          <SelectItem key={l.id} value={l.id}>
+                            {l.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Peso Entrada (Kg)</Label>
+                    <Input
+                      required
+                      type="number"
+                      value={form.pesoAtual}
+                      onChange={(e) => setForm({ ...form, pesoAtual: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Categoria</Label>
+                    <Select
+                      value={form.categoria}
+                      onValueChange={(v) => setForm({ ...form, categoria: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Matriz">Matriz PO</SelectItem>
+                        <SelectItem value="Touro">Touro PO</SelectItem>
+                        <SelectItem value="Garrote">Garrote</SelectItem>
+                        <SelectItem value="Novilha">Novilha</SelectItem>
+                        <SelectItem value="Bezerro">Bezerro(a)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Sexo</Label>
+                    <Select
+                      value={form.gender}
+                      onValueChange={(v) => setForm({ ...form, gender: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="M">Macho</SelectItem>
+                        <SelectItem value="F">Fêmea</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Pai (Touro)</Label>
+                    <Select value={form.pai} onValueChange={(v) => setForm({ ...form, pai: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Opcional" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Desconhecido</SelectItem>
+                        {touros.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {t.brinco}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Mãe (Matriz)</Label>
+                    <Select value={form.mae} onValueChange={(v) => setForm({ ...form, mae: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Opcional" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Desconhecida</SelectItem>
+                        {matrizes.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {m.brinco}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label>Centro de Custo</Label>
+                  <Select
+                    value={form.costCenter}
+                    onValueChange={(v) => setForm({ ...form, costCenter: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CC01-PO">CC01-PO (Elite)</SelectItem>
+                      <SelectItem value="CC02-TIP">CC02-TIP (Comercial)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button type="submit" className="w-full bg-emerald-800 mt-2">
+                  Salvar Cadastro
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -48,43 +269,58 @@ export default function Animais() {
                 <TableHead>RGN</TableHead>
                 <TableHead>Lote</TableHead>
                 <TableHead>Categoria</TableHead>
-                <TableHead>C. Custo</TableHead>
+                <TableHead>Genealogia (P/M)</TableHead>
                 <TableHead className="text-right">Peso Atual</TableHead>
                 <TableHead className="text-right">GMD</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((a) => (
-                <TableRow key={a.id}>
-                  <TableCell className="font-bold">{a.brinco}</TableCell>
-                  <TableCell>{a.rgn || '-'}</TableCell>
-                  <TableCell>{state.lotes.find((l) => l.id === a.loteId)?.name || '-'}</TableCell>
-                  <TableCell>{a.categoria}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={a.costCenter === 'CC01-PO' ? 'default' : 'secondary'}
-                      className="text-[10px]"
-                    >
-                      {a.costCenter}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-emerald-900">
-                    {a.pesoAtual} kg
-                  </TableCell>
-                  <TableCell className="text-right font-mono">{a.gmd.toFixed(3)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      title="Exportar Ficha (PDF)"
-                      onClick={() => exportAnimalPDF(a, state.lotes, state.pesagens, state.animais)}
-                    >
-                      <FileText className="w-4 h-4 text-emerald-700" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filtered.map((a) => {
+                const pai = state.animais.find((x) => x.id === a.pai)
+                const mae = state.animais.find((x) => x.id === a.mae)
+                return (
+                  <TableRow key={a.id}>
+                    <TableCell className="font-bold">{a.brinco}</TableCell>
+                    <TableCell>{a.rgn || '-'}</TableCell>
+                    <TableCell>
+                      {state.lotes.find((l) => l.id === a.loteId)?.name || '-'}
+                      <div className="mt-1">
+                        <Badge
+                          variant={a.costCenter === 'CC01-PO' ? 'default' : 'secondary'}
+                          className="text-[9px] px-1.5"
+                        >
+                          {a.costCenter}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {a.categoria}
+                      <span className="block text-[10px] text-muted-foreground">{a.status}</span>
+                    </TableCell>
+                    <TableCell className="text-xs text-slate-600">
+                      P: {pai?.brinco || '-'} <br />
+                      M: {mae?.brinco || '-'}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-emerald-900">
+                      {a.pesoAtual} kg
+                    </TableCell>
+                    <TableCell className="text-right font-mono">{a.gmd.toFixed(3)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        title="Exportar Ficha (PDF)"
+                        onClick={() =>
+                          exportAnimalPDF(a, state.lotes, state.pesagens, state.animais)
+                        }
+                      >
+                        <FileText className="w-4 h-4 text-emerald-700" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
               {filtered.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-4">

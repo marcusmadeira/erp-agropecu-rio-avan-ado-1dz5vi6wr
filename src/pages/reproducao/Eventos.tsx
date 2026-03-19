@@ -2,6 +2,7 @@ import { useState } from 'react'
 import useAppStore from '@/stores/useAppStore'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -32,7 +33,7 @@ export default function EventosRepro() {
   const { state, dispatch } = useAppStore()
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({ animalId: '', type: 'IATF' })
+  const [form, setForm] = useState({ animalId: '', type: 'IATF', touro: '' })
 
   const handleSave = () => {
     if (!form.animalId) return
@@ -48,6 +49,7 @@ export default function EventosRepro() {
           id: Math.random().toString(),
           animalId: form.animalId,
           type: form.type as any,
+          touro: form.touro,
           date,
           previsaoToque: prevToque,
           dpp,
@@ -58,7 +60,7 @@ export default function EventosRepro() {
     setOpen(false)
     toast({
       title: 'Evento Reprodutivo Registrado',
-      description: 'Previsões calculadas automaticamente.',
+      description: 'Previsões de Toque e DPP calculadas automaticamente.',
     })
   }
 
@@ -66,7 +68,7 @@ export default function EventosRepro() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-4">
         <h2 className="text-2xl font-bold text-emerald-900">Eventos Reprodutivos</h2>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -101,6 +103,11 @@ export default function EventosRepro() {
                   <SelectItem value="Monta">Monta Natural</SelectItem>
                 </SelectContent>
               </Select>
+              <Input
+                placeholder="Touro Utilizado / Sêmen (Opcional)"
+                value={form.touro}
+                onChange={(e) => setForm({ ...form, touro: e.target.value })}
+              />
               <Button onClick={handleSave} className="w-full bg-emerald-800">
                 Salvar Evento
               </Button>
@@ -110,12 +117,12 @@ export default function EventosRepro() {
       </div>
 
       <Card className="shadow-subtle">
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Brinco da Matriz</TableHead>
-                <TableHead>Tipo</TableHead>
+                <TableHead>Tipo / Touro</TableHead>
                 <TableHead>Data do Evento</TableHead>
                 <TableHead>Previsão Toque (+30d)</TableHead>
                 <TableHead>Status</TableHead>
@@ -127,7 +134,9 @@ export default function EventosRepro() {
                 return (
                   <TableRow key={r.id}>
                     <TableCell className="font-bold">{a?.brinco}</TableCell>
-                    <TableCell>{r.type}</TableCell>
+                    <TableCell>
+                      {r.type} <span className="text-xs text-muted-foreground ml-1">{r.touro}</span>
+                    </TableCell>
                     <TableCell>{format(parseISO(r.date), 'dd/MM/yyyy')}</TableCell>
                     <TableCell className="font-mono">
                       {format(parseISO(r.previsaoToque), 'dd/MM/yyyy')}

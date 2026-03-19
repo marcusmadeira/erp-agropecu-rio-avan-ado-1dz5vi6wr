@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import useAppStore from '@/stores/useAppStore'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -9,11 +10,72 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Box, BrainCircuit } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Box, BrainCircuit, Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useToast } from '@/hooks/use-toast'
 
 export default function Estoque() {
-  const { state } = useAppStore()
+  const { state, dispatch } = useAppStore()
+  const { toast } = useToast()
+  const [open, setOpen] = useState(false)
+  const [form, setForm] = useState({
+    name: '',
+    category: 'Nutrição',
+    quantity: '',
+    unit: 'Kg',
+    unitCost: '',
+  })
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form.name || !form.quantity || !form.unitCost) return
+
+    dispatch((s) => ({
+      ...s,
+      estoque: [
+        {
+          id: Math.random().toString(),
+          name: form.name,
+          category: form.category,
+          unit: form.unit,
+          quantity: Number(form.quantity),
+          unitCost: Number(form.unitCost),
+        },
+        ...s.estoque,
+      ],
+      auditLogs: [
+        {
+          id: Math.random().toString(),
+          date: new Date().toISOString(),
+          userName: s.currentUser?.name || 'Sistema',
+          action: 'Create',
+          table: 'Estoque',
+          recordId: form.name,
+          oldValue: '-',
+          newValue: `${form.quantity} ${form.unit}`,
+        },
+        ...s.auditLogs,
+      ],
+    }))
+    setOpen(false)
+    toast({ title: 'Insumo Cadastrado', description: 'O estoque foi atualizado com sucesso.' })
+  }
 
   return (
     <div className="space-y-4">
@@ -34,7 +96,83 @@ export default function Estoque() {
               </Link>
             </Button>
           )}
-          <Button className="flex-1 sm:flex-none bg-emerald-800 shadow-sm">Nova Entrada</Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex-1 sm:flex-none bg-emerald-800 shadow-sm">
+                <Plus className="w-4 h-4 mr-2" /> Nova Entrada
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>Novo Insumo no Estoque</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSave} className="space-y-4 mt-2">
+                <div>
+                  <Label>Nome do Produto</Label>
+                  <Input
+                    required
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Categoria</Label>
+                    <Select
+                      value={form.category}
+                      onValueChange={(v) => setForm({ ...form, category: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Nutrição">Nutrição</SelectItem>
+                        <SelectItem value="Saúde">Saúde (Vacinas)</SelectItem>
+                        <SelectItem value="Sêmen">Sêmen (Genética)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Unidade</Label>
+                    <Select value={form.unit} onValueChange={(v) => setForm({ ...form, unit: v })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Kg">Kg</SelectItem>
+                        <SelectItem value="Doses">Doses</SelectItem>
+                        <SelectItem value="Litros">Litros</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Quantidade Inicial</Label>
+                    <Input
+                      required
+                      type="number"
+                      value={form.quantity}
+                      onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Custo Unitário (R$)</Label>
+                    <Input
+                      required
+                      type="number"
+                      step="0.01"
+                      value={form.unitCost}
+                      onChange={(e) => setForm({ ...form, unitCost: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <Button type="submit" className="w-full bg-emerald-800 mt-2">
+                  Adicionar Estoque
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -45,6 +183,7 @@ export default function Estoque() {
               <TableRow>
                 <TableHead>Produto / Insumo</TableHead>
                 <TableHead>Categoria</TableHead>
+                <TableHead className="text-right">Custo Unit.</TableHead>
                 <TableHead className="text-right">Quantidade Atual</TableHead>
               </TableRow>
             </TableHeader>
@@ -53,6 +192,9 @@ export default function Estoque() {
                 <TableRow key={e.id}>
                   <TableCell className="font-semibold">{e.name}</TableCell>
                   <TableCell>{e.category}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    R$ {e.unitCost.toFixed(2)}
+                  </TableCell>
                   <TableCell className="text-right font-mono text-emerald-800 font-bold">
                     {e.quantity} {e.unit}
                   </TableCell>
