@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import { ShieldAlert, ArrowRight } from 'lucide-react'
 
@@ -28,19 +29,28 @@ export default function Reclassificacao() {
 
   const [open, setOpen] = useState(false)
   const [selectedAnimal, setSelectedAnimal] = useState<any>(null)
-  const [form, setForm] = useState({ category: 'Descarte', loteId: '', costCenter: 'CC02-TIP' })
+  const [form, setForm] = useState({
+    category: 'Vaca Descarte TIP',
+    loteId: '',
+    costCenter: 'CC02-TIP',
+    motivo: '',
+  })
 
   const poAnimals = state.animais.filter((a) => a.costCenter === 'CC01-PO' && a.status === 'Ativo')
 
   const openForm = (animal: any) => {
     setSelectedAnimal(animal)
-    setForm({ category: 'Descarte', loteId: '', costCenter: 'CC02-TIP' })
+    setForm({ category: 'Vaca Descarte TIP', loteId: '', costCenter: 'CC02-TIP', motivo: '' })
     setOpen(true)
   }
 
   const handleReclassificar = () => {
-    if (!selectedAnimal || !form.loteId) {
-      toast({ title: 'Erro', description: 'Selecione o Lote de destino.', variant: 'destructive' })
+    if (!selectedAnimal || !form.loteId || !form.motivo) {
+      toast({
+        title: 'Aviso',
+        description: 'Preencha o Lote e o Motivo Obrigatório.',
+        variant: 'destructive',
+      })
       return
     }
 
@@ -51,7 +61,7 @@ export default function Reclassificacao() {
           ? {
               ...a,
               costCenter: form.costCenter as any,
-              status: `Reclassificado (${form.costCenter.replace('CC02-', '')})`,
+              status: `Reclassificado`,
               categoria: form.category,
               loteId: form.loteId,
             }
@@ -66,7 +76,7 @@ export default function Reclassificacao() {
           table: 'Animais',
           recordId: selectedAnimal.brinco,
           oldValue: 'CC01-PO',
-          newValue: `${form.costCenter} / ${form.category}`,
+          newValue: `Mudança para ${form.costCenter} / Motivo: ${form.motivo}`,
         },
         ...s.auditLogs,
       ],
@@ -74,8 +84,8 @@ export default function Reclassificacao() {
 
     setOpen(false)
     toast({
-      title: 'Animal Reclassificado!',
-      description: 'As alterações de Categoria, Lote e Centro de Custo foram aplicadas.',
+      title: 'Reclassificação Sucesso!',
+      description: 'Animal enviado para engorda comercial.',
     })
   }
 
@@ -83,13 +93,11 @@ export default function Reclassificacao() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <ShieldAlert className="w-8 h-8 text-amber-500" />
-        <h2 className="text-2xl font-bold text-emerald-900">
-          Reclassificação de Animais (Descarte PO)
-        </h2>
+        <h2 className="text-2xl font-bold text-emerald-900">Reclassificação (Descarte PO)</h2>
       </div>
       <p className="text-muted-foreground">
-        Animais PO com falhas reprodutivas ou fenótipo indesejado devem ser movidos para terminação
-        comercial (TIP).
+        Obrigue a transferência de centro de custo com motivo justificado p/ animais PO
+        desclassificados.
       </p>
 
       <Card className="shadow-subtle border-t-4 border-t-amber-500">
@@ -101,8 +109,8 @@ export default function Reclassificacao() {
             <TableHeader>
               <TableRow>
                 <TableHead>Brinco</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Centro de Custo Atual</TableHead>
+                <TableHead>Categoria Atual</TableHead>
+                <TableHead>C. Custo</TableHead>
                 <TableHead className="text-right">Ação</TableHead>
               </TableRow>
             </TableHeader>
@@ -120,21 +128,14 @@ export default function Reclassificacao() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-amber-700 border-amber-300 hover:bg-amber-50"
+                      className="text-amber-700 border-amber-300"
                       onClick={() => openForm(a)}
                     >
-                      Reclassificar <ArrowRight className="w-4 h-4 ml-2" />
+                      Rebaixar p/ TIP <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
-              {poAnimals.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-4">
-                    Nenhum animal PO ativo encontrado.
-                  </TableCell>
-                </TableRow>
-              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -143,9 +144,18 @@ export default function Reclassificacao() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Mover Animal de Centro de Custo</DialogTitle>
+            <DialogTitle>Movimentação Comercial</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
+            <div>
+              <Label>Motivo Obrigatório</Label>
+              <Input
+                required
+                placeholder="Ex: Falha reprodutiva, Defeito fenotípico"
+                value={form.motivo}
+                onChange={(e) => setForm({ ...form, motivo: e.target.value })}
+              />
+            </div>
             <div>
               <Label>Nova Categoria</Label>
               <Select
@@ -156,38 +166,26 @@ export default function Reclassificacao() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Descarte">Descarte</SelectItem>
-                  <SelectItem value="Boi Gordo">Boi Gordo (Terminação)</SelectItem>
-                  <SelectItem value="Vaca Gorda">Vaca Gorda (Terminação)</SelectItem>
+                  <SelectItem value="Vaca Descarte TIP">Vaca Descarte TIP</SelectItem>
+                  <SelectItem value="Novilha TIP">Novilha TIP</SelectItem>
+                  <SelectItem value="Garrote TIP">Garrote TIP</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Novo Lote de Destino</Label>
+              <Label>Lote Destino (Engorda)</Label>
               <Select value={form.loteId} onValueChange={(v) => setForm({ ...form, loteId: v })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o Lote..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {state.lotes.map((l) => (
-                    <SelectItem key={l.id} value={l.id}>
-                      {l.name} ({l.costCenter})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Novo Centro de Custo</Label>
-              <Select
-                value={form.costCenter}
-                onValueChange={(v) => setForm({ ...form, costCenter: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CC02-TIP">CC02-TIP (Comercial/Engorda)</SelectItem>
+                  {state.lotes
+                    .filter((l) => l.costCenter === 'CC02-TIP')
+                    .map((l) => (
+                      <SelectItem key={l.id} value={l.id}>
+                        {l.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -195,7 +193,7 @@ export default function Reclassificacao() {
               onClick={handleReclassificar}
               className="w-full bg-amber-600 hover:bg-amber-700"
             >
-              Aplicar Reclassificação
+              Confirmar Rebaixamento
             </Button>
           </div>
         </DialogContent>

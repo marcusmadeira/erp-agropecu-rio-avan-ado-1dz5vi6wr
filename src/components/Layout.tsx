@@ -66,19 +66,19 @@ const navItems = [
     module: 'Estrutura',
     icon: Map,
     items: [
-      { name: 'Pastos', path: '/pastos' },
-      { name: 'Lotes', path: '/lotes' },
+      { name: 'Pastos', path: '/pastos', levels: [1, 2] },
+      { name: 'Lotes', path: '/lotes', levels: [1, 2] },
     ],
-    levels: [1, 2, 3],
+    levels: [1, 2],
   },
   {
     module: 'Rebanho',
     icon: Activity,
     items: [
-      { name: 'Animais', path: '/animais' },
-      { name: 'Curral Digital', path: '/pesagem' },
-      { name: 'Apartação', path: '/apartacao' },
-      { name: 'Reclassificação', path: '/reclassificacao' },
+      { name: 'Animais', path: '/animais', levels: [1, 2] },
+      { name: 'Curral Digital', path: '/pesagem', levels: [1, 2, 3] },
+      { name: 'Apartação', path: '/apartacao', levels: [1, 2] },
+      { name: 'Reclassificação', path: '/reclassificacao', levels: [1, 2] },
     ],
     levels: [1, 2, 3],
   },
@@ -86,18 +86,18 @@ const navItems = [
     module: 'Reprodução',
     icon: Baby,
     items: [
-      { name: 'Eventos Repro', path: '/eventos-repro' },
-      { name: 'Nascimentos', path: '/nascimentos' },
+      { name: 'Eventos Repro', path: '/eventos-repro', levels: [1, 2] },
+      { name: 'Nascimentos', path: '/nascimentos', levels: [1, 2] },
     ],
-    levels: [1, 2, 3],
+    levels: [1, 2],
   },
   {
     module: 'Suprimentos',
     icon: Droplet,
     items: [
-      { name: 'Estoque', path: '/estoque' },
-      { name: 'Previsão de Demanda', path: '/previsao-demanda' },
-      { name: 'Manejo', path: '/manejo' },
+      { name: 'Estoque', path: '/estoque', levels: [1, 2] },
+      { name: 'Previsão de Demanda', path: '/previsao-demanda', levels: [1, 2] },
+      { name: 'Manejo Diário', path: '/manejo', levels: [1, 2, 3] },
     ],
     levels: [1, 2, 3],
   },
@@ -105,9 +105,9 @@ const navItems = [
     module: 'Financeiro / Cadastros',
     icon: DollarSign,
     items: [
-      { name: 'Parceiros de Negócios', path: '/parceiros' },
-      { name: 'Transações', path: '/transacoes' },
-      { name: 'Eventos Comerciais', path: '/eventos-comerciais' },
+      { name: 'Parceiros de Negócios', path: '/parceiros', levels: [1, 2] },
+      { name: 'Transações', path: '/transacoes', levels: [1, 2] },
+      { name: 'Eventos Comerciais', path: '/eventos-comerciais', levels: [1, 2] },
     ],
     levels: [1, 2],
   },
@@ -115,17 +115,17 @@ const navItems = [
     module: 'Operações',
     icon: Tractor,
     items: [
-      { name: 'Maquinário', path: '/maquinario' },
-      { name: 'Clima', path: '/clima' },
+      { name: 'Maquinário', path: '/maquinario', levels: [1, 2] },
+      { name: 'Clima', path: '/clima', levels: [1, 2] },
     ],
-    levels: [1, 2, 3],
+    levels: [1, 2],
   },
   {
     module: 'Integrações',
     icon: Network,
     items: [
-      { name: 'Inttegra API', path: '/inttegra' },
-      { name: 'Importação (ETL)', path: '/importacao' },
+      { name: 'Inttegra API', path: '/inttegra', levels: [1] },
+      { name: 'Importação (ETL)', path: '/importacao', levels: [1] },
     ],
     levels: [1],
   },
@@ -147,24 +147,38 @@ export default function Layout() {
     navigate('/login')
   }
 
+  // Security routing enforcement
   useEffect(() => {
     if (
       state.userRole === 3 &&
-      (location.pathname.startsWith('/transacoes') ||
-        location.pathname.startsWith('/parceiros') ||
-        location.pathname.startsWith('/auditoria') ||
-        location.pathname.startsWith('/inttegra') ||
-        location.pathname.startsWith('/importacao') ||
-        location.pathname.startsWith('/previsao-demanda'))
+      location.pathname !== '/' &&
+      location.pathname !== '/pesagem' &&
+      location.pathname !== '/manejo'
     ) {
       navigate('/')
     }
   }, [state.userRole, location.pathname, navigate])
 
+  // Mock Weekly Backup
+  useEffect(() => {
+    const lastBackupStr = localStorage.getItem('last_weekly_backup')
+    const lastBackup = lastBackupStr ? new Date(lastBackupStr) : new Date(0)
+    const daysSince = Math.floor((new Date().getTime() - lastBackup.getTime()) / (1000 * 3600 * 24))
+
+    if (daysSince >= 7 && state.userRole === 1) {
+      setTimeout(() => {
+        toast({
+          title: 'Backup Semanal Automático',
+          description: 'Dump completo do banco gerado em JSON e enviado para admin@agro.com',
+        })
+        localStorage.setItem('last_weekly_backup', new Date().toISOString())
+      }, 3000)
+    }
+  }, [state.userRole, toast])
+
   // Offline Data Synchronization Engine
   useEffect(() => {
     if (state.isOnline && state.pendingSyncQueue.length > 0 && !isSyncing) {
-      // Auto-trigger sync when online
       handleManualSync()
     }
   }, [state.isOnline, state.pendingSyncQueue.length])
@@ -176,11 +190,8 @@ export default function Layout() {
     }
 
     setIsSyncing(true)
-
-    // Simulate network request and conflict check
     setTimeout(() => {
-      const hasConflict = Math.random() > 0.8 // 20% chance of a mock validation conflict
-
+      const hasConflict = Math.random() > 0.8 // 20% chance
       if (hasConflict && state.pendingSyncQueue.length > 0) {
         setIsSyncing(false)
         setSyncModalOpen(true)
@@ -211,7 +222,9 @@ export default function Layout() {
       <div className="flex h-screen w-full bg-slate-50">
         <Sidebar className="border-r shadow-subtle">
           <SidebarHeader className="p-4 flex items-center h-16 border-b">
-            <h2 className="font-bold text-emerald-900 tracking-tight text-lg">Agro ERP Elite</h2>
+            <h2 className="font-bold text-emerald-900 tracking-tight text-lg">
+              Gestão Pecuária 360º
+            </h2>
           </SidebarHeader>
           <SidebarContent className="p-2 gap-2">
             {navItems
@@ -224,11 +237,9 @@ export default function Layout() {
                   </div>
                   <SidebarMenu>
                     {mod.items ? (
-                      mod.items.map((i) => {
-                        // Hide specific modules from level 3
-                        if (i.path === '/previsao-demanda' && state.userRole === 3) return null
-                        if (i.path === '/importacao' && state.userRole !== 1) return null
-                        return (
+                      mod.items
+                        .filter((i) => !i.levels || i.levels.includes(state.userRole))
+                        .map((i) => (
                           <SidebarMenuItem key={i.path}>
                             <SidebarMenuButton
                               asChild
@@ -238,8 +249,7 @@ export default function Layout() {
                               <Link to={i.path}>{i.name}</Link>
                             </SidebarMenuButton>
                           </SidebarMenuItem>
-                        )
-                      })
+                        ))
                     ) : (
                       <SidebarMenuItem>
                         <SidebarMenuButton
@@ -271,7 +281,6 @@ export default function Layout() {
             </div>
 
             <div className="flex items-center gap-3 sm:gap-4">
-              {/* Sync Status Dashboard */}
               <button
                 className="hidden sm:flex items-center cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => setSyncModalOpen(true)}
@@ -296,22 +305,6 @@ export default function Layout() {
                     <Cloud className="w-4 h-4" />
                     <span>Sincronizado</span>
                   </div>
-                )}
-              </button>
-
-              {/* Mobile Compact Sync Status */}
-              <button
-                className="flex sm:hidden items-center cursor-pointer"
-                onClick={() => setSyncModalOpen(true)}
-              >
-                {!state.isOnline ? (
-                  <CloudOff className="w-5 h-5 text-rose-500" />
-                ) : isSyncing ? (
-                  <RefreshCw className="w-5 h-5 text-amber-500 animate-spin" />
-                ) : state.pendingSyncQueue.length > 0 ? (
-                  <AlertTriangle className="w-5 h-5 text-amber-500" />
-                ) : (
-                  <Cloud className="w-5 h-5 text-emerald-600" />
                 )}
               </button>
 
@@ -378,8 +371,7 @@ export default function Layout() {
             <div className="bg-amber-100 border-b border-amber-200 px-4 py-2.5 flex items-center justify-center text-amber-800 text-xs sm:text-sm font-medium z-20 shrink-0 shadow-sm animate-fade-in">
               <CloudOff className="w-5 h-5 mr-2 shrink-0" />
               <span className="text-center">
-                <strong>Modo Offline:</strong> Você está visualizando dados em cache. As alterações
-                locais serão sincronizadas quando a conexão for restaurada.
+                <strong>Modo Offline:</strong> Visualizando cache. Sincronização na próxima conexão.
               </span>
             </div>
           )}
@@ -390,7 +382,6 @@ export default function Layout() {
         </main>
       </div>
 
-      {/* Conflict Management & Sync Queue Dialog */}
       <Dialog open={syncModalOpen} onOpenChange={setSyncModalOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
           <DialogHeader>
@@ -398,12 +389,10 @@ export default function Layout() {
               <RefreshCw
                 className={`w-5 h-5 ${isSyncing ? 'animate-spin text-amber-500' : 'text-emerald-700'}`}
               />
-              Central de Sincronização Local
+              Sincronização Local
             </DialogTitle>
             <DialogDescription>
-              {state.isOnline ? 'Você está online.' : 'Você está offline. Operando em Cache Local.'}
-              {state.lastSync &&
-                ` Última sincronização com sucesso: ${format(parseISO(state.lastSync), 'dd/MM/yyyy HH:mm')}`}
+              {state.isOnline ? 'Você está online.' : 'Você está offline.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -425,18 +414,12 @@ export default function Layout() {
                     <TableRow key={item.id}>
                       <TableCell>
                         <span className="font-medium text-xs">{item.type}</span>
-                        <div className="text-xs text-muted-foreground truncate max-w-[200px]">
-                          {JSON.stringify(item.payload)}
-                        </div>
                       </TableCell>
                       <TableCell className="text-xs">
                         {format(parseISO(item.timestamp), 'dd/MM HH:mm')}
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant="outline"
-                          className="text-amber-600 border-amber-300 bg-amber-50"
-                        >
+                        <Badge variant="outline" className="text-amber-600">
                           Na Fila
                         </Badge>
                       </TableCell>
@@ -446,7 +429,7 @@ export default function Layout() {
               </Table>
             ) : (
               <div className="text-center py-8 text-muted-foreground text-sm border border-dashed rounded-lg">
-                Nenhum registro pendente na fila.
+                Fila Vazia.
               </div>
             )}
           </div>
@@ -454,17 +437,17 @@ export default function Layout() {
           <div className="flex justify-between items-center mt-6 pt-4 border-t">
             <Button
               variant="ghost"
-              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+              className="text-rose-600 hover:text-rose-700"
               onClick={clearQueue}
             >
-              Descartar Pendentes
+              Descartar
             </Button>
             <Button
               className="bg-emerald-800"
               onClick={handleManualSync}
               disabled={!state.isOnline || isSyncing || state.pendingSyncQueue.length === 0}
             >
-              {isSyncing ? 'Enviando...' : 'Forçar Sincronização'}
+              Forçar Sync
             </Button>
           </div>
         </DialogContent>

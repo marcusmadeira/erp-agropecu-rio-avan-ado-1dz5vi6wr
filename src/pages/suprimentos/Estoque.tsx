@@ -45,6 +45,8 @@ export default function Estoque() {
     quantity: '',
     unit: 'Kg',
     unitCost: '',
+    botijao: '',
+    caneca: '',
   })
 
   const handleSave = (e: React.FormEvent) => {
@@ -61,6 +63,8 @@ export default function Estoque() {
           unit: form.unit,
           quantity: Number(form.quantity),
           unitCost: Number(form.unitCost),
+          botijao: form.category === 'Sêmen' ? form.botijao : undefined,
+          caneca: form.category === 'Sêmen' ? form.caneca : undefined,
         },
         ...s.estoque,
       ],
@@ -86,7 +90,6 @@ export default function Estoque() {
     if (!e.target.files || e.target.files.length === 0) return
     setIsAnalyzing(true)
 
-    // Mock AI OCR process
     setTimeout(() => {
       setExtractedItems([
         {
@@ -104,18 +107,12 @@ export default function Estoque() {
           quantity: 50,
           unit: 'Doses',
           unitCost: 45.0,
-        },
-        {
-          id: Math.random().toString(),
-          name: 'Sal Mineral Protéico',
-          category: 'Nutrição',
-          quantity: 2000,
-          unit: 'Kg',
-          unitCost: 3.2,
+          botijao: 'BT-EXT',
+          caneca: 'C-01',
         },
       ])
       setIsAnalyzing(false)
-      toast({ title: 'Leitura Concluída', description: 'Dados extraídos da Nota Fiscal com IA.' })
+      toast({ title: 'Leitura Concluída', description: 'Dados extraídos da NF-e com IA.' })
     }, 2500)
   }
 
@@ -143,10 +140,7 @@ export default function Estoque() {
 
     setOcrOpen(false)
     setExtractedItems([])
-    toast({
-      title: 'Estoque Atualizado',
-      description: 'Todos os itens da NF-e foram importados com sucesso.',
-    })
+    toast({ title: 'Estoque Atualizado', description: 'Itens importados com sucesso.' })
   }
 
   return (
@@ -154,22 +148,16 @@ export default function Estoque() {
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <Box className="text-emerald-900 w-8 h-8" />
-          <h2 className="text-2xl font-bold text-emerald-900">Estoque de Insumos</h2>
+          <h2 className="text-2xl font-bold text-emerald-900">Estoque Inteligente</h2>
         </div>
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
           {state.userRole !== 3 && (
-            <Button
-              variant="outline"
-              asChild
-              className="text-indigo-700 border-indigo-200 hover:bg-indigo-50 font-semibold shadow-sm"
-            >
+            <Button variant="outline" asChild className="text-indigo-700 border-indigo-200">
               <Link to="/previsao-demanda">
                 <BrainCircuit className="w-4 h-4 mr-2" /> Previsão IA
               </Link>
             </Button>
           )}
-
-          {/* Botão OCR IA */}
           <Dialog
             open={ocrOpen}
             onOpenChange={(v) => {
@@ -178,27 +166,22 @@ export default function Estoque() {
             }}
           >
             <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="text-amber-700 border-amber-200 hover:bg-amber-50 shadow-sm"
-              >
+              <Button variant="outline" className="text-amber-700 border-amber-200">
                 <FileText className="w-4 h-4 mr-2" /> Ler NF-e (IA)
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <BrainCircuit className="w-5 h-5 text-indigo-600" />
-                  Importação de NF-e Inteligente (OCR)
+                  <BrainCircuit className="w-5 h-5 text-indigo-600" /> OCR Inteligente
                 </DialogTitle>
                 <DialogDescription>
-                  Faça o upload do PDF da Nota Fiscal. A Inteligência Artificial irá identificar os
-                  produtos e categorizá-los.
+                  Extração automática de produtos e quantidades via PDF.
                 </DialogDescription>
               </DialogHeader>
 
               {extractedItems.length === 0 ? (
-                <div className="mt-4 border-2 border-dashed border-slate-300 rounded-lg p-8 text-center bg-slate-50 relative hover:bg-slate-100 transition-colors">
+                <div className="mt-4 border-2 border-dashed border-slate-300 rounded-lg p-8 text-center bg-slate-50 relative">
                   <input
                     type="file"
                     accept=".pdf,image/*"
@@ -209,60 +192,43 @@ export default function Estoque() {
                   {isAnalyzing ? (
                     <div className="flex flex-col items-center">
                       <RefreshCw className="w-10 h-10 text-indigo-500 animate-spin mb-3" />
-                      <p className="font-semibold text-slate-700">Processando com IA...</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Extraindo produtos, quantidades e valores.
-                      </p>
+                      <p>Processando...</p>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center">
                       <Upload className="w-10 h-10 text-slate-400 mb-3" />
-                      <p className="font-semibold text-slate-700">Arraste a NF-e aqui (PDF/JPG)</p>
-                      <p className="text-xs text-muted-foreground mt-1">Ou clique para procurar</p>
+                      <p>Arraste a NF-e aqui</p>
                     </div>
                   )}
                 </div>
               ) : (
                 <div className="mt-4 space-y-4">
-                  <div className="max-h-[300px] overflow-auto border rounded-md">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Produto Encontrado</TableHead>
-                          <TableHead>Categoria (IA)</TableHead>
-                          <TableHead className="text-right">Qtd</TableHead>
-                          <TableHead className="text-right">Custo Unit.</TableHead>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Produto</TableHead>
+                        <TableHead>Cat.</TableHead>
+                        <TableHead className="text-right">Qtd</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {extractedItems.map((i) => (
+                        <TableRow key={i.id}>
+                          <TableCell>{i.name}</TableCell>
+                          <TableCell>{i.category}</TableCell>
+                          <TableCell className="text-right">{i.quantity}</TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {extractedItems.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="font-medium text-xs">{item.name}</TableCell>
-                            <TableCell className="text-xs">
-                              <span className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full font-semibold">
-                                {item.category}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-right font-mono text-xs">
-                              {item.quantity} {item.unit}
-                            </TableCell>
-                            <TableCell className="text-right font-mono text-xs">
-                              R$ {item.unitCost.toFixed(2)}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                      ))}
+                    </TableBody>
+                  </Table>
                   <Button className="w-full bg-emerald-800" onClick={handleSaveOcr}>
-                    Confirmar e Inserir no Estoque
+                    Confirmar Importação
                   </Button>
                 </div>
               )}
             </DialogContent>
           </Dialog>
 
-          {/* Botão Nova Entrada Manual */}
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button className="bg-emerald-800 shadow-sm">
@@ -271,19 +237,17 @@ export default function Estoque() {
             </DialogTrigger>
             <DialogContent className="max-w-sm">
               <DialogHeader>
-                <DialogTitle>Novo Insumo no Estoque</DialogTitle>
+                <DialogTitle>Novo Insumo</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSave} className="space-y-4 mt-2">
-                <div>
-                  <Label>Nome do Produto</Label>
-                  <Input
-                    required
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  />
-                </div>
+                <Input
+                  placeholder="Nome do Produto"
+                  required
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <div className="space-y-1">
                     <Label>Categoria</Label>
                     <Select
                       value={form.category}
@@ -294,12 +258,12 @@ export default function Estoque() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Nutrição">Nutrição</SelectItem>
-                        <SelectItem value="Saúde">Saúde (Vacinas)</SelectItem>
-                        <SelectItem value="Sêmen">Sêmen (Genética)</SelectItem>
+                        <SelectItem value="Saúde">Saúde</SelectItem>
+                        <SelectItem value="Sêmen">Sêmen Genética</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
+                  <div className="space-y-1">
                     <Label>Unidade</Label>
                     <Select value={form.unit} onValueChange={(v) => setForm({ ...form, unit: v })}>
                       <SelectTrigger>
@@ -313,29 +277,47 @@ export default function Estoque() {
                     </Select>
                   </div>
                 </div>
+                {form.category === 'Sêmen' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label>Botijão</Label>
+                      <Input
+                        value={form.botijao}
+                        onChange={(e) => setForm({ ...form, botijao: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Caneca</Label>
+                      <Input
+                        value={form.caneca}
+                        onChange={(e) => setForm({ ...form, caneca: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Quantidade Inicial</Label>
+                  <div className="space-y-1">
+                    <Label>Quantidade</Label>
                     <Input
-                      required
                       type="number"
+                      required
                       value={form.quantity}
                       onChange={(e) => setForm({ ...form, quantity: e.target.value })}
                     />
                   </div>
-                  <div>
-                    <Label>Custo Unitário (R$)</Label>
+                  <div className="space-y-1">
+                    <Label>Custo Unit. (R$)</Label>
                     <Input
-                      required
                       type="number"
                       step="0.01"
+                      required
                       value={form.unitCost}
                       onChange={(e) => setForm({ ...form, unitCost: e.target.value })}
                     />
                   </div>
                 </div>
                 <Button type="submit" className="w-full bg-emerald-800 mt-2">
-                  Adicionar Estoque
+                  Adicionar
                 </Button>
               </form>
             </DialogContent>
@@ -348,17 +330,24 @@ export default function Estoque() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Produto / Insumo</TableHead>
+                <TableHead>Produto</TableHead>
                 <TableHead>Categoria</TableHead>
                 <TableHead className="text-right">Custo Unit.</TableHead>
-                <TableHead className="text-right">Quantidade Atual</TableHead>
+                <TableHead className="text-right">Qtd Atual</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {state.estoque.map((e) => (
                 <TableRow key={e.id}>
                   <TableCell className="font-semibold">{e.name}</TableCell>
-                  <TableCell>{e.category}</TableCell>
+                  <TableCell>
+                    {e.category}
+                    {e.category === 'Sêmen' && e.botijao && (
+                      <span className="block text-[10px] text-muted-foreground">
+                        Botijão: {e.botijao} / Caneca: {e.caneca}
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right text-muted-foreground">
                     R$ {e.unitCost.toFixed(2)}
                   </TableCell>

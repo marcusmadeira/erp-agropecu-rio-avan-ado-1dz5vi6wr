@@ -42,7 +42,7 @@ export default function Animais() {
     rgn: '',
     nomeAnimal: '',
     loteId: '',
-    categoria: 'Matriz',
+    categoria: 'Matriz PO',
     pesoAtual: '',
     costCenter: 'CC01-PO',
     gender: 'F',
@@ -63,7 +63,6 @@ export default function Animais() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.brinco || !form.loteId || !form.pesoAtual) return
-
     const newId = Math.random().toString()
     const peso = Number(form.pesoAtual)
 
@@ -97,25 +96,25 @@ export default function Animais() {
         ...s.auditLogs,
       ],
     }))
-    toast({ title: 'Animal Cadastrado', description: `Brinco ${form.brinco} salvo com sucesso.` })
+    toast({ title: 'Animal Cadastrado', description: `Brinco ${form.brinco} salvo.` })
     setOpen(false)
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center flex-wrap gap-4">
-        <h2 className="text-2xl font-bold text-emerald-900">Cadastro de Animais</h2>
+        <h2 className="text-2xl font-bold text-emerald-900">Plantel e Rastreabilidade</h2>
         <div className="flex items-center space-x-2 relative w-full sm:w-auto">
           <Search className="w-4 h-4 absolute left-3 text-muted-foreground" />
           <Input
             className="pl-9 w-full sm:w-64"
-            placeholder="Buscar Brinco / RGN / Nome..."
+            placeholder="Buscar Brinco / RGN..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-emerald-800 hidden sm:inline-flex">
+              <Button className="bg-emerald-800">
                 <Plus className="w-4 h-4 mr-2" /> Novo Animal
               </Button>
             </DialogTrigger>
@@ -141,14 +140,27 @@ export default function Animais() {
                     />
                   </div>
                 </div>
-                <div>
-                  <Label>Nome do Animal (Opcional)</Label>
-                  <Input
-                    value={form.nomeAnimal}
-                    onChange={(e) => setForm({ ...form, nomeAnimal: e.target.value })}
-                  />
-                </div>
                 <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Categoria Oficial</Label>
+                    <Select
+                      value={form.categoria}
+                      onValueChange={(v) => setForm({ ...form, categoria: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Matriz PO">Matriz PO</SelectItem>
+                        <SelectItem value="Touro PO">Touro PO</SelectItem>
+                        <SelectItem value="Bezerro PO">Bezerro PO</SelectItem>
+                        <SelectItem value="Bezerra PO">Bezerra PO</SelectItem>
+                        <SelectItem value="Novilha TIP">Novilha TIP</SelectItem>
+                        <SelectItem value="Garrote TIP">Garrote TIP</SelectItem>
+                        <SelectItem value="Vaca Descarte TIP">Vaca Descarte TIP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div>
                     <Label>Lote</Label>
                     <Select
@@ -168,6 +180,8 @@ export default function Animais() {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label>Peso Entrada (Kg)</Label>
                     <Input
@@ -177,38 +191,18 @@ export default function Animais() {
                       onChange={(e) => setForm({ ...form, pesoAtual: e.target.value })}
                     />
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label>Categoria</Label>
+                    <Label>Centro de Custo</Label>
                     <Select
-                      value={form.categoria}
-                      onValueChange={(v) => setForm({ ...form, categoria: v })}
+                      value={form.costCenter}
+                      onValueChange={(v) => setForm({ ...form, costCenter: v })}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Matriz">Matriz PO</SelectItem>
-                        <SelectItem value="Touro">Touro PO</SelectItem>
-                        <SelectItem value="Garrote">Garrote</SelectItem>
-                        <SelectItem value="Novilha">Novilha</SelectItem>
-                        <SelectItem value="Bezerro">Bezerro(a)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Sexo</Label>
-                    <Select
-                      value={form.gender}
-                      onValueChange={(v) => setForm({ ...form, gender: v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="M">Macho</SelectItem>
-                        <SelectItem value="F">Fêmea</SelectItem>
+                        <SelectItem value="CC01-PO">PO (Elite)</SelectItem>
+                        <SelectItem value="CC02-TIP">TIP (Comercial)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -221,7 +215,7 @@ export default function Animais() {
                         <SelectValue placeholder="Opcional" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Desconhecido</SelectItem>
+                        <SelectItem value="none">Nenhum</SelectItem>
                         {touros.map((t) => (
                           <SelectItem key={t.id} value={t.id}>
                             {t.brinco}
@@ -237,7 +231,7 @@ export default function Animais() {
                         <SelectValue placeholder="Opcional" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Desconhecida</SelectItem>
+                        <SelectItem value="none">Nenhum</SelectItem>
                         {matrizes.map((m) => (
                           <SelectItem key={m.id} value={m.id}>
                             {m.brinco}
@@ -246,21 +240,6 @@ export default function Animais() {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-                <div>
-                  <Label>Centro de Custo</Label>
-                  <Select
-                    value={form.costCenter}
-                    onValueChange={(v) => setForm({ ...form, costCenter: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="CC01-PO">CC01-PO (Elite)</SelectItem>
-                      <SelectItem value="CC02-TIP">CC02-TIP (Comercial)</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
                 <Button type="submit" className="w-full bg-emerald-800 mt-2">
                   Salvar Cadastro
@@ -280,9 +259,8 @@ export default function Animais() {
                 <TableHead>Nome / RGN</TableHead>
                 <TableHead>Lote</TableHead>
                 <TableHead>Categoria</TableHead>
-                <TableHead>Genealogia (P/M)</TableHead>
-                <TableHead className="text-right">Peso Atual</TableHead>
-                <TableHead className="text-right">GMD</TableHead>
+                <TableHead>Genealogia</TableHead>
+                <TableHead className="text-right">Peso / GMD</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -294,7 +272,7 @@ export default function Animais() {
                   <TableRow key={a.id}>
                     <TableCell className="font-bold">{a.brinco}</TableCell>
                     <TableCell>
-                      <div className="font-medium text-slate-800">{a.nomeAnimal || '-'}</div>
+                      <div className="font-medium">{a.nomeAnimal || '-'}</div>
                       <div className="text-[10px] text-muted-foreground">{a.rgn || 'S/ RGN'}</div>
                     </TableCell>
                     <TableCell>
@@ -318,28 +296,18 @@ export default function Animais() {
                     </TableCell>
                     <TableCell className="text-right font-mono text-emerald-900">
                       {a.pesoAtual} kg
+                      <span className="block text-[10px] text-muted-foreground">
+                        {a.gmd.toFixed(3)} GMD
+                      </span>
                     </TableCell>
-                    <TableCell className="text-right font-mono">{a.gmd.toFixed(3)}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        title="Exportar Ficha (PDF)"
-                        onClick={() => exportAnimalPDF(a, state)}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => exportAnimalPDF(a, state)}>
                         <FileText className="w-4 h-4 text-emerald-700" />
                       </Button>
                     </TableCell>
                   </TableRow>
                 )
               })}
-              {filtered.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-4">
-                    Nenhum animal encontrado.
-                  </TableCell>
-                </TableRow>
-              )}
             </TableBody>
           </Table>
         </CardContent>

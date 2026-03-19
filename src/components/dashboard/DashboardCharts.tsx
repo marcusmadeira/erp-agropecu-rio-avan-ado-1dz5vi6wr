@@ -1,171 +1,156 @@
 import { useMemo } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  BarChart,
-  Bar,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from '@/components/ui/chart'
+import {
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
-  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
+  BarChart,
+  Bar,
 } from 'recharts'
 import useAppStore from '@/stores/useAppStore'
 
 export default function DashboardCharts() {
   const { state } = useAppStore()
 
-  const currentMonth = new Date().getMonth()
-  const months = [
-    'Jan',
-    'Fev',
-    'Mar',
-    'Abr',
-    'Mai',
-    'Jun',
-    'Jul',
-    'Ago',
-    'Set',
-    'Out',
-    'Nov',
-    'Dez',
-  ]
+  const cashFlowData = useMemo(() => {
+    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun']
+    return months.map((m) => ({
+      name: m,
+      Realizado: Math.random() * 50000 + 20000,
+      Projetado: Math.random() * 60000 + 25000,
+    }))
+  }, [])
 
-  const cashData = Array.from({ length: 4 }).map((_, i) => {
-    const m = (currentMonth + i) % 12
-    const txs = state.transacoes.filter((t) => {
-      try {
-        if (!t.Data_Vencimento) return false
-        return new Date(t.Data_Vencimento).getMonth() === m
-      } catch (e) {
-        return false
+  const reproData = useMemo(() => {
+    const prenhes = state.reproducoes.filter(
+      (r) => r.status === 'Prenhe' || r.status === 'Parida',
+    ).length
+    const vazias = state.reproducoes.filter((r) => r.status === 'Vazia').length
+    const aguardando = state.reproducoes.filter((r) => r.status === 'Aguardando Toque').length
+    return [
+      { name: 'Prenhes', value: prenhes, fill: 'hsl(var(--chart-2))' },
+      { name: 'Vazias', value: vazias, fill: 'hsl(var(--chart-5))' },
+      { name: 'Aguardando', value: aguardando, fill: 'hsl(var(--chart-4))' },
+    ]
+  }, [state.reproducoes])
+
+  const lotesCostData = useMemo(() => {
+    return state.lotes.map((lote) => {
+      const loteManejos = state.manejos.filter((m) => m.loteId === lote.id)
+      const custoVariavel = loteManejos.reduce((acc, m) => acc + (m.cost || 0), 0)
+
+      const animais = state.animais.filter((a) => a.loteId === lote.id && a.status === 'Ativo')
+      const totalGain = animais.reduce(
+        (acc, a) => acc + (a.pesoAtual - (a.pesoEntrada || a.pesoAtual)),
+        0,
+      )
+
+      const arrobasProduced = totalGain / 30
+      const custoArroba = arrobasProduced > 0 ? custoVariavel / arrobasProduced : 0
+
+      return {
+        name: lote.name,
+        custoArroba: Number(custoArroba.toFixed(2)),
       }
     })
-    return {
-      name: months[m],
-      receita: txs
-        .filter((t) => t.Tipo_Movimento === 'Receita')
-        .reduce((a, b) => a + b.Valor_Total, 0),
-      despesa: txs
-        .filter((t) => t.Tipo_Movimento === 'Despesa')
-        .reduce((a, b) => a + b.Valor_Total, 0),
-    }
-  })
-
-  const totalMatrizes = state.animais.filter((a) => a.categoria === 'Matriz').length
-  const prenhes = state.reproducoes.filter((r) => r.status === 'Prenhe').length
-  const vazias = totalMatrizes - prenhes
-
-  const pieData = [
-    { name: 'Prenhes', value: prenhes, color: 'hsl(var(--chart-1))' },
-    { name: 'Vazias/Aguardando', value: vazias, color: 'hsl(var(--chart-2))' },
-  ]
-
-  // Calculate Bull Ranking
-  const bullRankingData = useMemo(() => {
-    const stats: Record<string, { total: number; prenhes: number }> = {}
-    state.reproducoes.forEach((r) => {
-      if (!r.touro) return
-      const tName = r.touro.replace('Sêmen Touro ', '').trim() // clean up string
-      if (!stats[tName]) stats[tName] = { total: 0, prenhes: 0 }
-      stats[tName].total++
-      if (r.status === 'Prenhe' || r.status === 'Parida') stats[tName].prenhes++
-    })
-    return Object.entries(stats)
-      .map(([touro, data]) => ({
-        name: touro.length > 15 ? touro.substring(0, 15) + '...' : touro,
-        taxa: Number(((data.prenhes / data.total) * 100).toFixed(1)),
-        total: data.total,
-      }))
-      .sort((a, b) => b.taxa - a.taxa)
-      .slice(0, 4) // Top 4 bulls
-  }, [state.reproducoes])
+  }, [state.lotes, state.manejos, state.animais])
 
   return (
     <div className="grid gap-4 md:grid-cols-3 mt-4">
-      <Card className="shadow-subtle col-span-1 md:col-span-2 lg:col-span-1">
+      <Card className="shadow-subtle col-span-1 md:col-span-2">
         <CardHeader>
-          <CardTitle className="text-emerald-900">Fluxo de Caixa Projetado</CardTitle>
+          <CardTitle>Fluxo de Caixa Projetado vs Realizado</CardTitle>
         </CardHeader>
         <CardContent>
           <ChartContainer
             config={{
-              receita: { label: 'Receitas', color: 'hsl(var(--chart-1))' },
-              despesa: { label: 'Despesas', color: 'hsl(var(--chart-2))' },
+              Realizado: { color: 'hsl(var(--chart-2))' },
+              Projetado: { color: 'hsl(var(--chart-1))' },
             }}
-            className="h-[250px] w-full"
+            className="h-[300px] w-full"
           >
-            <BarChart data={cashData}>
+            <AreaChart data={cashFlowData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" />
               <YAxis />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="receita" fill="var(--color-receita)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="despesa" fill="var(--color-despesa)" radius={[4, 4, 0, 0]} />
-            </BarChart>
+              <ChartLegend content={<ChartLegendContent />} />
+              <Area
+                type="monotone"
+                dataKey="Projetado"
+                stroke="var(--color-Projetado)"
+                fill="var(--color-Projetado)"
+                fillOpacity={0.3}
+              />
+              <Area
+                type="monotone"
+                dataKey="Realizado"
+                stroke="var(--color-Realizado)"
+                fill="var(--color-Realizado)"
+                fillOpacity={0.6}
+              />
+            </AreaChart>
           </ChartContainer>
         </CardContent>
       </Card>
 
-      <Card className="shadow-subtle">
+      <Card className="shadow-subtle col-span-1">
         <CardHeader>
-          <CardTitle className="text-emerald-900">Taxa de Prenhez Geral</CardTitle>
+          <CardTitle>Taxa de Prenhez Geral</CardTitle>
         </CardHeader>
-        <CardContent className="flex justify-center items-center h-[250px]">
-          <ResponsiveContainer width="100%" height="100%">
+        <CardContent>
+          <ChartContainer config={{}} className="h-[300px] w-full">
             <PieChart>
               <Pie
-                data={pieData}
+                data={reproData}
+                dataKey="value"
+                nameKey="name"
                 cx="50%"
                 cy="50%"
                 innerRadius={60}
-                outerRadius={80}
-                paddingAngle={5}
-                dataKey="value"
+                outerRadius={100}
+                label
               >
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                {reproData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
               </Pie>
-              <ChartTooltip />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartLegend content={<ChartLegendContent />} />
             </PieChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         </CardContent>
       </Card>
 
-      <Card className="shadow-subtle">
+      <Card className="shadow-subtle col-span-1 md:col-span-3">
         <CardHeader>
-          <CardTitle className="text-emerald-900">Ranking Reprodutivo</CardTitle>
-          <CardDescription>Top 4 Touros/Sêmen (% de Sucesso IATF)</CardDescription>
+          <CardTitle>Custo por Arroba Produzida (R$/@) por Lote</CardTitle>
         </CardHeader>
         <CardContent>
-          {bullRankingData.length > 0 ? (
-            <ChartContainer
-              config={{
-                taxa: { label: 'Taxa Sucesso (%)', color: 'hsl(var(--chart-3))' },
-              }}
-              className="h-[230px] w-full"
-            >
-              <BarChart data={bullRankingData} layout="vertical" margin={{ left: 30 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                <XAxis type="number" domain={[0, 100]} hide />
-                <YAxis dataKey="name" type="category" width={80} fontSize={10} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar
-                  dataKey="taxa"
-                  fill="var(--color-taxa)"
-                  radius={[0, 4, 4, 0]}
-                  label={{ position: 'right', formatter: (v: number) => `${v}%`, fontSize: 10 }}
-                />
-              </BarChart>
-            </ChartContainer>
-          ) : (
-            <div className="h-[230px] flex items-center justify-center text-sm text-muted-foreground">
-              Sem dados reprodutivos suficientes.
-            </div>
-          )}
+          <ChartContainer
+            config={{ custoArroba: { color: 'hsl(var(--chart-1))' } }}
+            className="h-[250px] w-full"
+          >
+            <BarChart data={lotesCostData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="custoArroba" fill="var(--color-custoArroba)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ChartContainer>
         </CardContent>
       </Card>
     </div>

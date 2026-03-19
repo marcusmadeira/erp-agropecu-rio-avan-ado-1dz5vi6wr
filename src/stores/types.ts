@@ -32,7 +32,15 @@ export interface Animal {
   rgn?: string
   nomeAnimal?: string
   loteId: string
-  categoria: string
+  categoria:
+    | 'Matriz PO'
+    | 'Touro PO'
+    | 'Bezerro PO'
+    | 'Bezerra PO'
+    | 'Novilha TIP'
+    | 'Vaca Descarte TIP'
+    | 'Garrote TIP'
+    | string
   pesoEntrada?: number
   pesoAtual: number
   gmd: number
@@ -54,10 +62,13 @@ export interface Reproducao {
   animalId: string
   type: 'IATF' | 'Monta'
   touro?: string
+  semenId?: string
   date: string
+  dataD0?: string
+  dataIATF?: string
   previsaoToque: string
   dpp: string
-  status: 'Aguardando Toque' | 'Prenhe' | 'Vazia' | 'Parida'
+  status: 'Em Protocolo' | 'Aguardando Toque' | 'Prenhe' | 'Vazia' | 'Parida'
 }
 export interface EstoqueItem {
   id: string
@@ -66,6 +77,8 @@ export interface EstoqueItem {
   quantity: number
   unit: string
   unitCost: number
+  botijao?: string
+  caneca?: string
 }
 export interface Manejo {
   id: string
