@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { ArrowRightRight, CheckSquare } from 'lucide-react'
+import { ArrowRightLeft, CheckSquare } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 export default function Apartacao() {
@@ -112,7 +112,7 @@ export default function Apartacao() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <ArrowRightRight className="w-8 h-8 text-emerald-900" />
+        <ArrowRightLeft className="w-8 h-8 text-emerald-900" />
         <div>
           <h2 className="text-2xl font-bold text-emerald-900">
             Apartação (Transferência em Massa)
