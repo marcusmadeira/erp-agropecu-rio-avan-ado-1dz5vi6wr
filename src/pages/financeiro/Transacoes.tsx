@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { format, parseISO } from 'date-fns'
+import { format, parseISO, isValid } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/components/dashboard/KpiCards'
@@ -34,7 +34,11 @@ export default function Transacoes() {
 
   const filtered = state.transacoes
     .filter((t) => (filterCC === 'ALL' ? true : t.Centro_Custo_Direcionado === filterCC))
-    .sort((a, b) => new Date(b.Data_Competencia).getTime() - new Date(a.Data_Competencia).getTime())
+    .sort((a, b) => {
+      const dateA = a.Data_Competencia ? new Date(a.Data_Competencia).getTime() : 0
+      const dateB = b.Data_Competencia ? new Date(b.Data_Competencia).getTime() : 0
+      return dateB - dateA
+    })
 
   const handlePay = (id: string, desc: string) => {
     const dataEfetivacao = new Date().toISOString()
@@ -69,6 +73,16 @@ export default function Transacoes() {
       title: 'Transação Efetivada',
       description: 'Lançamento DRE atualizado e Inttegra notificado.',
     })
+  }
+
+  const safeFormatDate = (dateString?: string) => {
+    if (!dateString) return '-'
+    try {
+      const date = parseISO(dateString)
+      return isValid(date) ? format(date, 'dd/MM/yyyy') : '-'
+    } catch {
+      return '-'
+    }
   }
 
   return (
@@ -119,7 +133,7 @@ export default function Transacoes() {
                 return (
                   <TableRow key={t.id}>
                     <TableCell className="font-mono text-xs">
-                      {format(parseISO(t.Data_Competencia), 'dd/MM/yyyy')}
+                      {safeFormatDate(t.Data_Competencia)}
                     </TableCell>
                     <TableCell className="font-medium">
                       {t.Descricao_Lancamento}
