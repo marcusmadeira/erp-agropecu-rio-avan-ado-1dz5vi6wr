@@ -231,7 +231,7 @@ export default function Layout() {
                           isActive={location.pathname === mod.path}
                           className="rounded-md"
                         >
-                          <Link to={mod.path!}>Acessar Painel</Link>
+                          <Link to={mod.path!}>Painel do rebanho</Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     )}
