@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import useAppStore from '@/stores/useAppStore'
+import { useInttegraSync } from '@/hooks/useInttegraSync'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,6 +25,7 @@ import { format, parseISO } from 'date-fns'
 
 export default function Nascimentos() {
   const { state, dispatch } = useAppStore()
+  const { pushRecord } = useInttegraSync()
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
   const [selectedRepro, setSelectedRepro] = useState<any>(null)
@@ -36,29 +38,32 @@ export default function Nascimentos() {
     const matriz = state.animais.find((a) => a.id === selectedRepro.animalId)
     if (!matriz) return
 
+    const bezerroId = Math.random().toString()
+    const now = new Date().toISOString()
+    const novoBezerro = {
+      id: bezerroId,
+      brinco: 'PENDENTE',
+      loteId: matriz.loteId,
+      categoria: 'Bezerro',
+      pesoAtual: Number(form.peso),
+      gmd: 0,
+      mae: matriz.id,
+      status: 'Ativo',
+      birthDate: now,
+      costCenter: matriz.costCenter,
+      gender: form.sexo as any,
+    }
+
     dispatch((s) => {
       const repros = s.reproducoes.map((r) =>
         r.id === selectedRepro.id ? { ...r, status: 'Parida' as any } : r,
       )
-      const novoBezerro = {
-        id: Math.random().toString(),
-        brinco: 'PENDENTE',
-        loteId: matriz.loteId,
-        categoria: 'Bezerro',
-        pesoAtual: Number(form.peso),
-        gmd: 0,
-        mae: matriz.id,
-        status: 'Ativo',
-        birthDate: new Date().toISOString(),
-        costCenter: matriz.costCenter,
-        gender: form.sexo as any,
-      }
 
       const offlineAction = {
         id: Math.random().toString(),
         type: 'CREATE_NASCIMENTO',
         payload: { maeId: matriz.id, peso: Number(form.peso), sexo: form.sexo },
-        timestamp: new Date().toISOString(),
+        timestamp: now,
       }
 
       return {
@@ -68,6 +73,10 @@ export default function Nascimentos() {
         pendingSyncQueue: s.isOnline ? s.pendingSyncQueue : [...s.pendingSyncQueue, offlineAction],
       }
     })
+
+    // Sync Inttegra (Tabela Especificada: Nascimentos_e_Desmama)
+    pushRecord('Nascimentos_e_Desmama', bezerroId, novoBezerro)
+
     setOpen(false)
     toast({
       title: state.isOnline ? 'Nascimento Registrado' : 'Salvo no Dispositivo',

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import useAppStore from '@/stores/useAppStore'
+import { useInttegraSync } from '@/hooks/useInttegraSync'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,6 +15,7 @@ import { useToast } from '@/hooks/use-toast'
 
 export default function EventosComerciais() {
   const { dispatch } = useAppStore()
+  const { pushRecord } = useInttegraSync()
   const { toast } = useToast()
   const [form, setForm] = useState({ desc: '', value: '', parcels: '1', cc: 'CC02-TIP' })
 
@@ -22,28 +24,32 @@ export default function EventosComerciais() {
     const p = parseInt(form.parcels)
     if (!form.desc || isNaN(v) || isNaN(p)) return
 
-    dispatch((s) => {
-      const newTxs = []
-      const valPerParcel = v / p
-      for (let i = 0; i < p; i++) {
-        const d = new Date()
-        d.setMonth(d.getMonth() + i)
-        newTxs.push({
-          id: Math.random().toString(),
-          description: `${form.desc} - Parcela ${i + 1}/${p}`,
-          value: valPerParcel,
-          type: 'Receita' as any,
-          date: d.toISOString(),
-          costCenter: form.cc,
-          status: i === 0 ? 'Pago' : ('Pendente' as any),
-        })
-      }
-      return { ...s, transacoes: [...s.transacoes, ...newTxs] }
+    const newTxs: any[] = []
+    const valPerParcel = v / p
+    for (let i = 0; i < p; i++) {
+      const d = new Date()
+      d.setMonth(d.getMonth() + i)
+      newTxs.push({
+        id: Math.random().toString(),
+        description: `${form.desc} - Parcela ${i + 1}/${p}`,
+        value: valPerParcel,
+        type: 'Receita',
+        date: d.toISOString(),
+        costCenter: form.cc,
+        status: i === 0 ? 'Pago' : 'Pendente',
+      })
+    }
+
+    dispatch((s) => ({ ...s, transacoes: [...s.transacoes, ...newTxs] }))
+
+    // Sync Inttegra para cada transação (Financeiro_Transacoes)
+    newTxs.forEach((tx) => {
+      pushRecord('Financeiro_Transacoes', tx.id, tx)
     })
 
     toast({
       title: 'Evento Comercial Registrado',
-      description: `${p} transações geradas automaticamente.`,
+      description: `${p} transações geradas e sincronização solicitada.`,
     })
     setForm({ desc: '', value: '', parcels: '1', cc: 'CC02-TIP' })
   }

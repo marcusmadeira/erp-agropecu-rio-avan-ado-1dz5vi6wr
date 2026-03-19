@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import useAppStore from '@/stores/useAppStore'
+import { useInttegraSync } from '@/hooks/useInttegraSync'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
@@ -25,6 +26,7 @@ import { useToast } from '@/hooks/use-toast'
 
 export default function Transacoes() {
   const { state, dispatch } = useAppStore()
+  const { pushRecord } = useInttegraSync()
   const { toast } = useToast()
   const [filterCC, setFilterCC] = useState('ALL')
 
@@ -50,7 +52,16 @@ export default function Transacoes() {
         ...s.auditLogs,
       ],
     }))
-    toast({ title: 'Transação baixada', description: 'Log de auditoria gerado.' })
+
+    const tx = state.transacoes.find((t) => t.id === id)
+    if (tx) {
+      pushRecord('Financeiro_Transacoes', id, { ...tx, status: 'Pago' })
+    }
+
+    toast({
+      title: 'Transação baixada',
+      description: 'Log de auditoria gerado e Inttegra notificado.',
+    })
   }
 
   return (

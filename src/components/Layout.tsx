@@ -28,6 +28,7 @@ import {
   CloudOff,
   RefreshCw,
   AlertTriangle,
+  Network,
 } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
 import { useEffect, useState } from 'react'
@@ -117,6 +118,12 @@ const navItems = [
     ],
     levels: [1, 2, 3],
   },
+  {
+    module: 'Integrações',
+    icon: Network,
+    items: [{ name: 'Inttegra API', path: '/inttegra' }],
+    levels: [1],
+  },
   { module: 'Auditoria', icon: ShieldCheck, path: '/auditoria', levels: [1] },
 ]
 
@@ -140,6 +147,7 @@ export default function Layout() {
       state.userRole === 3 &&
       (location.pathname.startsWith('/transacoes') ||
         location.pathname.startsWith('/auditoria') ||
+        location.pathname.startsWith('/inttegra') ||
         location.pathname.startsWith('/previsao-demanda'))
     ) {
       navigate('/')
@@ -231,7 +239,7 @@ export default function Layout() {
                           isActive={location.pathname === mod.path}
                           className="rounded-md"
                         >
-                          <Link to={mod.path!}>Painel do rebanho</Link>
+                          <Link to={mod.path!}>Acessar Módulo</Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     )}

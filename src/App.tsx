@@ -14,6 +14,7 @@ import NotFound from './pages/NotFound'
 import Dashboard from './pages/Dashboard'
 import NutricaoEficiencia from './pages/dashboard/NutricaoEficiencia'
 import Auditoria from './pages/admin/Auditoria'
+import Inttegra from './pages/admin/Inttegra'
 import Pastos from './pages/estrutura/Pastos'
 import Lotes from './pages/estrutura/Lotes'
 import Animais from './pages/rebanho/Animais'
@@ -85,6 +86,7 @@ const AppRoutes = () => (
       <Route path="/" element={<Dashboard />} />
       <Route path="/nutricao" element={<NutricaoEficiencia />} />
       <Route path="/auditoria" element={<Auditoria />} />
+      <Route path="/inttegra" element={<Inttegra />} />
       <Route path="/pastos" element={<Pastos />} />
       <Route path="/lotes" element={<Lotes />} />
       <Route path="/animais" element={<Animais />} />

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import useAppStore from '@/stores/useAppStore'
+import { useInttegraSync } from '@/hooks/useInttegraSync'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +16,7 @@ import { Scale, CloudOff } from 'lucide-react'
 
 export default function CurralDigital() {
   const { state, dispatch } = useAppStore()
+  const { pushRecord } = useInttegraSync()
   const { toast } = useToast()
   const [animalId, setAnimalId] = useState('')
   const [peso, setPeso] = useState('')
@@ -23,14 +25,18 @@ export default function CurralDigital() {
     const p = parseFloat(peso)
     if (!animalId || isNaN(p)) return
 
-    dispatch((s) => {
-      const a = s.animais.find((x) => x.id === animalId)
-      if (!a) return s
-      const newGmd = (p - a.pesoAtual) / 30
+    const pesagemId = Math.random().toString()
+    const now = new Date().toISOString()
+    const a = state.animais.find((x) => x.id === animalId)
+    if (!a) return
+    const newGmd = (p - a.pesoAtual) / 30
 
+    const newPesagem = { id: pesagemId, animalId, weight: p, date: now }
+
+    dispatch((s) => {
       const auditLog = {
         id: Math.random().toString(),
-        date: new Date().toISOString(),
+        date: now,
         userName: s.currentUser?.name || 'Operacional',
         action: 'Update' as any,
         table: 'Animais',
@@ -43,15 +49,12 @@ export default function CurralDigital() {
         id: Math.random().toString(),
         type: 'CREATE_PESAGEM',
         payload: { animalId, peso: p },
-        timestamp: new Date().toISOString(),
+        timestamp: now,
       }
 
       return {
         ...s,
-        pesagens: [
-          ...s.pesagens,
-          { id: Math.random().toString(), animalId, weight: p, date: new Date().toISOString() },
-        ],
+        pesagens: [...s.pesagens, newPesagem],
         animais: s.animais.map((x) =>
           x.id === animalId ? { ...x, pesoAtual: p, gmd: newGmd } : x,
         ),
@@ -60,9 +63,14 @@ export default function CurralDigital() {
       }
     })
 
+    // Sincronização Inttegra (Tabela Especificada: Historico_Pesagem)
+    pushRecord('Historico_Pesagem', pesagemId, newPesagem)
+
     toast({
       title: state.isOnline ? 'Pesagem Registrada' : 'Salvo Offline',
-      description: state.isOnline ? 'Dados salvos na nuvem.' : 'Será sincronizado automaticamente.',
+      description: state.isOnline
+        ? 'Dados salvos na nuvem e no Inttegra.'
+        : 'Será sincronizado automaticamente.',
       className: !state.isOnline ? 'border-amber-500' : '',
     })
     setPeso('')

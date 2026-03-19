@@ -114,6 +114,22 @@ export interface SyncAction {
   timestamp: string
 }
 
+export interface InttegraConfig {
+  token: string
+  baseUrl: string
+  status: 'Conectado' | 'Falha' | 'Sincronizando' | 'Desconectado'
+  lastSync: string | null
+}
+
+export interface SyncMapping {
+  id: string
+  localTable: string
+  localId: string
+  remoteId: string
+  status: 'Sincronizado' | 'Pendente_Envio' | 'Erro_Sync'
+  errorLog: string
+}
+
 export interface AppState {
   isAuthenticated: boolean
   currentUser: User | null
@@ -134,4 +150,6 @@ export interface AppState {
   maquinario: Maquinario[]
   clima: ClimaLog[]
   auditLogs: AuditLog[]
+  inttegraConfig: InttegraConfig
+  syncMappings: SyncMapping[]
 }

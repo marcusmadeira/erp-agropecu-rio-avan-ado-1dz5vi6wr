@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import useAppStore from '@/stores/useAppStore'
+import { useInttegraSync } from '@/hooks/useInttegraSync'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +16,7 @@ import { Droplet, CloudOff } from 'lucide-react'
 
 export default function Manejo() {
   const { state, dispatch } = useAppStore()
+  const { pushRecord } = useInttegraSync()
   const { toast } = useToast()
   const [form, setForm] = useState({ itemId: '', quantity: '', loteId: '' })
 
@@ -22,15 +24,28 @@ export default function Manejo() {
     const q = Number(form.quantity)
     if (!form.itemId || isNaN(q) || !form.loteId) return
 
-    dispatch((s) => {
-      const item = s.estoque.find((e) => e.id === form.itemId)
-      const cost = item ? item.unitCost * q : 0
+    const manejoId = Math.random().toString()
+    const now = new Date().toISOString()
+    const item = state.estoque.find((e) => e.id === form.itemId)
+    const cost = item ? item.unitCost * q : 0
 
+    const newManejo = {
+      id: manejoId,
+      type: 'Saída para Manejo',
+      details: 'Manejo Diário',
+      date: now,
+      loteId: form.loteId,
+      itemId: form.itemId,
+      quantity: q,
+      cost,
+    }
+
+    dispatch((s) => {
       const offlineAction = {
         id: Math.random().toString(),
         type: 'CREATE_MANEJO',
         payload: { ...form, cost },
-        timestamp: new Date().toISOString(),
+        timestamp: now,
       }
 
       return {
@@ -38,26 +53,18 @@ export default function Manejo() {
         estoque: s.estoque.map((e) =>
           e.id === form.itemId ? { ...e, quantity: e.quantity - q } : e,
         ),
-        manejos: [
-          ...s.manejos,
-          {
-            id: Math.random().toString(),
-            type: 'Saída para Manejo',
-            details: 'Manejo Diário',
-            date: new Date().toISOString(),
-            loteId: form.loteId,
-            itemId: form.itemId,
-            quantity: q,
-            cost,
-          },
-        ],
+        manejos: [...s.manejos, newManejo],
         pendingSyncQueue: s.isOnline ? s.pendingSyncQueue : [...s.pendingSyncQueue, offlineAction],
       }
     })
+
+    // Sincronização Inttegra (Tabela Especificada: Manejo_Diario_Cocho_Sanidade)
+    pushRecord('Manejo_Diario_Cocho_Sanidade', manejoId, newManejo)
+
     toast({
       title: state.isOnline ? 'Manejo registrado!' : 'Salvo Offline',
       description: state.isOnline
-        ? 'Estoque deduzido e custo alocado.'
+        ? 'Estoque deduzido e sincronizado com Inttegra.'
         : 'Aguardando rede para sincronizar.',
     })
     setForm({ itemId: '', quantity: '', loteId: '' })

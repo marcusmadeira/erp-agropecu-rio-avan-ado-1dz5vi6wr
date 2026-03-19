@@ -181,4 +181,11 @@ export const initialData: AppState = {
       newValue: '550',
     },
   ],
+  inttegraConfig: {
+    token: '',
+    baseUrl: 'https://api.inttegra.com/v1/',
+    status: 'Desconectado',
+    lastSync: null,
+  },
+  syncMappings: [],
 }
