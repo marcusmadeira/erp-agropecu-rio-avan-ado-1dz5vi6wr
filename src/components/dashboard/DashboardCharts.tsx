@@ -112,178 +112,175 @@ export default function DashboardCharts() {
 
   return (
     <div className="mt-4 w-full">
-      <div className="flex justify-between items-center mb-4">
-        <Tabs defaultValue="financeiro" className="w-full max-w-[400px]">
-          <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="financeiro" className="w-full">
+        <div className="flex justify-between items-center mb-4">
+          <TabsList className="grid w-full max-w-[400px] grid-cols-2">
             <TabsTrigger value="financeiro">Dash Financeiro</TabsTrigger>
             <TabsTrigger value="producao">Dash Produção</TabsTrigger>
           </TabsList>
-        </Tabs>
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-[150px] bg-white">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="year">Ano Atual</SelectItem>
-            <SelectItem value="semester">Semestre</SelectItem>
-            <SelectItem value="quarter">Trimestre</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[150px] bg-white">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="year">Ano Atual</SelectItem>
+              <SelectItem value="semester">Semestre</SelectItem>
+              <SelectItem value="quarter">Trimestre</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-      {/* Since TabsContent wraps multiple cards, we need to structure it carefully to let Tabs control visibility. We'll use CSS based on the TabsRoot state, or wrap them individually. Wait, shadcn Tabs requires TabsContent to be a direct child or correctly structured. */}
-
-      {/* We can use standard mapping or wrap everything in a div that checks active tab. But standard shadcn TabsContent is fine here. */}
-      <div className="relative">
-        <TabsContent
-          value="financeiro"
-          className="grid gap-4 md:grid-cols-2 m-0 border-none p-0 outline-none"
-        >
-          <Card className="shadow-subtle col-span-1 md:col-span-2">
-            <CardHeader>
-              <CardTitle>Evolução de Receitas e Despesas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                config={{
-                  Receitas: { color: 'hsl(var(--chart-1))', label: 'Receitas (R$)' },
-                  Despesas: { color: 'hsl(var(--chart-5))', label: 'Despesas (R$)' },
-                }}
-                className="h-[300px] w-full"
-              >
-                <ComposedChart
-                  data={financeData}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+        <div className="relative">
+          <TabsContent
+            value="financeiro"
+            className="grid gap-4 md:grid-cols-2 m-0 border-none p-0 outline-none"
+          >
+            <Card className="shadow-subtle col-span-1 md:col-span-2">
+              <CardHeader>
+                <CardTitle>Evolução de Receitas e Despesas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{
+                    Receitas: { color: 'hsl(var(--chart-1))', label: 'Receitas (R$)' },
+                    Despesas: { color: 'hsl(var(--chart-5))', label: 'Despesas (R$)' },
+                  }}
+                  className="h-[300px] w-full"
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <ChartLegend content={<ChartLegendContent />} />
-                  <Bar dataKey="Receitas" fill="var(--color-Receitas)" radius={[4, 4, 0, 0]} />
-                  <Line
-                    type="monotone"
-                    dataKey="Despesas"
-                    stroke="var(--color-Despesas)"
-                    strokeWidth={3}
-                  />
-                </ComposedChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-subtle col-span-1 md:col-span-2">
-            <CardHeader>
-              <CardTitle>Curva ABC de Despesas (Ranking)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={{}} className="h-[250px] w-full">
-                <BarChart
-                  layout="vertical"
-                  data={abcData}
-                  margin={{ top: 0, right: 30, left: 40, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" width={120} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="value" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]}>
-                    {abcData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent
-          value="producao"
-          className="grid gap-4 md:grid-cols-3 m-0 border-none p-0 outline-none"
-        >
-          <Card className="shadow-subtle col-span-1">
-            <CardHeader>
-              <CardTitle>Taxa de Concepção</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={{}} className="h-[250px] w-full">
-                <PieChart>
-                  <Pie
-                    data={reproData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    label
+                  <ComposedChart
+                    data={financeData}
+                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                   >
-                    {reproData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <ChartLegend content={<ChartLegendContent />} />
-                </PieChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
+                    <Bar dataKey="Receitas" fill="var(--color-Receitas)" radius={[4, 4, 0, 0]} />
+                    <Line
+                      type="monotone"
+                      dataKey="Despesas"
+                      stroke="var(--color-Despesas)"
+                      strokeWidth={3}
+                    />
+                  </ComposedChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
 
-          <Card className="shadow-subtle col-span-1">
-            <CardHeader>
-              <CardTitle>Top Touros (% Prenhez)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                config={{ taxa: { color: 'hsl(var(--chart-1))', label: '% Sucesso' } }}
-                className="h-[250px] w-full"
-              >
-                <BarChart
-                  layout="vertical"
-                  data={sireRanking}
-                  margin={{ top: 0, right: 30, left: 40, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" domain={[0, 100]} />
-                  <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10 }} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="taxa" fill="var(--color-taxa)" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+            <Card className="shadow-subtle col-span-1 md:col-span-2">
+              <CardHeader>
+                <CardTitle>Curva ABC de Despesas (Ranking)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer config={{}} className="h-[250px] w-full">
+                  <BarChart
+                    layout="vertical"
+                    data={abcData}
+                    margin={{ top: 0, right: 30, left: 40, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis type="number" />
+                    <YAxis dataKey="name" type="category" width={120} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="value" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]}>
+                      {abcData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          <Card className="shadow-subtle col-span-1">
-            <CardHeader>
-              <CardTitle>Estoque Crítico (Dias Restantes)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                config={{ dias: { color: 'hsl(var(--chart-2))', label: 'Dias Restantes' } }}
-                className="h-[250px] w-full"
-              >
-                <BarChart
-                  data={predictiveStockData}
-                  margin={{ top: 20, right: 10, left: -20, bottom: 5 }}
+          <TabsContent
+            value="producao"
+            className="grid gap-4 md:grid-cols-3 m-0 border-none p-0 outline-none"
+          >
+            <Card className="shadow-subtle col-span-1">
+              <CardHeader>
+                <CardTitle>Taxa de Concepção</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer config={{}} className="h-[250px] w-full">
+                  <PieChart>
+                    <Pie
+                      data={reproData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      label
+                    >
+                      {reproData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
+                  </PieChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-subtle col-span-1">
+              <CardHeader>
+                <CardTitle>Top Touros (% Prenhez)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{ taxa: { color: 'hsl(var(--chart-1))', label: '% Sucesso' } }}
+                  className="h-[250px] w-full"
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <ReferenceLine
-                    y={15}
-                    stroke="red"
-                    strokeDasharray="3 3"
-                    label={{ position: 'top', value: 'Crítico', fill: 'red', fontSize: 10 }}
-                  />
-                  <Bar dataKey="dias" fill="var(--color-dias)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </div>
+                  <BarChart
+                    layout="vertical"
+                    data={sireRanking}
+                    margin={{ top: 0, right: 30, left: 40, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis type="number" domain={[0, 100]} />
+                    <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10 }} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="taxa" fill="var(--color-taxa)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-subtle col-span-1">
+              <CardHeader>
+                <CardTitle>Estoque Crítico (Dias Restantes)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{ dias: { color: 'hsl(var(--chart-2))', label: 'Dias Restantes' } }}
+                  className="h-[250px] w-full"
+                >
+                  <BarChart
+                    data={predictiveStockData}
+                    margin={{ top: 20, right: 10, left: -20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                    <YAxis />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ReferenceLine
+                      y={15}
+                      stroke="red"
+                      strokeDasharray="3 3"
+                      label={{ position: 'top', value: 'Crítico', fill: 'red', fontSize: 10 }}
+                    />
+                    <Bar dataKey="dias" fill="var(--color-dias)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </div>
+      </Tabs>
     </div>
   )
 }
