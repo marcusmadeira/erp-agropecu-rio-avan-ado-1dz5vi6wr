@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/table'
 import { differenceInDays, format, parseISO } from 'date-fns'
 import useAppStore from '@/stores/useAppStore'
+import { Baby } from 'lucide-react'
 
 export default function MaternidadeAlerts() {
   const { state } = useAppStore()
@@ -46,8 +47,8 @@ export default function MaternidadeAlerts() {
   return (
     <Card className="shadow-subtle mt-4 border-l-4 border-l-amber-500">
       <CardHeader>
-        <CardTitle className="text-emerald-900 flex items-center gap-2">
-          Painel de Maternidade
+        <CardTitle className="text-primary flex items-center gap-2">
+          <Baby className="w-5 h-5" /> Painel de Maternidade
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -63,7 +64,10 @@ export default function MaternidadeAlerts() {
           <TableBody>
             {events.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
+                <TableCell
+                  colSpan={4}
+                  className="text-center text-muted-foreground font-medium py-4"
+                >
                   Nenhuma matriz próxima do parto.
                 </TableCell>
               </TableRow>
@@ -74,9 +78,11 @@ export default function MaternidadeAlerts() {
               return (
                 <TableRow key={r.id}>
                   <TableCell className="text-center">{getAlertStatus(r.dpp, r.status)}</TableCell>
-                  <TableCell className="font-medium">{animal?.brinco || 'Desconhecido'}</TableCell>
-                  <TableCell>{format(parseISO(r.dpp), 'dd/MM/yyyy')}</TableCell>
-                  <TableCell className="font-mono">
+                  <TableCell className="font-bold">{animal?.brinco || 'Desconhecido'}</TableCell>
+                  <TableCell className="font-mono font-medium">
+                    {format(parseISO(r.dpp), 'dd/MM/yyyy')}
+                  </TableCell>
+                  <TableCell className="font-mono font-bold text-slate-700">
                     {r.status === 'Parida' ? 'Parida' : `${Math.max(0, days)} dias`}
                   </TableCell>
                 </TableRow>

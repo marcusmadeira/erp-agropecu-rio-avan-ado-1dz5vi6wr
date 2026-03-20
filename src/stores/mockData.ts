@@ -111,6 +111,16 @@ export const initialData: AppState = {
       dpp: new Date(new Date().getTime() + 10 * 24 * 60 * 60 * 1000).toISOString(),
       status: 'Prenhe',
     },
+    {
+      id: 'r2',
+      animalId: 'a3',
+      type: 'IATF',
+      date: '2023-08-01',
+      touro: 'REM Armador',
+      previsaoToque: '2023-08-31',
+      dpp: new Date(new Date().getTime() - 100 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'Vazia',
+    },
   ],
   estoque: [
     {
@@ -132,7 +142,55 @@ export const initialData: AppState = {
       botijao: 'BT-01',
       caneca: 'C-05',
     },
+    {
+      id: 'e3',
+      name: 'Milho Grão',
+      category: 'Nutrição',
+      quantity: 5000,
+      unit: 'Kg',
+      unitCost: 1.2,
+      minStock: 2000,
+    },
+    {
+      id: 'e4',
+      name: 'Farelo de Soja',
+      category: 'Nutrição',
+      quantity: 2000,
+      unit: 'Kg',
+      unitCost: 2.8,
+      minStock: 1000,
+    },
+    {
+      id: 'e5',
+      name: 'Ureia Pecuária',
+      category: 'Nutrição',
+      quantity: 500,
+      unit: 'Kg',
+      unitCost: 3.5,
+      minStock: 200,
+    },
+    {
+      id: 'er1',
+      name: 'Ração Engorda TIP 18%',
+      category: 'Nutrição',
+      quantity: 1500,
+      unit: 'Kg',
+      unitCost: 1.85,
+      minStock: 500,
+    },
   ],
+  formulacoes: [
+    {
+      id: 'f1',
+      name: 'Ração Engorda TIP 18%',
+      ingredients: [
+        { itemId: 'e3', percent: 70 },
+        { itemId: 'e4', percent: 25 },
+        { itemId: 'e5', percent: 5 },
+      ],
+    },
+  ],
+  producoesRacao: [],
   manejos: [
     {
       id: 'mn1',

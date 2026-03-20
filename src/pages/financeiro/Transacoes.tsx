@@ -16,11 +16,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import { format, parseISO, isValid } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/components/dashboard/KpiCards'
-import { Check, User } from 'lucide-react'
+import { Check, User, BrainCircuit, Upload, RefreshCw, FileText } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { TransactionForm } from './TransactionForm'
 import { CENTROS_CUSTO } from './constants'
@@ -31,6 +39,8 @@ export default function Transacoes() {
   const { pushRecord } = useInttegraSync()
   const { toast } = useToast()
   const [filterCC, setFilterCC] = useState('ALL')
+  const [ocrOpen, setOcrOpen] = useState(false)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const filtered = state.transacoes
     .filter((t) => (filterCC === 'ALL' ? true : t.Centro_Custo_Direcionado === filterCC))
@@ -75,6 +85,40 @@ export default function Transacoes() {
     })
   }
 
+  const handleOcrUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return
+    setIsAnalyzing(true)
+
+    setTimeout(() => {
+      const newVal = Math.floor(Math.random() * 5000) + 1000
+      dispatch((s) => ({
+        ...s,
+        transacoes: [
+          {
+            id: Math.random().toString(),
+            Descricao_Lancamento: 'NF-e Importada via IA (Suprimentos)',
+            Valor_Total: newVal,
+            Tipo_Movimento: 'Despesa',
+            Data_Competencia: new Date().toISOString(),
+            Data_Vencimento: new Date(new Date().getTime() + 5 * 86400000).toISOString(),
+            Centro_Custo_Direcionado: 'CC01-Nelore PO',
+            Status_Pagamento: 'Pendente',
+            Macroconta_Inttegra: '5. PECUÁRIA (Custos Diretos)',
+            Categoria_Inttegra: 'Insumos Rebanho Genética',
+          },
+          ...s.transacoes,
+        ],
+      }))
+
+      setIsAnalyzing(false)
+      setOcrOpen(false)
+      toast({
+        title: 'Leitura Concluída',
+        description: 'Transação gerada a partir da NF-e com sucesso.',
+      })
+    }, 2500)
+  }
+
   const safeFormatDate = (dateString?: string) => {
     if (!dateString) return '-'
     try {
@@ -89,7 +133,7 @@ export default function Transacoes() {
     <div className="space-y-4">
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-emerald-900">Transações DRE</h2>
+          <h2 className="text-2xl font-bold text-primary">Transações DRE</h2>
           <p className="text-sm text-muted-foreground">Gestão financeira hierárquica Inttegra</p>
         </div>
         <div className="flex items-center gap-3">
@@ -106,6 +150,46 @@ export default function Transacoes() {
               ))}
             </SelectContent>
           </Select>
+
+          <Dialog open={ocrOpen} onOpenChange={setOcrOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="text-indigo-700 border-indigo-200">
+                <FileText className="w-4 h-4 mr-2" /> Ler NF-e (IA)
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <BrainCircuit className="w-5 h-5 text-indigo-600" /> IA Financeira
+                </DialogTitle>
+                <DialogDescription>
+                  Arraste uma Nota Fiscal ou Boleto para preencher o lançamento automaticamente.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="mt-4 border-2 border-dashed border-slate-300 rounded-lg p-8 text-center bg-slate-50 relative">
+                <input
+                  type="file"
+                  accept=".pdf,image/*"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={handleOcrUpload}
+                  disabled={isAnalyzing}
+                />
+                {isAnalyzing ? (
+                  <div className="flex flex-col items-center">
+                    <RefreshCw className="w-10 h-10 text-indigo-500 animate-spin mb-3" />
+                    <p className="font-bold text-slate-700">Lendo Documento...</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <Upload className="w-10 h-10 text-slate-400 mb-3" />
+                    <p className="font-bold text-slate-700">Solte o PDF aqui</p>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <TransactionForm />
         </div>
       </div>
@@ -132,13 +216,13 @@ export default function Transacoes() {
 
                 return (
                   <TableRow key={t.id}>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="font-mono text-xs font-bold">
                       {safeFormatDate(t.Data_Vencimento)}
                     </TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-bold">
                       {t.Descricao_Lancamento}
                       {partner && (
-                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1 font-normal">
+                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1 font-medium">
                           <User className="w-3 h-3" /> {partner.Nome_Razao_Social}
                         </div>
                       )}
@@ -155,15 +239,17 @@ export default function Transacoes() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-xs font-semibold text-slate-700">
+                      <div className="text-xs font-bold text-slate-700">
                         {t.Macroconta_Inttegra}
                       </div>
-                      <div className="text-[10px] text-muted-foreground">
+                      <div className="text-[10px] text-muted-foreground font-medium">
                         {t.Categoria_Inttegra}{' '}
                         {t.Subcategoria_Detalhe ? ` > ${t.Subcategoria_Detalhe}` : ''}
                       </div>
                     </TableCell>
-                    <TableCell className="text-xs">{t.Centro_Custo_Direcionado}</TableCell>
+                    <TableCell className="text-xs font-bold">
+                      {t.Centro_Custo_Direcionado}
+                    </TableCell>
                     <TableCell
                       className={`text-right font-mono font-bold ${t.Tipo_Movimento === 'Receita' ? 'text-emerald-700' : 'text-rose-700'}`}
                     >

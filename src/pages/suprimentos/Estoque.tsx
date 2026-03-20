@@ -196,12 +196,12 @@ export default function Estoque() {
                   {isAnalyzing ? (
                     <div className="flex flex-col items-center">
                       <RefreshCw className="w-10 h-10 text-indigo-500 animate-spin mb-3" />
-                      <p>Processando...</p>
+                      <p className="font-bold text-slate-700">Processando...</p>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center">
                       <Upload className="w-10 h-10 text-slate-400 mb-3" />
-                      <p>Arraste a NF-e aqui</p>
+                      <p className="font-bold text-slate-700">Arraste a NF-e aqui</p>
                     </div>
                   )}
                 </div>
@@ -218,9 +218,11 @@ export default function Estoque() {
                     <TableBody>
                       {extractedItems.map((i) => (
                         <TableRow key={i.id}>
-                          <TableCell>{i.name}</TableCell>
+                          <TableCell className="font-bold">{i.name}</TableCell>
                           <TableCell>{i.category}</TableCell>
-                          <TableCell className="text-right">{i.quantity}</TableCell>
+                          <TableCell className="text-right font-mono font-bold">
+                            {i.quantity}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -356,7 +358,7 @@ export default function Estoque() {
                     key={e.id}
                     className={isCritical ? 'bg-rose-50/50 hover:bg-rose-50' : ''}
                   >
-                    <TableCell className="font-semibold">
+                    <TableCell className="font-bold">
                       <div className="flex items-center gap-2">
                         {isCritical && (
                           <AlertTriangle className="w-4 h-4 text-rose-500 animate-pulse" />
@@ -364,7 +366,7 @@ export default function Estoque() {
                         <span className={isCritical ? 'text-rose-700' : ''}>{e.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="font-medium">
                       {e.category}
                       {e.category === 'Sêmen' && e.botijao && (
                         <span className="block text-[10px] text-muted-foreground">
@@ -372,7 +374,7 @@ export default function Estoque() {
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
+                    <TableCell className="text-right text-muted-foreground font-mono font-medium">
                       R$ {e.unitCost.toFixed(2)}
                     </TableCell>
                     <TableCell

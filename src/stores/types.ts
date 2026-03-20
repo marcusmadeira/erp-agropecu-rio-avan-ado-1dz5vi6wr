@@ -82,6 +82,26 @@ export interface EstoqueItem {
   caneca?: string
   minStock?: number
 }
+
+export interface FormulacaoItem {
+  itemId: string
+  percent: number
+}
+
+export interface Formulacao {
+  id: string
+  name: string
+  ingredients: FormulacaoItem[]
+}
+
+export interface ProducaoRacao {
+  id: string
+  date: string
+  formulacaoId: string
+  quantityKg: number
+  totalCost: number
+}
+
 export interface Manejo {
   id: string
   type: string
@@ -191,6 +211,8 @@ export interface AppState {
   pesagens: Pesagem[]
   reproducoes: Reproducao[]
   estoque: EstoqueItem[]
+  formulacoes: Formulacao[]
+  producoesRacao: ProducaoRacao[]
   manejos: Manejo[]
   parceiros: ParceiroNegocio[]
   transacoes: Transacao[]

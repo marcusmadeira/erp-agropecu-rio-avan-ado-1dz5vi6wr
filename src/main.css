@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=JetBrains+Mono&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -12,34 +12,42 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 164 86% 16%; /* Emerald 900 */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 38 92% 50%; /* Amber 500 */
-    --secondary-foreground: 222.2 84% 4.9%;
+
+    /* Primary: #094016 (Toriba Green) */
+    --primary: 134 75% 14%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: #22263f (Navy Blue) */
+    --secondary: 232 30% 19%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Accent: #402e20 (Brown) */
+    --accent: 25 33% 19%;
+    --accent-foreground: 0 0% 100%;
+
     --muted: 210 40% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 164 86% 16%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 164 86% 16%;
+    --ring: 134 75% 14%;
     --radius: 0.5rem;
+
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222.2 84% 4.9%;
-    --sidebar-primary: 164 86% 16%;
+    --sidebar-primary: 134 75% 14%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 164 86% 16%;
+    --sidebar-accent-foreground: 134 75% 14%;
     --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 164 86% 16%;
+    --sidebar-ring: 134 75% 14%;
 
-    --chart-1: 164 86% 16%; /* Emerald */
-    --chart-2: 38 92% 50%; /* Amber */
-    --chart-3: 0 84% 60%; /* Red */
-    --chart-4: 210 100% 50%; /* Blue */
-    --chart-5: 280 100% 60%; /* Purple */
+    --chart-1: 134 75% 14%; /* Toriba Green */
+    --chart-2: 232 30% 19%; /* Toriba Navy */
+    --chart-3: 25 33% 19%; /* Toriba Brown */
+    --chart-4: 38 92% 50%; /* Amber */
+    --chart-5: 0 84% 60%; /* Red */
   }
 
   .dark {
@@ -49,33 +57,34 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 164 86% 16%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 38 92% 50%;
-    --secondary-foreground: 222.2 84% 4.9%;
+    --primary: 134 75% 14%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 232 30% 19%;
+    --secondary-foreground: 0 0% 100%;
     --muted: 222.2 84% 4.9%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 222.2 84% 4.9%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 25 33% 19%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 222.2 84% 4.9%;
     --input: 222.2 84% 4.9%;
-    --ring: 164 86% 16%;
+    --ring: 134 75% 14%;
+
     --sidebar-background: 222.2 84% 4.9%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 164 86% 16%;
+    --sidebar-primary: 134 75% 14%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 222.2 84% 4.9%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 222.2 84% 4.9%;
-    --sidebar-ring: 164 86% 16%;
+    --sidebar-ring: 134 75% 14%;
 
-    --chart-1: 164 86% 16%;
-    --chart-2: 38 92% 50%;
-    --chart-3: 0 84% 60%;
-    --chart-4: 210 100% 50%;
-    --chart-5: 280 100% 60%;
+    --chart-1: 134 75% 14%;
+    --chart-2: 232 30% 19%;
+    --chart-3: 25 33% 19%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 84% 60%;
   }
 
   * {

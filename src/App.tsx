@@ -27,6 +27,7 @@ import Nascimentos from './pages/reproducao/Nascimentos'
 import Estoque from './pages/suprimentos/Estoque'
 import Manejo from './pages/suprimentos/Manejo'
 import PrevisaoDemanda from './pages/suprimentos/PrevisaoDemanda'
+import FabricaRacao from './pages/suprimentos/FabricaRacao'
 import Transacoes from './pages/financeiro/Transacoes'
 import EventosComerciais from './pages/financeiro/EventosComerciais'
 import Parceiros from './pages/financeiro/Parceiros'
@@ -101,6 +102,7 @@ const AppRoutes = () => (
       <Route path="/nascimentos" element={<Nascimentos />} />
       <Route path="/estoque" element={<Estoque />} />
       <Route path="/previsao-demanda" element={<PrevisaoDemanda />} />
+      <Route path="/fabrica-racao" element={<FabricaRacao />} />
       <Route path="/manejo" element={<Manejo />} />
       <Route path="/transacoes" element={<Transacoes />} />
       <Route path="/parceiros" element={<Parceiros />} />
