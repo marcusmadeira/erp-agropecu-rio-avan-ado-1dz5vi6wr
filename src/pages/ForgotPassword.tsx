@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
-import { Tractor, Loader2, ArrowLeft } from 'lucide-react'
+import { Loader2, ArrowLeft } from 'lucide-react'
+import { ToribaLogo } from '@/components/ToribaLogo'
 
 export default function ForgotPassword() {
   const [method, setMethod] = useState<'email' | 'whatsapp'>('email')
@@ -28,7 +29,6 @@ export default function ForgotPassword() {
 
     setIsLoading(true)
 
-    // Simulate API call
     setTimeout(() => {
       setIsLoading(false)
       const methodLabel = method === 'email' ? 'E-mail' : 'WhatsApp'
@@ -36,15 +36,13 @@ export default function ForgotPassword() {
         title: 'Recuperação Solicitada',
         description: `Link de recuperação enviado com sucesso via ${methodLabel}.`,
       })
-      // For demonstration purposes, we navigate to the reset page
-      // In a real app, the user would click the link in their email/whatsapp
       navigate('/reset-password')
     }, 1500)
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <Card className="w-full max-w-md shadow-elevation border-t-4 border-t-emerald-700 animate-fade-in-up">
+      <Card className="w-full max-w-md shadow-elevation border-t-4 border-t-primary animate-fade-in-up">
         <CardHeader className="text-center pb-4 relative">
           <Button
             variant="ghost"
@@ -56,10 +54,10 @@ export default function ForgotPassword() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
           </Button>
-          <div className="mx-auto bg-emerald-100 p-3 rounded-full w-fit mb-4">
-            <Tractor className="w-8 h-8 text-emerald-800" />
+          <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
+            <ToribaLogo className="w-10 h-10 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold text-emerald-900 tracking-tight">
+          <CardTitle className="text-2xl font-bold text-primary tracking-tight">
             Recuperar Senha
           </CardTitle>
           <CardDescription>Escolha como deseja receber o link de acesso</CardDescription>
@@ -92,18 +90,14 @@ export default function ForgotPassword() {
               <Input
                 id="contact"
                 type={method === 'email' ? 'email' : 'tel'}
-                placeholder={method === 'email' ? 'usuario@agro.com' : '(00) 00000-0000'}
+                placeholder={method === 'email' ? 'usuario@toriba.com' : '(00) 00000-0000'}
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 required
               />
             </div>
 
-            <Button
-              type="submit"
-              className="w-full bg-emerald-800 hover:bg-emerald-900 h-12"
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full bg-primary h-12" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />

@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Box, BrainCircuit, Plus, FileText, Upload, RefreshCw } from 'lucide-react'
+import { Box, BrainCircuit, Plus, FileText, Upload, RefreshCw, AlertTriangle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useToast } from '@/hooks/use-toast'
 
@@ -47,6 +47,7 @@ export default function Estoque() {
     unitCost: '',
     botijao: '',
     caneca: '',
+    minStock: '100',
   })
 
   const handleSave = (e: React.FormEvent) => {
@@ -65,6 +66,7 @@ export default function Estoque() {
           unitCost: Number(form.unitCost),
           botijao: form.category === 'Sêmen' ? form.botijao : undefined,
           caneca: form.category === 'Sêmen' ? form.caneca : undefined,
+          minStock: Number(form.minStock),
         },
         ...s.estoque,
       ],
@@ -99,6 +101,7 @@ export default function Estoque() {
           quantity: 200,
           unit: 'Doses',
           unitCost: 1.5,
+          minStock: 50,
         },
         {
           id: Math.random().toString(),
@@ -109,6 +112,7 @@ export default function Estoque() {
           unitCost: 45.0,
           botijao: 'BT-EXT',
           caneca: 'C-01',
+          minStock: 20,
         },
       ])
       setIsAnalyzing(false)
@@ -147,8 +151,8 @@ export default function Estoque() {
     <div className="space-y-4">
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div className="flex items-center gap-3">
-          <Box className="text-emerald-900 w-8 h-8" />
-          <h2 className="text-2xl font-bold text-emerald-900">Estoque Inteligente</h2>
+          <Box className="text-primary w-8 h-8" />
+          <h2 className="text-2xl font-bold text-primary">Estoque Inteligente</h2>
         </div>
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
           {state.userRole !== 3 && (
@@ -221,7 +225,7 @@ export default function Estoque() {
                       ))}
                     </TableBody>
                   </Table>
-                  <Button className="w-full bg-emerald-800" onClick={handleSaveOcr}>
+                  <Button className="w-full bg-primary" onClick={handleSaveOcr}>
                     Confirmar Importação
                   </Button>
                 </div>
@@ -231,7 +235,7 @@ export default function Estoque() {
 
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-emerald-800 shadow-sm">
+              <Button className="bg-primary shadow-sm">
                 <Plus className="w-4 h-4 mr-2" /> Nova Entrada
               </Button>
             </DialogTrigger>
@@ -316,7 +320,15 @@ export default function Estoque() {
                     />
                   </div>
                 </div>
-                <Button type="submit" className="w-full bg-emerald-800 mt-2">
+                <div className="space-y-1">
+                  <Label>Estoque Mínimo (Alerta)</Label>
+                  <Input
+                    type="number"
+                    value={form.minStock}
+                    onChange={(e) => setForm({ ...form, minStock: e.target.value })}
+                  />
+                </div>
+                <Button type="submit" className="w-full bg-primary mt-2">
                   Adicionar
                 </Button>
               </form>
@@ -337,25 +349,40 @@ export default function Estoque() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {state.estoque.map((e) => (
-                <TableRow key={e.id}>
-                  <TableCell className="font-semibold">{e.name}</TableCell>
-                  <TableCell>
-                    {e.category}
-                    {e.category === 'Sêmen' && e.botijao && (
-                      <span className="block text-[10px] text-muted-foreground">
-                        Botijão: {e.botijao} / Caneca: {e.caneca}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right text-muted-foreground">
-                    R$ {e.unitCost.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-emerald-800 font-bold">
-                    {e.quantity} {e.unit}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {state.estoque.map((e) => {
+                const isCritical = e.quantity < (e.minStock || 100)
+                return (
+                  <TableRow
+                    key={e.id}
+                    className={isCritical ? 'bg-rose-50/50 hover:bg-rose-50' : ''}
+                  >
+                    <TableCell className="font-semibold">
+                      <div className="flex items-center gap-2">
+                        {isCritical && (
+                          <AlertTriangle className="w-4 h-4 text-rose-500 animate-pulse" />
+                        )}
+                        <span className={isCritical ? 'text-rose-700' : ''}>{e.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {e.category}
+                      {e.category === 'Sêmen' && e.botijao && (
+                        <span className="block text-[10px] text-muted-foreground">
+                          Botijão: {e.botijao} / Caneca: {e.caneca}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground">
+                      R$ {e.unitCost.toFixed(2)}
+                    </TableCell>
+                    <TableCell
+                      className={`text-right font-mono font-bold ${isCritical ? 'text-rose-600' : 'text-primary'}`}
+                    >
+                      {e.quantity} {e.unit}
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </CardContent>

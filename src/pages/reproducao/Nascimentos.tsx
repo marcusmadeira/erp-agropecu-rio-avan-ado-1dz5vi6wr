@@ -64,6 +64,7 @@ export default function Nascimentos() {
       birthDate: now,
       costCenter: matriz.costCenter,
       gender: formNasc.sexo as any,
+      custoAcumulado: 0,
     }
 
     dispatch((s) => {
@@ -87,6 +88,8 @@ export default function Nascimentos() {
   const handleDesmamar = () => {
     if (!selectedBezerro || !formDesmama.brinco || !formDesmama.loteId) return
 
+    const selectedLote = state.lotes.find((l) => l.id === formDesmama.loteId)
+
     dispatch((s) => ({
       ...s,
       animais: s.animais.map((a) =>
@@ -96,9 +99,9 @@ export default function Nascimentos() {
               brinco: formDesmama.brinco,
               rgn: formDesmama.rgn,
               loteId: formDesmama.loteId,
+              costCenter: selectedLote?.costCenter || a.costCenter,
               categoria: selectedBezerro.gender === 'M' ? 'Garrote' : 'Novilha',
-              status: 'Desmamado',
-              // Mae property already exists from creation (Lactente state)
+              status: 'Ativo',
             }
           : a,
       ),
@@ -127,7 +130,7 @@ export default function Nascimentos() {
 
   return (
     <div className="space-y-4 p-4 md:p-0">
-      <h2 className="text-2xl font-bold text-emerald-900">Maternidade e Desmama</h2>
+      <h2 className="text-2xl font-bold text-primary">Maternidade e Desmama</h2>
 
       <Tabs defaultValue="partos" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md">
@@ -165,7 +168,7 @@ export default function Nascimentos() {
                               setSelectedRepro(r)
                               setOpenNasc(true)
                             }}
-                            className="bg-emerald-800"
+                            className="bg-primary"
                           >
                             Registrar Parto
                           </Button>
@@ -243,13 +246,11 @@ export default function Nascimentos() {
       <Dialog open={openNasc} onOpenChange={setOpenNasc}>
         <DialogContent className="sm:max-w-md w-[95vw] rounded-xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-2xl text-emerald-900">Registrar Nascimento</DialogTitle>
+            <DialogTitle className="text-2xl text-primary">Registrar Nascimento</DialogTitle>
           </DialogHeader>
           <div className="space-y-6 mt-4">
             <div className="space-y-3">
-              <label className="text-base font-semibold text-emerald-950">
-                Peso ao Nascer (Kg)
-              </label>
+              <label className="text-base font-semibold text-slate-800">Peso ao Nascer (Kg)</label>
               <Input
                 type="number"
                 placeholder="Ex: 35"
@@ -259,7 +260,7 @@ export default function Nascimentos() {
               />
             </div>
             <div className="space-y-3">
-              <label className="text-base font-semibold text-emerald-950">Sexo do Bezerro</label>
+              <label className="text-base font-semibold text-slate-800">Sexo do Bezerro</label>
               <Select
                 value={formNasc.sexo}
                 onValueChange={(v) => setFormNasc({ ...formNasc, sexo: v })}
@@ -279,7 +280,7 @@ export default function Nascimentos() {
             </div>
             <Button
               onClick={handleRegistrarNascimento}
-              className="w-full h-16 text-xl font-bold bg-emerald-800 rounded-xl mt-4 active:scale-[0.98] transition-transform"
+              className="w-full h-16 text-xl font-bold bg-primary rounded-xl mt-4 active:scale-[0.98] transition-transform"
             >
               Salvar Bezerro
             </Button>

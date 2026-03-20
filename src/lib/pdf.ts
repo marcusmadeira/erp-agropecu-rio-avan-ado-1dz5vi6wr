@@ -1,5 +1,14 @@
 import { Animal, Lote, AppState } from '@/stores/types'
 
+const logoSvg = `
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:40px;height:40px;margin-right:15px;vertical-align:middle;">
+    <circle cx="50" cy="50" r="50" fill="#094016" />
+    <path d="M44 28 C44 24.686 46.686 22 50 22 C53.314 22 56 24.686 56 28 L56 72 C56 75.314 53.314 78 50 78 C46.686 78 44 75.314 44 72 L44 28 Z" fill="white" />
+    <path d="M24 35 C24 31 18 31 18 35 C18 55 28 68 36 74 C38 75.5 41 72 39 70 C32 65 24 53 24 35 Z" fill="white" />
+    <path d="M76 35 C76 31 82 31 82 35 C82 55 72 68 64 74 C62 75.5 59 72 61 70 C68 65 76 53 76 35 Z" fill="white" />
+  </svg>
+`
+
 function printPDF(title: string, html: string) {
   const win = window.open('', '_blank')
   if (!win) return
@@ -8,18 +17,18 @@ function printPDF(title: string, html: string) {
       <head>
         <title>${title}</title>
         <style>
-          body { font-family: Arial, sans-serif; color: #064e3b; margin: 0; padding: 20px; }
-          h1, h2, h3 { color: #065f46; }
-          .header { display: flex; align-items: center; border-bottom: 2px solid #059669; padding-bottom: 15px; margin-bottom: 20px; }
-          .logo { background: #d1fae5; color: #065f46; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 24px; margin-right: 20px; letter-spacing: -0.5px; }
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #000000; margin: 0; padding: 20px; }
+          h1, h2, h3 { color: #094016; margin-top: 0; }
+          .header { display: flex; align-items: center; border-bottom: 2px solid #094016; padding-bottom: 15px; margin-bottom: 20px; }
+          .logo { display: flex; align-items: center; font-weight: bold; font-size: 28px; margin-right: 20px; letter-spacing: -0.5px; color: #094016; }
           .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-          .card { border: 1px solid #d1fae5; padding: 15px; border-radius: 8px; background: #f8fafc; }
+          .card { border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; background: #f8fafc; }
           table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-          th { background-color: #ecfdf5; text-align: left; padding: 10px; border: 1px solid #d1fae5; }
-          td { padding: 10px; border: 1px solid #e5e7eb; }
+          th { background-color: #f1f5f9; text-align: left; padding: 10px; border: 1px solid #e2e8f0; color: #094016; }
+          td { padding: 10px; border: 1px solid #e2e8f0; }
           .text-right { text-align: right; }
           .text-center { text-align: center; }
-          .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; background: #d1fae5; color: #065f46; }
+          .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; background: #e2e8f0; color: #094016; }
         </style>
       </head>
       <body onload="window.print(); setTimeout(() => window.close(), 500);">
@@ -43,7 +52,6 @@ export function exportAnimalPDF(animal: Animal, state: AppState) {
     .filter((r) => r.animalId === animal.id)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
-  // Generate simple ASCII bar chart for GMD progress
   const generateChart = () => {
     if (history.length < 2) return '<p>Dados insuficientes para gráfico de progresso.</p>'
     const maxW = Math.max(...history.map((h) => h.weight))
@@ -54,7 +62,7 @@ export function exportAnimalPDF(animal: Animal, state: AppState) {
         <div style="margin-bottom: 5px; display: flex; align-items: center; font-size: 12px;">
           <div style="width: 80px;">${new Date(h.date).toLocaleDateString()}</div>
           <div style="flex-grow: 1; background: #e5e7eb; height: 16px; border-radius: 4px; overflow: hidden; margin: 0 10px;">
-            <div style="width: ${width}%; background: #10b981; height: 100%;"></div>
+            <div style="width: ${width}%; background: #094016; height: 100%;"></div>
           </div>
           <div style="width: 50px; text-align: right; font-weight: bold;">${h.weight}kg</div>
         </div>
@@ -65,10 +73,10 @@ export function exportAnimalPDF(animal: Animal, state: AppState) {
 
   const html = `
     <div class="header">
-      <div class="logo">AGRO ERP</div>
-      <div>
-        <h1 style="margin:0;">Ficha Individual (Dossiê)</h1>
-        <p style="margin: 5px 0 0 0; color: #64748b;">Relatório Gerado em: ${new Date().toLocaleString()}</p>
+      <div class="logo">${logoSvg} TORIBA AGROPECUÁRIA</div>
+      <div style="margin-left: auto; text-align: right;">
+        <h2 style="margin:0;">Ficha Individual do Animal</h2>
+        <p style="margin: 5px 0 0 0; color: #64748b; font-size: 12px;">Gerado em: ${new Date().toLocaleString()}</p>
       </div>
     </div>
 
@@ -89,10 +97,19 @@ export function exportAnimalPDF(animal: Animal, state: AppState) {
       </div>
     </div>
 
-    <div class="card" style="margin-top: 20px;">
-      <h3>Genealogia (Pedigree)</h3>
-      <p><strong>Pai:</strong> ${pai ? `${pai.nomeAnimal || ''} (${pai.brinco}) - ${pai.rgn || 'S/RGN'}` : 'Desconhecido'}</p>
-      <p><strong>Mãe:</strong> ${mae ? `${mae.nomeAnimal || ''} (${mae.brinco}) - ${mae.rgn || 'S/RGN'}` : 'Desconhecida'}</p>
+    <div class="grid" style="margin-top: 20px;">
+      <div class="card">
+        <h3>Genealogia (Pedigree)</h3>
+        <p><strong>Pai:</strong> ${pai ? `${pai.nomeAnimal || ''} (${pai.brinco}) - ${pai.rgn || 'S/RGN'}` : 'Desconhecido'}</p>
+        <p><strong>Mãe:</strong> ${mae ? `${mae.nomeAnimal || ''} (${mae.brinco}) - ${mae.rgn || 'S/RGN'}` : 'Desconhecida'}</p>
+      </div>
+      <div class="card">
+        <h3>Investimento Acumulado (Nutrição/Sanidade)</h3>
+        <p style="font-size: 24px; font-weight: bold; color: #094016; margin: 10px 0;">
+          R$ ${(animal.custoAcumulado || 0).toFixed(2)}
+        </p>
+        <p style="font-size: 12px; color: #64748b;">*Custo variável acumulado através do manejo diário no lote.</p>
+      </div>
     </div>
 
     <div class="grid" style="margin-top: 20px;">
@@ -126,7 +143,7 @@ export function exportAnimalPDF(animal: Animal, state: AppState) {
                 <tr>
                   <td>${new Date(r.date).toLocaleDateString()}</td>
                   <td>${r.type} ${r.touro ? `(${r.touro})` : ''}</td>
-                  <td><span class="badge" style="background:#fef3c7;color:#92400e;">${r.status}</span></td>
+                  <td><span class="badge">${r.status}</span></td>
                 </tr>
               `,
                     )
@@ -155,7 +172,6 @@ export function exportLotePDF(lote: Lote, state: AppState) {
 
   const pasto = state.pastos.find((p) => p.loteId === lote.id)
 
-  // Calc Consumption and Costs
   const lotManejos = state.manejos.filter((m) => m.loteId === lote.id)
   const custoVariavel = lotManejos.reduce((acc, m) => acc + (m.cost || 0), 0)
 
@@ -172,7 +188,6 @@ export function exportLotePDF(lote: Lote, state: AppState) {
   const custoPorArroba =
     arrobasProduced > 0 ? (custoTotalAcumulado / arrobasProduced).toFixed(2) : '0.00'
 
-  // Aggregate consumed insumos
   const consumptionMap: Record<string, { name: string; qtd: number; unit: string; cost: number }> =
     {}
   lotManejos.forEach((m) => {
@@ -190,10 +205,10 @@ export function exportLotePDF(lote: Lote, state: AppState) {
 
   const html = `
     <div class="header">
-      <div class="logo">AGRO ERP</div>
-      <div>
-        <h1 style="margin:0;">Performance do Lote</h1>
-        <p style="margin: 5px 0 0 0; color: #64748b;">Relatório Gerado em: ${new Date().toLocaleString()}</p>
+      <div class="logo">${logoSvg} TORIBA AGROPECUÁRIA</div>
+      <div style="margin-left: auto; text-align: right;">
+        <h2 style="margin:0;">Performance do Lote</h2>
+        <p style="margin: 5px 0 0 0; color: #64748b; font-size: 12px;">Relatório Gerado em: ${new Date().toLocaleString()}</p>
       </div>
     </div>
 
@@ -218,9 +233,9 @@ export function exportLotePDF(lote: Lote, state: AppState) {
         <h3>Análise Financeira (Custo Acumulado)</h3>
         <p><strong>Custo Nutrição/Sanidade (Variável):</strong> R$ ${custoVariavel.toFixed(2)}</p>
         <p><strong>Custo Fixo Rateado:</strong> R$ ${custoFixoProporcional.toFixed(2)}</p>
-        <hr style="border-top: 1px dashed #d1fae5; margin: 10px 0;" />
+        <hr style="border-top: 1px dashed #cbd5e1; margin: 10px 0;" />
         <p style="font-size: 18px;"><strong>Custo Total:</strong> R$ ${custoTotalAcumulado.toFixed(2)}</p>
-        <p style="font-size: 18px; color: #047857;"><strong>Custo por @ Produzida:</strong> R$ ${custoPorArroba}</p>
+        <p style="font-size: 18px; color: #094016;"><strong>Custo por @ Produzida:</strong> R$ ${custoPorArroba}</p>
       </div>
       <div class="card">
         <h3>Consumo de Insumos</h3>
@@ -262,6 +277,7 @@ export function exportLotePDF(lote: Lote, state: AppState) {
           <th>Categoria</th>
           <th class="text-right">Peso (Kg)</th>
           <th class="text-right">GMD</th>
+          <th class="text-right">Custo Ind.</th>
         </tr>
       </thead>
       <tbody>
@@ -278,11 +294,12 @@ export function exportLotePDF(lote: Lote, state: AppState) {
                 <td>${a.categoria}</td>
                 <td class="text-right font-mono">${a.pesoAtual}</td>
                 <td class="text-right font-mono">${a.gmd.toFixed(3)}</td>
+                <td class="text-right font-mono">R$ ${(a.custoAcumulado || 0).toFixed(2)}</td>
               </tr>
             `,
                 )
                 .join('')
-            : `<tr><td colspan="5" class="text-center">Lote sem animais ativos.</td></tr>`
+            : `<tr><td colspan="6" class="text-center">Lote sem animais ativos.</td></tr>`
         }
       </tbody>
     </table>

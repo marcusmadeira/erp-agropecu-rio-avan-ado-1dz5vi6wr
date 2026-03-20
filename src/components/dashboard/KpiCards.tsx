@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { DollarSign, Activity, Users } from 'lucide-react'
+import { DollarSign, ArrowUpRight, ArrowDownRight, Wallet, Users } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
 
 export const formatCurrency = (val: number) =>
@@ -8,83 +8,59 @@ export const formatCurrency = (val: number) =>
 export default function KpiCards() {
   const { state } = useAppStore()
 
-  const caixaRealizado = state.transacoes.reduce((acc, t) => {
-    if (t.Status_Pagamento !== 'Efetivado') return acc
-    return t.Tipo_Movimento === 'Receita' ? acc + t.Valor_Total : acc - t.Valor_Total
-  }, 0)
-
-  const activeAnimals = state.animais.filter((a) => a.status === 'Ativo').length
-
-  const currentMonth = new Date().getMonth()
-  const desembolso = state.transacoes
-    .filter((t) => {
-      try {
-        if (!t.Data_Competencia) return false
-        return (
-          t.Tipo_Movimento === 'Despesa' &&
-          t.Status_Pagamento === 'Efetivado' &&
-          new Date(t.Data_Competencia).getMonth() === currentMonth
-        )
-      } catch (e) {
-        return false
-      }
-    })
+  const receitas = state.transacoes
+    .filter((t) => t.Tipo_Movimento === 'Receita' && t.Status_Pagamento === 'Efetivado')
     .reduce((acc, t) => acc + t.Valor_Total, 0)
-
-  const desembolsoPorCabeca = activeAnimals > 0 ? desembolso / activeAnimals : 0
-
-  const gmdMedio =
-    activeAnimals > 0
-      ? state.animais.filter((a) => a.status === 'Ativo').reduce((acc, a) => acc + a.gmd, 0) /
-        activeAnimals
-      : 0
+  const despesas = state.transacoes
+    .filter((t) => t.Tipo_Movimento === 'Despesa' && t.Status_Pagamento === 'Efetivado')
+    .reduce((acc, t) => acc + t.Valor_Total, 0)
+  const saldo = receitas - despesas
+  const activeAnimals = state.animais.filter((a) => a.status === 'Ativo').length
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="shadow-subtle hover:-translate-y-1 transition-transform">
+      <Card className="shadow-subtle hover:-translate-y-1 transition-transform border-l-4 border-l-emerald-500">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-emerald-900/70">Caixa Realizado</CardTitle>
-          <DollarSign className="h-4 w-4 text-emerald-700" />
+          <CardTitle className="text-sm font-medium text-slate-600">Receitas Realizadas</CardTitle>
+          <ArrowUpRight className="h-4 w-4 text-emerald-600" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-emerald-900 font-mono">
-            {formatCurrency(caixaRealizado)}
+          <div className="text-2xl font-bold text-emerald-700 font-mono">
+            {formatCurrency(receitas)}
           </div>
         </CardContent>
       </Card>
-      <Card className="shadow-subtle hover:-translate-y-1 transition-transform">
+      <Card className="shadow-subtle hover:-translate-y-1 transition-transform border-l-4 border-l-rose-500">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-emerald-900/70">
-            Desembolso Cab/Mês
-          </CardTitle>
-          <DollarSign className="h-4 w-4 text-amber-500" />
+          <CardTitle className="text-sm font-medium text-slate-600">Despesas Realizadas</CardTitle>
+          <ArrowDownRight className="h-4 w-4 text-rose-600" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-emerald-900 font-mono">
-            {formatCurrency(desembolsoPorCabeca)}
+          <div className="text-2xl font-bold text-rose-700 font-mono">
+            {formatCurrency(despesas)}
           </div>
         </CardContent>
       </Card>
-      <Card className="shadow-subtle hover:-translate-y-1 transition-transform">
+      <Card className="shadow-subtle hover:-translate-y-1 transition-transform border-l-4 border-l-blue-500">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-emerald-900/70">
-            GMD Médio Global
-          </CardTitle>
-          <Activity className="h-4 w-4 text-emerald-700" />
+          <CardTitle className="text-sm font-medium text-slate-600">Saldo Atual</CardTitle>
+          <Wallet className="h-4 w-4 text-blue-600" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-emerald-900 font-mono">
-            {gmdMedio.toFixed(3)} kg/d
+          <div
+            className={`text-2xl font-bold font-mono ${saldo >= 0 ? 'text-blue-700' : 'text-rose-700'}`}
+          >
+            {formatCurrency(saldo)}
           </div>
         </CardContent>
       </Card>
-      <Card className="shadow-subtle hover:-translate-y-1 transition-transform">
+      <Card className="shadow-subtle hover:-translate-y-1 transition-transform border-l-4 border-l-primary">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-emerald-900/70">Animais Ativos</CardTitle>
-          <Users className="h-4 w-4 text-emerald-700" />
+          <CardTitle className="text-sm font-medium text-slate-600">Cabeças Ativas</CardTitle>
+          <Users className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-emerald-900 font-mono">{activeAnimals}</div>
+          <div className="text-2xl font-bold text-primary font-mono">{activeAnimals}</div>
         </CardContent>
       </Card>
     </div>

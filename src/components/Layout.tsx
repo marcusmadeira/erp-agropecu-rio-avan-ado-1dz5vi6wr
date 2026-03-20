@@ -58,6 +58,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { format, parseISO } from 'date-fns'
+import { ToribaLogo } from '@/components/ToribaLogo'
 
 const navItems = [
   { module: 'Dashboard', icon: Home, path: '/', levels: [1, 2, 3] },
@@ -169,7 +170,7 @@ export default function Layout() {
       setTimeout(() => {
         toast({
           title: 'Backup Semanal Automático',
-          description: 'Dump completo do banco gerado em JSON e enviado para admin@agro.com',
+          description: 'Dump completo do banco gerado em JSON e enviado para admin@toriba.com',
         })
         localStorage.setItem('last_weekly_backup', new Date().toISOString())
       }, 3000)
@@ -221,17 +222,23 @@ export default function Layout() {
     <SidebarProvider>
       <div className="flex h-screen w-full bg-slate-50">
         <Sidebar className="border-r shadow-subtle">
-          <SidebarHeader className="p-4 flex items-center h-16 border-b">
-            <h2 className="font-bold text-emerald-900 tracking-tight text-lg">
+          <SidebarHeader className="p-4 flex flex-col items-start justify-center h-20 border-b">
+            <div className="flex items-center gap-2">
+              <ToribaLogo className="w-6 h-6 text-primary" />
+              <h2 className="font-bold text-primary tracking-tight text-lg leading-none">
+                Toriba Agro
+              </h2>
+            </div>
+            <span className="text-[10px] text-muted-foreground mt-1 ml-8 font-medium">
               Gestão Pecuária 360º
-            </h2>
+            </span>
           </SidebarHeader>
           <SidebarContent className="p-2 gap-2">
             {navItems
               .filter((item) => item.levels.includes(state.userRole))
               .map((mod) => (
                 <SidebarGroup key={mod.module}>
-                  <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-emerald-900/60 uppercase">
+                  <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-primary/60 uppercase">
                     <mod.icon className="w-4 h-4" />
                     {mod.module}
                   </div>
@@ -271,7 +278,7 @@ export default function Layout() {
           <header className="h-16 flex items-center justify-between px-4 sm:px-6 border-b bg-white shadow-subtle z-10 shrink-0">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
-              <h1 className="font-semibold text-lg text-emerald-900 hidden sm:block">
+              <h1 className="font-semibold text-lg text-primary hidden sm:block">
                 {state.userRole === 1
                   ? 'Gestão Executiva'
                   : state.userRole === 2
@@ -301,7 +308,7 @@ export default function Layout() {
                     <span>Ação Pendente ({state.pendingSyncQueue.length})</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full text-xs font-medium border border-emerald-100">
+                  <div className="flex items-center gap-1.5 text-primary bg-primary/10 px-3 py-1.5 rounded-full text-xs font-medium border border-primary/20">
                     <Cloud className="w-4 h-4" />
                     <span>Sincronizado</span>
                   </div>
@@ -311,7 +318,7 @@ export default function Layout() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="w-5 h-5 text-emerald-900" />
+                    <Bell className="w-5 h-5 text-primary" />
                     {alerts.length > 0 && (
                       <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full animate-pulse border border-white" />
                     )}
@@ -349,7 +356,7 @@ export default function Layout() {
 
               <div className="flex items-center gap-3 border-l pl-3 sm:pl-4 border-slate-200">
                 <div className="text-sm text-right hidden sm:block">
-                  <p className="font-semibold text-emerald-900 leading-none">
+                  <p className="font-semibold text-primary leading-none">
                     {state.currentUser?.name}
                   </p>
                   <span className="text-xs text-muted-foreground font-medium">
@@ -387,7 +394,7 @@ export default function Layout() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <RefreshCw
-                className={`w-5 h-5 ${isSyncing ? 'animate-spin text-amber-500' : 'text-emerald-700'}`}
+                className={`w-5 h-5 ${isSyncing ? 'animate-spin text-amber-500' : 'text-primary'}`}
               />
               Sincronização Local
             </DialogTitle>
@@ -443,7 +450,7 @@ export default function Layout() {
               Descartar
             </Button>
             <Button
-              className="bg-emerald-800"
+              className="bg-primary text-primary-foreground"
               onClick={handleManualSync}
               disabled={!state.isOnline || isSyncing || state.pendingSyncQueue.length === 0}
             >

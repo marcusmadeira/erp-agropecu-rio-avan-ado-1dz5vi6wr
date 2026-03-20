@@ -79,6 +79,7 @@ export default function Animais() {
           birthDate: new Date().toISOString(),
           pai: form.pai === 'none' ? undefined : form.pai,
           mae: form.mae === 'none' ? undefined : form.mae,
+          custoAcumulado: 0,
         } as any,
         ...s.animais,
       ],
@@ -103,7 +104,7 @@ export default function Animais() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center flex-wrap gap-4">
-        <h2 className="text-2xl font-bold text-emerald-900">Plantel e Rastreabilidade</h2>
+        <h2 className="text-2xl font-bold text-primary">Plantel e Rastreabilidade</h2>
         <div className="flex items-center space-x-2 relative w-full sm:w-auto">
           <Search className="w-4 h-4 absolute left-3 text-muted-foreground" />
           <Input
@@ -114,7 +115,7 @@ export default function Animais() {
           />
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-emerald-800">
+              <Button className="bg-primary">
                 <Plus className="w-4 h-4 mr-2" /> Novo Animal
               </Button>
             </DialogTrigger>
@@ -241,7 +242,7 @@ export default function Animais() {
                     </Select>
                   </div>
                 </div>
-                <Button type="submit" className="w-full bg-emerald-800 mt-2">
+                <Button type="submit" className="w-full bg-primary mt-2">
                   Salvar Cadastro
                 </Button>
               </form>
@@ -294,7 +295,7 @@ export default function Animais() {
                       P: {pai?.brinco || '-'} <br />
                       M: {mae?.brinco || '-'}
                     </TableCell>
-                    <TableCell className="text-right font-mono text-emerald-900">
+                    <TableCell className="text-right font-mono text-primary">
                       {a.pesoAtual} kg
                       <span className="block text-[10px] text-muted-foreground">
                         {a.gmd.toFixed(3)} GMD
@@ -302,7 +303,7 @@ export default function Animais() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" onClick={() => exportAnimalPDF(a, state)}>
-                        <FileText className="w-4 h-4 text-emerald-700" />
+                        <FileText className="w-4 h-4 text-primary" />
                       </Button>
                     </TableCell>
                   </TableRow>

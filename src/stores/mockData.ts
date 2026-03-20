@@ -3,7 +3,7 @@ import { AppState, User } from './types'
 export const mockUsers: User[] = [
   {
     id: 'u1',
-    email: 'admin@agro.com',
+    email: 'admin@toriba.com',
     name: 'Admin CEO',
     role: 1,
     phone: '+5511999999991',
@@ -11,7 +11,7 @@ export const mockUsers: User[] = [
   },
   {
     id: 'u2',
-    email: 'gerente@agro.com',
+    email: 'gerente@toriba.com',
     name: 'Gerente',
     role: 2,
     phone: '+5511999999992',
@@ -19,7 +19,7 @@ export const mockUsers: User[] = [
   },
   {
     id: 'u3',
-    email: 'peao@agro.com',
+    email: 'peao@toriba.com',
     name: 'Operacional',
     role: 3,
     phone: '+5511999999993',
@@ -80,6 +80,7 @@ export const initialData: AppState = {
       birthDate: '2020-05-10',
       costCenter: 'CC01-PO',
       gender: 'F',
+      custoAcumulado: 120,
     },
     {
       id: 'a3',
@@ -94,6 +95,7 @@ export const initialData: AppState = {
       birthDate: '2023-08-20',
       costCenter: 'CC02-TIP',
       gender: 'M',
+      custoAcumulado: 85,
     },
   ],
   pesagens: [{ id: 'ps1', animalId: 'a1', weight: 500, date: '2023-08-01T10:00:00.000Z' }],
@@ -113,11 +115,12 @@ export const initialData: AppState = {
   estoque: [
     {
       id: 'e1',
-      name: 'Ração Proteica TIP',
+      name: 'Sal Mineral (Saco 30kg)',
       category: 'Nutrição',
-      quantity: 5000,
+      quantity: 40,
       unit: 'Kg',
       unitCost: 2.5,
+      minStock: 100,
     },
     {
       id: 'e2',
@@ -139,7 +142,7 @@ export const initialData: AppState = {
       loteId: 'l2',
       cost: 1250,
       itemId: 'e1',
-      quantity: 500,
+      quantity: 50,
     },
     {
       id: 'mn2',
@@ -149,7 +152,7 @@ export const initialData: AppState = {
       loteId: 'l2',
       cost: 1300,
       itemId: 'e1',
-      quantity: 520,
+      quantity: 52,
     },
   ],
   parceiros: [
@@ -191,12 +194,12 @@ export const initialData: AppState = {
     {
       id: 't3',
       Descricao_Lancamento: 'Sêmen Elite ABS',
-      Valor_Total: 5000,
+      Valor_Total: 5500,
       Tipo_Movimento: 'Despesa',
       Data_Competencia: new Date().toISOString(),
-      Data_Vencimento: new Date(new Date().getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      Data_Vencimento: new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toISOString(),
       Centro_Custo_Direcionado: 'CC01-Nelore PO',
-      Status_Pagamento: 'Atrasado',
+      Status_Pagamento: 'Pendente',
       Macroconta_Inttegra: '5. PECUÁRIA (Custos Diretos)',
       Categoria_Inttegra: 'Insumos Rebanho Genética',
       Subcategoria_Detalhe: 'Sêmen',

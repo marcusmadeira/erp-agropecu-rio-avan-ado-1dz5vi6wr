@@ -49,7 +49,7 @@ export function useAlerts() {
             type: 'critical',
             date: new Date().toISOString(),
             link: '/nascimentos',
-            smsTriggered: true, // Trigger to Vaqueiro/Gerente
+            smsTriggered: true,
           })
         }
       }
@@ -71,7 +71,6 @@ export function useAlerts() {
             link: '/transacoes',
           })
         } else if (diffDays <= 1 && t.Valor_Total > 5000) {
-          // Trigger to CEO when Bill > 5000 is due next day
           newAlerts.push({
             id: `fin-due-tomorrow-${t.id}`,
             title: 'Alerta CEO: Conta de Alto Valor',
@@ -85,8 +84,33 @@ export function useAlerts() {
       }
     })
 
+    // Critical Stock Alerts
+    state.estoque.forEach((e) => {
+      const isCore = ['Milho', 'Mineral', 'Farelo', 'Soja', 'Ureia', 'Sal'].some((core) =>
+        e.name.toLowerCase().includes(core.toLowerCase()),
+      )
+      if (isCore && e.quantity < (e.minStock || 100)) {
+        newAlerts.push({
+          id: `stock-${e.id}`,
+          title: 'Alerta CEO: Estoque Crítico',
+          description: `${e.name} está abaixo do mínimo (${e.quantity} ${e.unit}).`,
+          type: 'critical',
+          date: new Date().toISOString(),
+          link: '/estoque',
+          smsTriggered: true,
+        })
+      }
+    })
+
     return newAlerts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  }, [state.isAuthenticated, state.maquinario, state.reproducoes, state.animais, state.transacoes])
+  }, [
+    state.isAuthenticated,
+    state.maquinario,
+    state.reproducoes,
+    state.animais,
+    state.transacoes,
+    state.estoque,
+  ])
 
   useEffect(() => {
     if (alerts.length > 0 && state.isAuthenticated) {

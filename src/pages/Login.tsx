@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
-import { Tractor, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+import { ToribaLogo } from '@/components/ToribaLogo'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -20,16 +21,12 @@ export default function Login() {
     if (e) e.preventDefault()
     setIsLoading(true)
 
-    // Simulate network delay for better UX
     setTimeout(() => {
       const targetEmail = mockEmail || email
-
-      // Fallback to empty array if state.users is undefined from older local storage
       const userList = state.users || []
 
       let user = userList.find((u) => u.email === targetEmail)
 
-      // Admin default override
       if (targetEmail === 'adm' && password === 'adm123') {
         user = {
           id: 'admin-1',
@@ -43,10 +40,9 @@ export default function Login() {
       let isValidPassword = false
       if (user) {
         if (targetEmail === 'adm' && password === 'adm123') isValidPassword = true
-        else if (mockEmail)
-          isValidPassword = true // Auto-login buttons
+        else if (mockEmail) isValidPassword = true
         else if (user.password && user.password === password) isValidPassword = true
-        else if (!user.password && password === '123') isValidPassword = true // Fallback for old mock data
+        else if (!user.password && password === '123') isValidPassword = true
       }
 
       if (user && isValidPassword) {
@@ -80,15 +76,15 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <Card className="w-full max-w-md shadow-elevation border-t-4 border-t-emerald-700 animate-fade-in-up">
+      <Card className="w-full max-w-md shadow-elevation border-t-4 border-t-primary animate-fade-in-up">
         <CardHeader className="text-center pb-4">
-          <div className="mx-auto bg-emerald-100 p-3 rounded-full w-fit mb-4">
-            <Tractor className="w-8 h-8 text-emerald-800" />
+          <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-4">
+            <ToribaLogo className="w-10 h-10 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold text-emerald-900 tracking-tight">
-            Agro ERP Elite
+          <CardTitle className="text-2xl font-bold text-primary tracking-tight">
+            Toriba Agropecuária
           </CardTitle>
-          <CardDescription>Acesso Seguro ao Sistema</CardDescription>
+          <CardDescription>Gestão Pecuária 360º</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
@@ -97,7 +93,7 @@ export default function Login() {
               <Input
                 id="email"
                 type="text"
-                placeholder="adm ou usuario@agro.com"
+                placeholder="adm ou usuario@toriba.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -118,17 +114,13 @@ export default function Login() {
               <div className="text-right">
                 <Link
                   to="/forgot-password"
-                  className="text-sm font-medium text-emerald-700 hover:text-emerald-900 transition-colors"
+                  className="text-sm font-medium text-primary/80 hover:text-primary transition-colors"
                 >
                   Esqueci minha senha
                 </Link>
               </div>
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-emerald-800 hover:bg-emerald-900 h-12"
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full bg-primary h-12" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -144,7 +136,7 @@ export default function Login() {
             <span className="text-muted-foreground">Não tem uma conta? </span>
             <Link
               to="/register"
-              className="font-medium text-emerald-700 hover:text-emerald-900 transition-colors"
+              className="font-medium text-primary/80 hover:text-primary transition-colors"
             >
               Cadastrar-se
             </Link>
@@ -159,7 +151,7 @@ export default function Login() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => handleLogin(undefined, 'admin@agro.com')}
+                onClick={() => handleLogin(undefined, 'admin@toriba.com')}
                 className="text-xs"
                 disabled={isLoading}
               >
@@ -169,7 +161,7 @@ export default function Login() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => handleLogin(undefined, 'gerente@agro.com')}
+                onClick={() => handleLogin(undefined, 'gerente@toriba.com')}
                 className="text-xs"
                 disabled={isLoading}
               >
@@ -179,7 +171,7 @@ export default function Login() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => handleLogin(undefined, 'peao@agro.com')}
+                onClick={() => handleLogin(undefined, 'peao@toriba.com')}
                 className="text-xs"
                 disabled={isLoading}
               >

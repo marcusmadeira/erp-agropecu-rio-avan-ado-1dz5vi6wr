@@ -32,7 +32,7 @@ export default function Manejo() {
     const newManejo = {
       id: manejoId,
       type: 'Saída para Manejo',
-      details: 'Manejo Diário',
+      details: 'Trato Diário',
       date: now,
       loteId: form.loteId,
       itemId: form.itemId,
@@ -59,12 +59,21 @@ export default function Manejo() {
         newValue: `${(item?.quantity || 0) - q}`,
       }
 
+      // Distribuição de custo proporcional por animal do lote
+      const lotAnimals = s.animais.filter((a) => a.loteId === form.loteId && a.status === 'Ativo')
+      const costPerAnimal = lotAnimals.length > 0 ? cost / lotAnimals.length : 0
+
       return {
         ...s,
         estoque: s.estoque.map((e) =>
           e.id === form.itemId ? { ...e, quantity: e.quantity - q } : e,
         ),
         manejos: [...s.manejos, newManejo],
+        animais: s.animais.map((a) =>
+          a.loteId === form.loteId && a.status === 'Ativo'
+            ? { ...a, custoAcumulado: (a.custoAcumulado || 0) + costPerAnimal }
+            : a,
+        ),
         auditLogs: [auditLog, ...s.auditLogs],
         pendingSyncQueue: s.isOnline ? s.pendingSyncQueue : [...s.pendingSyncQueue, offlineAction],
       }
@@ -75,7 +84,7 @@ export default function Manejo() {
     toast({
       title: state.isOnline ? 'Manejo registrado!' : 'Salvo Offline',
       description: state.isOnline
-        ? 'Estoque deduzido e sincronizado com Inttegra.'
+        ? 'Estoque deduzido, custo distribuído por animal e sincronizado.'
         : 'Aguardando rede para sincronizar.',
     })
     setForm({ itemId: '', quantity: '', loteId: '' })
@@ -83,12 +92,12 @@ export default function Manejo() {
 
   return (
     <div className="flex justify-center sm:pt-6 h-full sm:h-auto">
-      <Card className="w-full max-w-md shadow-elevation border-t-4 border-t-emerald-700 rounded-none sm:rounded-xl flex flex-col h-full sm:h-auto border-x-0 border-b-0 sm:border-x sm:border-b">
+      <Card className="w-full max-w-md shadow-elevation border-t-4 border-t-primary rounded-none sm:rounded-xl flex flex-col h-full sm:h-auto border-x-0 border-b-0 sm:border-x sm:border-b">
         <CardHeader className="text-center pt-8 pb-4">
-          <div className="mx-auto bg-emerald-100 p-4 rounded-full w-fit mb-4">
-            <Droplet className="w-10 h-10 text-emerald-800" />
+          <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-4">
+            <Droplet className="w-10 h-10 text-primary" />
           </div>
-          <CardTitle className="text-3xl text-emerald-900 tracking-tight">Trato Diário</CardTitle>
+          <CardTitle className="text-3xl text-primary tracking-tight">Trato Diário</CardTitle>
           <p className="text-base text-muted-foreground mt-2">Apontamento rápido no campo.</p>
           {!state.isOnline && (
             <div className="mt-4 inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-md text-sm font-medium">
@@ -98,7 +107,7 @@ export default function Manejo() {
         </CardHeader>
         <CardContent className="space-y-6 flex-1 flex flex-col pt-2">
           <div className="space-y-3">
-            <label className="text-base font-semibold text-emerald-950">Lote Destino</label>
+            <label className="text-base font-semibold text-slate-800">Lote Destino</label>
             <Select value={form.loteId} onValueChange={(v) => setForm({ ...form, loteId: v })}>
               <SelectTrigger className="text-lg h-14 rounded-xl bg-slate-50 border-slate-200">
                 <SelectValue placeholder="Selecione o Lote..." />
@@ -113,7 +122,7 @@ export default function Manejo() {
             </Select>
           </div>
           <div className="space-y-3">
-            <label className="text-base font-semibold text-emerald-950">Insumo Utilizado</label>
+            <label className="text-base font-semibold text-slate-800">Insumo Utilizado</label>
             <Select value={form.itemId} onValueChange={(v) => setForm({ ...form, itemId: v })}>
               <SelectTrigger className="text-lg h-14 rounded-xl bg-slate-50 border-slate-200">
                 <SelectValue placeholder="Selecione o Insumo..." />
@@ -128,18 +137,18 @@ export default function Manejo() {
             </Select>
           </div>
           <div className="space-y-3">
-            <label className="text-base font-semibold text-emerald-950">Quantidade</label>
+            <label className="text-base font-semibold text-slate-800">Quantidade</label>
             <Input
               type="number"
               placeholder="0"
-              className="text-3xl font-mono text-center h-20 text-emerald-900 font-bold rounded-xl bg-slate-50 border-slate-200"
+              className="text-3xl font-mono text-center h-20 text-primary font-bold rounded-xl bg-slate-50 border-slate-200"
               value={form.quantity}
               onChange={(e) => setForm({ ...form, quantity: e.target.value })}
             />
           </div>
           <div className="mt-auto pt-6 pb-8 sm:pb-0">
             <Button
-              className="w-full h-16 text-xl font-bold bg-emerald-800 hover:bg-emerald-900 rounded-xl shadow-lg active:scale-[0.98] transition-transform"
+              className="w-full h-16 text-xl font-bold bg-primary rounded-xl shadow-lg active:scale-[0.98] transition-transform"
               onClick={handleSave}
             >
               Confirmar e Alocar

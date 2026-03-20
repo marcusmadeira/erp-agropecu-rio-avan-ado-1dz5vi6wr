@@ -50,6 +50,7 @@ export interface Animal {
   birthDate: string
   costCenter: 'CC01-PO' | 'CC02-TIP'
   gender: 'M' | 'F'
+  custoAcumulado?: number
 }
 export interface Pesagem {
   id: string
@@ -79,6 +80,7 @@ export interface EstoqueItem {
   unitCost: number
   botijao?: string
   caneca?: string
+  minStock?: number
 }
 export interface Manejo {
   id: string
