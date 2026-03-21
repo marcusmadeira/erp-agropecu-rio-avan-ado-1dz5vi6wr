@@ -55,31 +55,57 @@ export function useAlerts() {
       }
     })
 
-    // Finance Alerts (CEO Notification)
+    // Finance Alerts & CRM WhatsApp Collection Rules
     state.transacoes.forEach((t) => {
       if (t.Status_Pagamento === 'Pendente' && t.Data_Vencimento) {
         const diffTime = new Date(t.Data_Vencimento).getTime() - new Date().getTime()
         const diffDays = Math.ceil(diffTime / 86400000)
 
-        if (diffTime < 0) {
-          newAlerts.push({
-            id: `fin-overdue-${t.id}`,
-            title: 'Transação Atrasada',
-            description: `Pagamento pendente: ${t.Descricao_Lancamento} (${t.Centro_Custo_Direcionado})`,
-            type: 'critical',
-            date: new Date().toISOString(),
-            link: '/transacoes',
-          })
-        } else if (diffDays <= 1 && t.Valor_Total > 5000) {
-          newAlerts.push({
-            id: `fin-due-tomorrow-${t.id}`,
-            title: 'Alerta CEO: Conta de Alto Valor',
-            description: `Atenção: ${t.Descricao_Lancamento} no valor de R$ ${t.Valor_Total.toFixed(2)} vence amanhã.`,
-            type: 'warning',
-            date: new Date().toISOString(),
-            link: '/transacoes',
-            smsTriggered: true,
-          })
+        if (t.Tipo_Movimento === 'Receita') {
+          // CRM Revenue Rules
+          if (diffDays === 2) {
+            newAlerts.push({
+              id: `crm-previo-${t.id}`,
+              title: 'CRM: Lembrete Amigável de Cobrança',
+              description: `Enviar WhatsApp para cliente sobre vencimento em 2 dias: ${t.Descricao_Lancamento} (R$ ${t.Valor_Total.toFixed(2)})`,
+              type: 'warning',
+              date: new Date().toISOString(),
+              link: '/transacoes',
+              smsTriggered: true,
+            })
+          } else if (diffDays === 0 || diffDays === -1) {
+            newAlerts.push({
+              id: `crm-vencimento-${t.id}`,
+              title: 'CRM: Vencimento Hoje/Atrasado',
+              description: `Enviar WhatsApp de Lembrete de Vencimento: ${t.Descricao_Lancamento} (R$ ${t.Valor_Total.toFixed(2)})`,
+              type: 'critical',
+              date: new Date().toISOString(),
+              link: '/transacoes',
+              smsTriggered: true,
+            })
+          }
+        } else {
+          // Expenses Alerts
+          if (diffTime < 0) {
+            newAlerts.push({
+              id: `fin-overdue-${t.id}`,
+              title: 'Transação Atrasada',
+              description: `Pagamento pendente: ${t.Descricao_Lancamento} (${t.Centro_Custo_Direcionado})`,
+              type: 'critical',
+              date: new Date().toISOString(),
+              link: '/transacoes',
+            })
+          } else if (diffDays <= 1 && t.Valor_Total > 5000) {
+            newAlerts.push({
+              id: `fin-due-tomorrow-${t.id}`,
+              title: 'Alerta CEO: Conta de Alto Valor',
+              description: `Atenção: ${t.Descricao_Lancamento} no valor de R$ ${t.Valor_Total.toFixed(2)} vence amanhã.`,
+              type: 'warning',
+              date: new Date().toISOString(),
+              link: '/transacoes',
+              smsTriggered: true,
+            })
+          }
         }
       }
     })
@@ -122,9 +148,9 @@ export function useAlerts() {
           }
           if (a.smsTriggered) {
             toast({
-              title: '📱 Webhook WhatsApp Enviado',
-              description: `Notificação enviada: ${a.title}`,
-              className: 'border-l-4 border-l-rose-500',
+              title: '📱 Alerta Disparado',
+              description: `Notificação/CRM: ${a.title}`,
+              className: 'border-l-4 border-l-primary',
             })
           }
         })

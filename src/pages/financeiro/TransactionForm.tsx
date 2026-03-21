@@ -35,6 +35,7 @@ export function TransactionForm() {
     Descricao_Lancamento: '',
     Valor_Total: '',
     Tipo_Movimento: 'Despesa',
+    Classificacao_Custo: 'Variável',
     Data_Competencia: safeDate(),
     Data_Vencimento: safeDate(),
     Centro_Custo_Direcionado: 'CC01-Nelore PO',
@@ -126,19 +127,19 @@ export function TransactionForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-emerald-700 hover:bg-emerald-800">
+        <Button className="bg-primary hover:bg-primary/90">
           <Plus className="w-4 h-4 mr-2" />
           Nova Transação DRE
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Lançamento Financeiro DRE</DialogTitle>
+          <DialogTitle className="text-primary">Lançamento Financeiro DRE</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3 mt-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Tipo</Label>
+              <Label>Tipo de Movimento</Label>
               <Select
                 value={form.Tipo_Movimento}
                 onValueChange={(v) =>
@@ -165,6 +166,43 @@ export function TransactionForm() {
               />
             </div>
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Classificação Custo</Label>
+              <Select
+                value={form.Classificacao_Custo}
+                onValueChange={(v) => setForm({ ...form, Classificacao_Custo: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Fixo">Custo Fixo</SelectItem>
+                  <SelectItem value="Variável">Custo Variável</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Centro Custo</Label>
+              <Select
+                value={form.Centro_Custo_Direcionado}
+                onValueChange={(v) => setForm({ ...form, Centro_Custo_Direcionado: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CENTROS_CUSTO.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div>
             <Label>Descrição</Label>
             <Input
@@ -176,7 +214,7 @@ export function TransactionForm() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Parceiro (Filtrado)</Label>
+              <Label>Parceiro / CRM</Label>
               <Select
                 value={form.Parceiro_Vinculado}
                 onValueChange={(v) => setForm({ ...form, Parceiro_Vinculado: v })}
@@ -206,7 +244,6 @@ export function TransactionForm() {
                   <SelectItem value="3">3x Mensais</SelectItem>
                   <SelectItem value="6">6x Mensais</SelectItem>
                   <SelectItem value="12">12x Mensais</SelectItem>
-                  <SelectItem value="30">30x Mensais</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -233,40 +270,20 @@ export function TransactionForm() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Centro Custo</Label>
-              <Select
-                value={form.Centro_Custo_Direcionado}
-                onValueChange={(v) => setForm({ ...form, Centro_Custo_Direcionado: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CENTROS_CUSTO.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Status Inicial</Label>
-              <Select
-                value={form.Status_Pagamento}
-                onValueChange={(v) => setForm({ ...form, Status_Pagamento: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Efetivado">Efetivado (Pago)</SelectItem>
-                  <SelectItem value="Pendente">Pendente</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label>Status Inicial</Label>
+            <Select
+              value={form.Status_Pagamento}
+              onValueChange={(v) => setForm({ ...form, Status_Pagamento: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Efetivado">Efetivado (Pago)</SelectItem>
+                <SelectItem value="Pendente">Pendente</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -339,7 +356,7 @@ export function TransactionForm() {
               </Select>
             </div>
           )}
-          <Button type="submit" className="w-full mt-4 bg-emerald-700 hover:bg-emerald-800">
+          <Button type="submit" className="w-full mt-4 bg-primary">
             Salvar Lançamento(s)
           </Button>
         </form>

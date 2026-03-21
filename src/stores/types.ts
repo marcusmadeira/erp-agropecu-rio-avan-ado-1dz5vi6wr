@@ -117,6 +117,8 @@ export interface ParceiroNegocio {
   Nome_Razao_Social: string
   Tipo_Documento: 'CPF' | 'CNPJ'
   Numero_Documento: string
+  Telefone_WhatsApp?: string
+  Email?: string
   Categoria_Parceiro: string[]
   Status: 'Ativo' | 'Inativo'
   ID_Inttegra?: string
@@ -126,6 +128,7 @@ export interface Transacao {
   Descricao_Lancamento: string
   Valor_Total: number
   Tipo_Movimento: 'Receita' | 'Despesa'
+  Classificacao_Custo: 'Fixo' | 'Variável'
   Data_Competencia: string
   Data_Vencimento: string
   Data_Efetivacao_Real?: string

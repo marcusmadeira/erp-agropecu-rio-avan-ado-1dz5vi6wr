@@ -29,6 +29,7 @@ import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { FileText } from 'lucide-react'
 import { exportLotePDF } from '@/lib/pdf'
+import { formatCurrency } from '@/components/dashboard/KpiCards'
 
 export default function Lotes() {
   const { state, dispatch } = useAppStore()
@@ -51,14 +52,14 @@ export default function Lotes() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-emerald-900">Manejo de Lotes</h2>
+        <h2 className="text-2xl font-bold text-primary">Manejo de Lotes</h2>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-emerald-800">Novo Lote</Button>
+            <Button className="bg-primary hover:bg-primary/90">Novo Lote</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Criar Lote</DialogTitle>
+              <DialogTitle className="text-primary">Criar Lote</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <Input
@@ -78,7 +79,7 @@ export default function Lotes() {
                   <SelectItem value="CC02-TIP">CC02-TIP (Comercial/Engorda)</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={handleSave} className="w-full bg-emerald-800">
+              <Button onClick={handleSave} className="w-full bg-primary hover:bg-primary/90">
                 Salvar
               </Button>
             </div>
@@ -93,8 +94,10 @@ export default function Lotes() {
               <TableRow>
                 <TableHead>Nome do Lote</TableHead>
                 <TableHead>Centro de Custo</TableHead>
-                <TableHead className="text-right">Qtd. Cabeças</TableHead>
+                <TableHead>Piquete Atual</TableHead>
+                <TableHead className="text-right">Cabeças</TableHead>
                 <TableHead className="text-right">Peso Médio</TableHead>
+                <TableHead className="text-right">Custo Nutrição</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -103,21 +106,33 @@ export default function Lotes() {
                 const animals = state.animais.filter(
                   (a) => a.loteId === l.id && a.status === 'Ativo',
                 )
+                const pasto = state.pastos.find((p) => p.loteId === l.id)
+                const lotManejos = state.manejos.filter((m) => m.loteId === l.id)
+                const custoNutricao = lotManejos.reduce((acc, m) => acc + (m.cost || 0), 0)
+
                 const avgWeight =
                   animals.length > 0
                     ? animals.reduce((acc, a) => acc + a.pesoAtual, 0) / animals.length
                     : 0
                 return (
                   <TableRow key={l.id}>
-                    <TableCell className="font-semibold">{l.name}</TableCell>
+                    <TableCell className="font-semibold text-secondary">{l.name}</TableCell>
                     <TableCell>
-                      <Badge variant={l.costCenter === 'CC01-PO' ? 'default' : 'secondary'}>
+                      <Badge variant="outline" className="border-border text-secondary">
                         {l.costCenter}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right font-mono">{animals.length}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {pasto ? pasto.name : 'Sem Piquete'}
+                    </TableCell>
+                    <TableCell className="text-right font-mono font-bold text-secondary">
+                      {animals.length}
+                    </TableCell>
                     <TableCell className="text-right font-mono">
                       {avgWeight.toFixed(1)} kg
+                    </TableCell>
+                    <TableCell className="text-right font-mono font-bold text-primary">
+                      {formatCurrency(custoNutricao)}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -125,8 +140,9 @@ export default function Lotes() {
                         size="sm"
                         onClick={() => exportLotePDF(l, state)}
                         title="Exportar Relatório PDF"
+                        className="text-primary border-primary hover:bg-primary/10"
                       >
-                        <FileText className="w-4 h-4 mr-2 text-emerald-700" /> Relatório
+                        <FileText className="w-4 h-4 mr-2" /> PDF
                       </Button>
                     </TableCell>
                   </TableRow>

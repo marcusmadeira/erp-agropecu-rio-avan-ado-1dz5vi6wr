@@ -61,8 +61,8 @@ import { format, parseISO } from 'date-fns'
 import { ToribaLogo } from '@/components/ToribaLogo'
 
 const navItems = [
-  { module: 'Dashboard', icon: Home, path: '/', levels: [1, 2, 3] },
-  { module: 'Desempenho', icon: LineChart, path: '/nutricao', levels: [1, 2] },
+  { module: 'Dashboard Financeiro', icon: Home, path: '/', levels: [1, 2] },
+  { module: 'Desempenho (Produção)', icon: LineChart, path: '/desempenho', levels: [1, 2] },
   {
     module: 'Estrutura',
     icon: Map,

@@ -19,13 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { Users, Plus, Edit2 } from 'lucide-react'
@@ -50,6 +44,8 @@ export default function Parceiros() {
     Nome_Razao_Social: '',
     Tipo_Documento: 'CNPJ',
     Numero_Documento: '',
+    Telefone_WhatsApp: '',
+    Email: '',
     Categoria_Parceiro: [],
     Status: 'Ativo',
     ID_Inttegra: '',
@@ -68,6 +64,8 @@ export default function Parceiros() {
       Nome_Razao_Social: '',
       Tipo_Documento: 'CNPJ',
       Numero_Documento: '',
+      Telefone_WhatsApp: '',
+      Email: '',
       Categoria_Parceiro: [],
       Status: 'Ativo',
       ID_Inttegra: '',
@@ -96,11 +94,12 @@ export default function Parceiros() {
     if (
       !form.Nome_Razao_Social ||
       !form.Numero_Documento ||
+      !form.Telefone_WhatsApp ||
       (form.Categoria_Parceiro && form.Categoria_Parceiro.length === 0)
     ) {
       toast({
         title: 'Aviso',
-        description: 'Preencha os campos obrigatórios (Nome, Doc e Categoria).',
+        description: 'Preencha os campos obrigatórios (Nome, Doc, WhatsApp e Categoria).',
         variant: 'destructive',
       })
       return
@@ -129,12 +128,10 @@ export default function Parceiros() {
     <div className="space-y-4">
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div className="flex items-center gap-3">
-          <Users className="w-8 h-8 text-emerald-900" />
+          <Users className="w-8 h-8 text-primary" />
           <div>
-            <h2 className="text-2xl font-bold text-emerald-900">Parceiros de Negócios</h2>
-            <p className="text-sm text-muted-foreground">
-              Fornecedores, Clientes, Funcionários e Terceiros
-            </p>
+            <h2 className="text-2xl font-bold text-primary">Parceiros de Negócios</h2>
+            <p className="text-sm text-muted-foreground">Fornecedores, Clientes e CRM WhatsApp</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -161,7 +158,7 @@ export default function Parceiros() {
               <SelectItem value="Inativo">Inativos</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={openNew} className="bg-emerald-800">
+          <Button onClick={openNew} className="bg-primary">
             <Plus className="w-4 h-4 mr-2" /> Novo Parceiro
           </Button>
         </div>
@@ -173,9 +170,9 @@ export default function Parceiros() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome / Razão Social</TableHead>
+                <TableHead>Contato (CRM)</TableHead>
                 <TableHead>Documento</TableHead>
                 <TableHead>Categorias</TableHead>
-                <TableHead>ID Inttegra</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ação</TableHead>
               </TableRow>
@@ -183,24 +180,35 @@ export default function Parceiros() {
             <TableBody>
               {filtered.map((p) => (
                 <TableRow key={p.id}>
-                  <TableCell className="font-semibold">{p.Nome_Razao_Social}</TableCell>
-                  <TableCell className="font-mono text-xs text-slate-600">
+                  <TableCell className="font-semibold text-secondary">
+                    {p.Nome_Razao_Social}
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {p.Telefone_WhatsApp ? `WA: ${p.Telefone_WhatsApp}` : '-'} <br />
+                    {p.Email ? `EM: ${p.Email}` : ''}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
                     {p.Tipo_Documento}: {p.Numero_Documento}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1 flex-wrap">
                       {p.Categoria_Parceiro.map((c) => (
-                        <Badge key={c} variant="outline" className="text-[10px] bg-slate-50">
+                        <Badge
+                          key={c}
+                          variant="outline"
+                          className="text-[10px] bg-slate-50 border-border text-secondary"
+                        >
                           {c}
                         </Badge>
                       ))}
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-xs">{p.ID_Inttegra || '-'}</TableCell>
                   <TableCell>
                     <Badge
                       variant={p.Status === 'Ativo' ? 'default' : 'secondary'}
-                      className={p.Status === 'Ativo' ? 'bg-emerald-600' : ''}
+                      className={
+                        p.Status === 'Ativo' ? 'bg-primary' : 'bg-muted text-muted-foreground'
+                      }
                     >
                       {p.Status}
                     </Badge>
@@ -210,7 +218,7 @@ export default function Parceiros() {
                       variant="ghost"
                       size="sm"
                       onClick={() => openEdit(p)}
-                      className="text-emerald-700"
+                      className="text-primary hover:bg-primary/10"
                     >
                       <Edit2 className="w-4 h-4 mr-1" /> Editar
                     </Button>
@@ -232,11 +240,15 @@ export default function Parceiros() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Editar Parceiro' : 'Novo Parceiro de Negócios'}</DialogTitle>
+            <DialogTitle className="text-primary">
+              {editingId ? 'Editar Parceiro' : 'Novo Parceiro de Negócios'}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4 mt-4">
             <div className="space-y-1">
-              <Label>Nome ou Razão Social</Label>
+              <Label>
+                Nome ou Razão Social <span className="text-rose-500">*</span>
+              </Label>
               <Input
                 required
                 value={form.Nome_Razao_Social}
@@ -260,7 +272,9 @@ export default function Parceiros() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label>Número do Doc. (Chave)</Label>
+                <Label>
+                  Número do Doc. (Chave) <span className="text-rose-500">*</span>
+                </Label>
                 <Input
                   required
                   value={form.Numero_Documento}
@@ -269,18 +283,43 @@ export default function Parceiros() {
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label>
+                  Telefone / WhatsApp (CRM) <span className="text-rose-500">*</span>
+                </Label>
+                <Input
+                  required
+                  value={form.Telefone_WhatsApp || ''}
+                  onChange={(e) => setForm({ ...form, Telefone_WhatsApp: e.target.value })}
+                  placeholder="Ex: 5511999999999"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>E-mail Corporativo</Label>
+                <Input
+                  type="email"
+                  value={form.Email || ''}
+                  onChange={(e) => setForm({ ...form, Email: e.target.value })}
+                  placeholder="contato@empresa.com"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label>Classificação (Múltipla Escolha)</Label>
-              <div className="grid grid-cols-2 gap-2 border rounded-md p-3 bg-slate-50">
+              <Label>
+                Classificação (Múltipla Escolha) <span className="text-rose-500">*</span>
+              </Label>
+              <div className="grid grid-cols-2 gap-2 border border-border rounded-md p-3 bg-slate-50">
                 {CATEGORIAS_DISPONIVEIS.map((cat) => (
                   <label key={cat} className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={form.Categoria_Parceiro?.includes(cat)}
                       onChange={() => toggleCat(cat)}
-                      className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-600"
+                      className="rounded border-border text-primary focus:ring-primary"
                     />
-                    <span className="text-sm font-medium">{cat}</span>
+                    <span className="text-sm font-medium text-secondary">{cat}</span>
                   </label>
                 ))}
               </div>
@@ -305,14 +344,14 @@ export default function Parceiros() {
               <div className="space-y-1">
                 <Label>ID Integração (Opcional)</Label>
                 <Input
-                  value={form.ID_Inttegra}
+                  value={form.ID_Inttegra || ''}
                   onChange={(e) => setForm({ ...form, ID_Inttegra: e.target.value })}
                   placeholder="INT-001"
                 />
               </div>
             </div>
 
-            <Button type="submit" className="w-full bg-emerald-800 hover:bg-emerald-900 mt-4">
+            <Button type="submit" className="w-full bg-primary mt-4">
               Salvar Registro
             </Button>
           </form>

@@ -12,7 +12,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import NotFound from './pages/NotFound'
 import Dashboard from './pages/Dashboard'
-import NutricaoEficiencia from './pages/dashboard/NutricaoEficiencia'
+import Desempenho from './pages/dashboard/Desempenho'
 import Auditoria from './pages/admin/Auditoria'
 import Inttegra from './pages/admin/Inttegra'
 import Importacao from './pages/admin/Importacao'
@@ -88,7 +88,7 @@ const AppRoutes = () => (
       }
     >
       <Route path="/" element={<Dashboard />} />
-      <Route path="/nutricao" element={<NutricaoEficiencia />} />
+      <Route path="/desempenho" element={<Desempenho />} />
       <Route path="/auditoria" element={<Auditoria />} />
       <Route path="/inttegra" element={<Inttegra />} />
       <Route path="/importacao" element={<Importacao />} />
