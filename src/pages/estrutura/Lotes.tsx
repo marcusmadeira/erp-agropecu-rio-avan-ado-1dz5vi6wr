@@ -29,7 +29,7 @@ import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { FileText } from 'lucide-react'
 import { exportLotePDF } from '@/lib/pdf'
-import { formatCurrency } from '@/components/dashboard/KpiCards'
+import { formatCurrency } from '@/lib/utils'
 
 export default function Lotes() {
   const { state, dispatch } = useAppStore()

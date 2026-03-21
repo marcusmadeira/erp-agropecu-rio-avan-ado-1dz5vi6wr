@@ -27,15 +27,12 @@ import {
 import { format, parseISO, isValid } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { formatCurrency } from '@/components/dashboard/KpiCards' // Need local function since it was deleted
+import { formatCurrency } from '@/lib/utils'
 import { Check, User, BrainCircuit, Upload, RefreshCw, FileText, MessageSquare } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { TransactionForm } from './TransactionForm'
 import { CENTROS_CUSTO } from './constants'
 import { useInttegraSync } from '@/hooks/useInttegraSync'
-
-const formatCurr = (val: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
 
 export default function Transacoes() {
   const { state, dispatch } = useAppStore()
@@ -261,7 +258,7 @@ export default function Transacoes() {
                       className={`text-right font-mono font-bold ${t.Tipo_Movimento === 'Receita' ? 'text-primary' : 'text-destructive'}`}
                     >
                       {t.Tipo_Movimento === 'Receita' ? '+' : '-'}
-                      {formatCurr(t.Valor_Total)}
+                      {formatCurrency(t.Valor_Total)}
                     </TableCell>
                     <TableCell>
                       <Badge

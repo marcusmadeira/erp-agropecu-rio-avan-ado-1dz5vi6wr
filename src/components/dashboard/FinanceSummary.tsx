@@ -13,7 +13,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recha
 import { ArrowUpRight, ArrowDownRight, Wallet, AlertTriangle, MessageSquare } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
 import { Transacao } from '@/stores/types'
-import { formatCurrency } from '@/components/dashboard/KpiCards'
+import { formatCurrency } from '@/lib/utils'
 import { format, differenceInDays } from 'date-fns'
 
 export default function FinanceSummary({ transactions }: { transactions: Transacao[] }) {

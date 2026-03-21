@@ -29,7 +29,7 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { Factory, Plus, Trash2, CheckCircle2 } from 'lucide-react'
 import { FormulacaoItem } from '@/stores/types'
-import { formatCurrency } from '@/components/dashboard/KpiCards'
+import { formatCurrency } from '@/lib/utils'
 
 export default function FabricaRacao() {
   const { state, dispatch } = useAppStore()

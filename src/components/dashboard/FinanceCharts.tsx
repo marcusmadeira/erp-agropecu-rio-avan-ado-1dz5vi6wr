@@ -14,7 +14,7 @@ import { Transacao } from '@/stores/types'
 import useAppStore from '@/stores/useAppStore'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { formatCurrency } from '@/components/dashboard/KpiCards'
+import { formatCurrency } from '@/lib/utils'
 import { Beef } from 'lucide-react'
 
 export default function FinanceCharts({ transactions }: { transactions: Transacao[] }) {

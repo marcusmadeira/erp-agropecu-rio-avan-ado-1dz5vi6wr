@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Transacao } from '@/stores/types'
-import { formatCurrency } from '@/components/dashboard/KpiCards'
+import { formatCurrency } from '@/lib/utils'
 
 export default function FinanceCalendar({ transactions }: { transactions: Transacao[] }) {
   const currentMonthFixos = useMemo(() => {

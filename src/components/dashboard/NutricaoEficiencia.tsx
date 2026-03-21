@@ -10,7 +10,7 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 import useAppStore from '@/stores/useAppStore'
-import { formatCurrency } from '@/components/dashboard/KpiCards'
+import { formatCurrency } from '@/lib/utils'
 import { TrendingUp, Beef } from 'lucide-react'
 
 export default function NutricaoEficiencia() {
