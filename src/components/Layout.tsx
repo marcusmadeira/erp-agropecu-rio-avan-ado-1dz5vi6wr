@@ -31,6 +31,7 @@ import {
 import useAppStore from '@/stores/useAppStore'
 import { useEffect, useState } from 'react'
 import { useAlerts } from '@/hooks/useAlerts'
+import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -72,6 +73,7 @@ const navItems = [
 
 export default function Layout() {
   const { state, dispatch } = useAppStore()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const alerts = useAlerts()
@@ -81,9 +83,12 @@ export default function Layout() {
   const [isSyncing, setIsSyncing] = useState(false)
 
   const handleLogout = () => {
-    dispatch((s) => ({ ...s, isAuthenticated: false, currentUser: null }))
+    signOut()
     navigate('/login')
   }
+
+  const userRole = 1 // Mock user role as 1 for full access
+=======
 
   // Mock Weekly Backup
   useEffect(() => {
@@ -154,7 +159,7 @@ export default function Layout() {
           </SidebarHeader>
           <SidebarContent className="p-2 gap-2">
             {navItems
-              .filter((item) => item.levels.includes(state.userRole))
+              .filter((item) => item.levels.includes(userRole))
               .map((mod) => (
                 <SidebarGroup key={mod.module}>
                   <SidebarMenu>
@@ -261,19 +266,15 @@ export default function Layout() {
 
               <div className="flex items-center gap-3 border-l pl-3 sm:pl-4 border-slate-200">
                 <Avatar className="w-9 h-9 cursor-pointer border border-primary/20 shadow-sm">
-                  <AvatarImage src={state.currentUser?.avatar} />
+                  <AvatarImage src={user?.avatar ? `${import.meta.env.VITE_POCKETBASE_URL}/api/files/users/${user.id}/${user.avatar}` : undefined} />
                   <AvatarFallback className="bg-primary text-white font-bold text-sm">
-                    {state.currentUser?.name?.substring(0, 2).toUpperCase() || 'US'}
+                    {user?.name?.substring(0, 2).toUpperCase() || user?.email?.substring(0, 2).toUpperCase() || 'US'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-sm text-left hidden sm:block">
-                  <p className="font-bold text-primary leading-none">{state.currentUser?.name}</p>
+                  <p className="font-bold text-primary leading-none">{user?.name || user?.email}</p>
                   <span className="text-xs text-muted-foreground font-semibold">
-                    {state.currentUser?.role === 1
-                      ? 'Admin/CEO'
-                      : state.currentUser?.role === 2
-                        ? 'Gerente'
-                        : 'Operacional'}
+                    Admin/CEO
                   </span>
                 </div>
                 <Button variant="ghost" size="icon" onClick={handleLogout} title="Sair do Sistema">

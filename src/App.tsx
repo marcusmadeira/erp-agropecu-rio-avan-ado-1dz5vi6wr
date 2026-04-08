@@ -4,6 +4,7 @@ import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppProvider } from '@/stores/useAppStore'
 import useAppStore from '@/stores/useAppStore'
+import { AuthProvider, useAuth } from '@/hooks/use-auth'
 
 import Layout from './components/Layout'
 import Login from './pages/Login'
@@ -40,14 +41,16 @@ import Maquinario from './pages/operacoes/Maquinario'
 import Clima from './pages/operacoes/Clima'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { state } = useAppStore()
-  if (!state.isAuthenticated) return <Navigate to="/login" replace />
+  const { user, loading } = useAuth()
+  if (loading) return null
+  if (!user) return <Navigate to="/login" replace />
   return <>{children}</>
 }
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { state } = useAppStore()
-  if (state.isAuthenticated) return <Navigate to="/" replace />
+  const { user, loading } = useAuth()
+  if (loading) return null
+  if (user) return <Navigate to="/" replace />
   return <>{children}</>
 }
 
@@ -125,15 +128,17 @@ const AppRoutes = () => (
 )
 
 const App = () => (
-  <AppProvider>
-    <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <AppRoutes />
-      </TooltipProvider>
-    </BrowserRouter>
-  </AppProvider>
+  <AuthProvider>
+    <AppProvider>
+      <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <AppRoutes />
+        </TooltipProvider>
+      </BrowserRouter>
+    </AppProvider>
+  </AuthProvider>
 )
 
 export default App
