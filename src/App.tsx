@@ -47,6 +47,25 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>
 }
 
+const AuthorizeRoute = ({
+  children,
+  allowedRoles,
+}: {
+  children: React.ReactNode
+  allowedRoles: number[]
+}) => {
+  const { user } = useAuth()
+  if (!user) return <Navigate to="/login" replace />
+
+  const userRole = user.nivel_acesso || 1
+  if (!allowedRoles.includes(userRole)) {
+    if (userRole === 2 || userRole === 3) return <Navigate to="/desempenho" replace />
+    return <Navigate to="/" replace />
+  }
+
+  return <>{children}</>
+}
+
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth()
   if (loading) return null
@@ -95,33 +114,222 @@ const AppRoutes = () => (
         </ProtectedRoute>
       }
     >
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/desempenho" element={<Desempenho />} />
-      <Route path="/auditoria" element={<Auditoria />} />
-      <Route path="/cadastros" element={<Cadastros />} />
-      <Route path="/financeiro" element={<Financeiro />} />
-      <Route path="/relatorios" element={<Relatorios />} />
-      <Route path="/configuracoes" element={<Configuracoes />} />
-      <Route path="/assistente-ia" element={<AssistenteIA />} />
-      <Route path="/inttegra" element={<Inttegra />} />
-      <Route path="/importacao" element={<Importacao />} />
-      <Route path="/pastos" element={<Pastos />} />
-      <Route path="/lotes" element={<Lotes />} />
-      <Route path="/animais" element={<Animais />} />
-      <Route path="/pesagem" element={<CurralDigital />} />
-      <Route path="/reclassificacao" element={<Reclassificacao />} />
-      <Route path="/apartacao" element={<Apartacao />} />
-      <Route path="/eventos-repro" element={<EventosRepro />} />
-      <Route path="/nascimentos" element={<Nascimentos />} />
-      <Route path="/estoque" element={<Estoque />} />
-      <Route path="/previsao-demanda" element={<PrevisaoDemanda />} />
-      <Route path="/fabrica-racao" element={<FabricaRacao />} />
-      <Route path="/manejo" element={<Manejo />} />
-      <Route path="/transacoes" element={<Transacoes />} />
-      <Route path="/parceiros" element={<Parceiros />} />
-      <Route path="/eventos-comerciais" element={<EventosComerciais />} />
-      <Route path="/maquinario" element={<Maquinario />} />
-      <Route path="/clima" element={<Clima />} />
+      <Route
+        path="/"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <Dashboard />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/desempenho"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+            <Desempenho />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/auditoria"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <Auditoria />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/cadastros"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 3]}>
+            <Cadastros />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/financeiro"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2]}>
+            <Financeiro />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/relatorios"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2]}>
+            <Relatorios />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/configuracoes"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <Configuracoes />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/assistente-ia"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <AssistenteIA />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/inttegra"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <Inttegra />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/importacao"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <Importacao />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/pastos"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 3]}>
+            <Pastos />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/lotes"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 3]}>
+            <Lotes />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/animais"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 3]}>
+            <Animais />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/pesagem"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 3]}>
+            <CurralDigital />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/reclassificacao"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 3]}>
+            <Reclassificacao />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/apartacao"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 3]}>
+            <Apartacao />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/eventos-repro"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 3]}>
+            <EventosRepro />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/nascimentos"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 3]}>
+            <Nascimentos />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/estoque"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <Estoque />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/previsao-demanda"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <PrevisaoDemanda />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/fabrica-racao"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <FabricaRacao />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/manejo"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <Manejo />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/transacoes"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2]}>
+            <Transacoes />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/parceiros"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 3]}>
+            <Parceiros />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/eventos-comerciais"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2]}>
+            <EventosComerciais />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/maquinario"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <Maquinario />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/clima"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <Clima />
+          </AuthorizeRoute>
+        }
+      />
     </Route>
     <Route path="*" element={<NotFound />} />
   </Routes>

@@ -61,14 +61,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import logoImg from '@/assets/img_3601-c9fbb.jpg'
 
 const navItems = [
-  { module: 'Dashboard Financeiro', icon: Home, path: '/', levels: [1, 2, 3] },
+  { module: 'Dashboard Financeiro', icon: Home, path: '/', levels: [1] },
   { module: 'Rebanho + Estoque', icon: LineChart, path: '/desempenho', levels: [1, 2, 3] },
-  { module: 'Parceiros, Animais, Lotes', icon: Users, path: '/cadastros', levels: [1, 2, 3] },
-  { module: 'Insumos, Rações', icon: Box, path: '/estoque', levels: [1, 2, 3] },
-  { module: 'Transações', icon: DollarSign, path: '/financeiro', levels: [1, 2, 3] },
-  { module: 'Relatórios', icon: FileText, path: '/relatorios', levels: [1, 2, 3] },
-  { module: 'Configurações', icon: Settings, path: '/configuracoes', levels: [1, 2, 3] },
-  { module: 'Assistente IA', icon: Bot, path: '/assistente-ia', levels: [1, 2, 3] },
+  { module: 'Parceiros, Animais, Lotes', icon: Users, path: '/cadastros', levels: [1, 3] },
+  { module: 'Insumos, Rações', icon: Box, path: '/estoque', levels: [1] },
+  { module: 'Transações', icon: DollarSign, path: '/financeiro', levels: [1, 2] },
+  { module: 'Relatórios', icon: FileText, path: '/relatorios', levels: [1, 2] },
+  { module: 'Configurações', icon: Settings, path: '/configuracoes', levels: [1] },
+  { module: 'Assistente IA', icon: Bot, path: '/assistente-ia', levels: [1] },
 ]
 
 export default function Layout() {
@@ -87,7 +87,7 @@ export default function Layout() {
     navigate('/login')
   }
 
-  const userRole = 1 // Mock user role as 1 for full access
+  const userRole = user?.nivel_acesso || 1
 
   // Mock Weekly Backup
   useEffect(() => {
@@ -280,7 +280,9 @@ export default function Layout() {
                 </Avatar>
                 <div className="text-sm text-left hidden sm:block">
                   <p className="font-bold text-primary leading-none">{user?.name || user?.email}</p>
-                  <span className="text-xs text-muted-foreground font-semibold">Admin/CEO</span>
+                  <span className="text-xs text-muted-foreground font-semibold">
+                    {userRole === 1 ? 'Admin/CEO' : userRole === 2 ? 'Gerente' : 'Operacional'}
+                  </span>
                 </div>
                 <Button variant="ghost" size="icon" onClick={handleLogout} title="Sair do Sistema">
                   <LogOut className="w-5 h-5 text-rose-600" />

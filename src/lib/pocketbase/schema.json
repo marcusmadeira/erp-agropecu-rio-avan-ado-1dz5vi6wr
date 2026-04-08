@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-08T23:31:49.562Z",
+  "generatedAt": "2026-04-08T23:39:38.522Z",
   "collections": [
     {
       "name": "users",
@@ -37,6 +37,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "nivel_acesso",
+          "type": "number",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
