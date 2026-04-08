@@ -88,7 +88,6 @@ export default function Layout() {
   }
 
   const userRole = 1 // Mock user role as 1 for full access
-=======
 
   // Mock Weekly Backup
   useEffect(() => {
@@ -266,16 +265,22 @@ export default function Layout() {
 
               <div className="flex items-center gap-3 border-l pl-3 sm:pl-4 border-slate-200">
                 <Avatar className="w-9 h-9 cursor-pointer border border-primary/20 shadow-sm">
-                  <AvatarImage src={user?.avatar ? `${import.meta.env.VITE_POCKETBASE_URL}/api/files/users/${user.id}/${user.avatar}` : undefined} />
+                  <AvatarImage
+                    src={
+                      user?.avatar
+                        ? `${import.meta.env.VITE_POCKETBASE_URL}/api/files/users/${user.id}/${user.avatar}`
+                        : undefined
+                    }
+                  />
                   <AvatarFallback className="bg-primary text-white font-bold text-sm">
-                    {user?.name?.substring(0, 2).toUpperCase() || user?.email?.substring(0, 2).toUpperCase() || 'US'}
+                    {user?.name?.substring(0, 2).toUpperCase() ||
+                      user?.email?.substring(0, 2).toUpperCase() ||
+                      'US'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-sm text-left hidden sm:block">
                   <p className="font-bold text-primary leading-none">{user?.name || user?.email}</p>
-                  <span className="text-xs text-muted-foreground font-semibold">
-                    Admin/CEO
-                  </span>
+                  <span className="text-xs text-muted-foreground font-semibold">Admin/CEO</span>
                 </div>
                 <Button variant="ghost" size="icon" onClick={handleLogout} title="Sair do Sistema">
                   <LogOut className="w-5 h-5 text-rose-600" />
