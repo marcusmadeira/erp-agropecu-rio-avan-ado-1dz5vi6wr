@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-08T23:39:38.522Z",
+  "generatedAt": "2026-04-08T23:46:59.789Z",
   "collections": [
     {
       "name": "users",
@@ -49,6 +49,53 @@
         "CREATE UNIQUE INDEX `idx_tokenKey__pb_users_auth_` ON `users` (`tokenKey`)",
         "CREATE UNIQUE INDEX `idx_email__pb_users_auth_` ON `users` (`email`) WHERE `email` != ''"
       ]
+    },
+    {
+      "name": "conversas_ia",
+      "type": "base",
+      "apiRules": {
+        "list": "usuario_id = @request.auth.id",
+        "view": "usuario_id = @request.auth.id",
+        "create": "@request.auth.id != ''",
+        "update": "usuario_id = @request.auth.id",
+        "delete": "usuario_id = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "usuario_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "pergunta",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "resposta",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_conversas_ia_usuario ON conversas_ia (usuario_id, created)"]
     }
   ]
 }
