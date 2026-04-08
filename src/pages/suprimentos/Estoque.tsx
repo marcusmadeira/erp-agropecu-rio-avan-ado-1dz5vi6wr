@@ -152,7 +152,7 @@ export default function Estoque() {
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <Box className="text-primary w-8 h-8" />
-          <h2 className="text-2xl font-bold text-primary">Estoque Inteligente</h2>
+          <h2 className="text-2xl font-bold text-primary">Insumos, Rações</h2>
         </div>
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
           {state.userRole !== 3 && (

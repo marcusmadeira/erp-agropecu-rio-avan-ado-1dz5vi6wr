@@ -56,20 +56,15 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { format, parseISO } from 'date-fns'
-import { ToribaLogo } from '@/components/ToribaLogo'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import logoImg from '@/assets/img_3601-c9fbb.jpg'
 
 const navItems = [
   { module: 'Dashboard Financeiro', icon: Home, path: '/', levels: [1, 2, 3] },
-  {
-    module: 'Desempenho (Rebanho + Estoque)',
-    icon: LineChart,
-    path: '/desempenho',
-    levels: [1, 2, 3],
-  },
-  { module: 'Cadastros', icon: Users, path: '/cadastros', levels: [1, 2, 3] },
-  { module: 'Estoque', icon: Box, path: '/estoque', levels: [1, 2, 3] },
-  { module: 'Financeiro', icon: DollarSign, path: '/financeiro', levels: [1, 2, 3] },
+  { module: 'Rebanho + Estoque', icon: LineChart, path: '/desempenho', levels: [1, 2, 3] },
+  { module: 'Parceiros, Animais, Lotes', icon: Users, path: '/cadastros', levels: [1, 2, 3] },
+  { module: 'Insumos, Rações', icon: Box, path: '/estoque', levels: [1, 2, 3] },
+  { module: 'Transações', icon: DollarSign, path: '/financeiro', levels: [1, 2, 3] },
   { module: 'Relatórios', icon: FileText, path: '/relatorios', levels: [1, 2, 3] },
   { module: 'Configurações', icon: Settings, path: '/configuracoes', levels: [1, 2, 3] },
   { module: 'Assistente IA', icon: Bot, path: '/assistente-ia', levels: [1, 2, 3] },
@@ -186,8 +181,12 @@ export default function Layout() {
             <div className="flex items-center gap-4">
               <SidebarTrigger className="text-primary hover:text-primary/80" />
               <div className="flex items-center gap-3">
-                <ToribaLogo className="w-8 h-8 text-primary" />
-                <span className="font-bold text-xl text-primary hidden sm:block uppercase tracking-tight">
+                <img
+                  src={logoImg}
+                  alt="Toriba Agropecuária Logo"
+                  className="h-10 w-auto object-contain"
+                />
+                <span className="font-bold text-xl text-primary hidden sm:block uppercase tracking-tight sr-only">
                   Toriba Agropecuária
                 </span>
               </div>

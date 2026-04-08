@@ -13,9 +13,9 @@ export default function Desempenho() {
   return (
     <div className="space-y-6 pb-10 animate-fade-in">
       <div>
-        <h2 className="text-2xl font-bold text-primary tracking-tight">Dashboard de Produção</h2>
+        <h2 className="text-2xl font-bold text-primary tracking-tight">Rebanho + Estoque</h2>
         <p className="text-sm text-muted-foreground">
-          Inventário, Reprodução e Previsão de Insumos
+          Dashboard de Produção: Inventário, Reprodução e Previsão de Insumos
         </p>
       </div>
 
