@@ -12,23 +12,21 @@ import {
 } from '@/components/ui/sidebar'
 import {
   Home,
-  Map,
-  Activity,
-  Baby,
-  Droplet,
+  LineChart,
+  Users,
+  Box,
   DollarSign,
-  Tractor,
+  FileText,
+  Settings,
+  Bot,
   Bell,
   LogOut,
   ShieldAlert,
   Wrench,
-  ShieldCheck,
-  LineChart,
   Cloud,
   CloudOff,
   RefreshCw,
   AlertTriangle,
-  Network,
 } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
 import { useEffect, useState } from 'react'
@@ -59,79 +57,22 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { format, parseISO } from 'date-fns'
 import { ToribaLogo } from '@/components/ToribaLogo'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 const navItems = [
-  { module: 'Dashboard Financeiro', icon: Home, path: '/', levels: [1, 2] },
-  { module: 'Desempenho (Produção)', icon: LineChart, path: '/desempenho', levels: [1, 2] },
+  { module: 'Dashboard Financeiro', icon: Home, path: '/', levels: [1, 2, 3] },
   {
-    module: 'Estrutura',
-    icon: Map,
-    items: [
-      { name: 'Pastos', path: '/pastos', levels: [1, 2] },
-      { name: 'Lotes', path: '/lotes', levels: [1, 2] },
-    ],
-    levels: [1, 2],
-  },
-  {
-    module: 'Rebanho',
-    icon: Activity,
-    items: [
-      { name: 'Animais', path: '/animais', levels: [1, 2] },
-      { name: 'Curral Digital', path: '/pesagem', levels: [1, 2, 3] },
-      { name: 'Apartação', path: '/apartacao', levels: [1, 2] },
-      { name: 'Reclassificação', path: '/reclassificacao', levels: [1, 2] },
-    ],
+    module: 'Desempenho (Rebanho + Estoque)',
+    icon: LineChart,
+    path: '/desempenho',
     levels: [1, 2, 3],
   },
-  {
-    module: 'Reprodução',
-    icon: Baby,
-    items: [
-      { name: 'Eventos Repro', path: '/eventos-repro', levels: [1, 2] },
-      { name: 'Nascimentos', path: '/nascimentos', levels: [1, 2] },
-    ],
-    levels: [1, 2],
-  },
-  {
-    module: 'Suprimentos',
-    icon: Droplet,
-    items: [
-      { name: 'Estoque', path: '/estoque', levels: [1, 2] },
-      { name: 'Previsão de Demanda', path: '/previsao-demanda', levels: [1, 2] },
-      { name: 'Fábrica de Ração', path: '/fabrica-racao', levels: [1, 2, 3] },
-      { name: 'Manejo Diário', path: '/manejo', levels: [1, 2, 3] },
-    ],
-    levels: [1, 2, 3],
-  },
-  {
-    module: 'Financeiro / Cadastros',
-    icon: DollarSign,
-    items: [
-      { name: 'Parceiros de Negócios', path: '/parceiros', levels: [1, 2] },
-      { name: 'Transações DRE', path: '/transacoes', levels: [1, 2] },
-      { name: 'Eventos Comerciais', path: '/eventos-comerciais', levels: [1, 2] },
-    ],
-    levels: [1, 2],
-  },
-  {
-    module: 'Operações',
-    icon: Tractor,
-    items: [
-      { name: 'Maquinário', path: '/maquinario', levels: [1, 2] },
-      { name: 'Clima', path: '/clima', levels: [1, 2] },
-    ],
-    levels: [1, 2],
-  },
-  {
-    module: 'Integrações',
-    icon: Network,
-    items: [
-      { name: 'Inttegra API', path: '/inttegra', levels: [1] },
-      { name: 'Importação (ETL)', path: '/importacao', levels: [1] },
-    ],
-    levels: [1],
-  },
-  { module: 'Auditoria & Config', icon: ShieldCheck, path: '/auditoria', levels: [1] },
+  { module: 'Cadastros', icon: Users, path: '/cadastros', levels: [1, 2, 3] },
+  { module: 'Estoque', icon: Box, path: '/estoque', levels: [1, 2, 3] },
+  { module: 'Financeiro', icon: DollarSign, path: '/financeiro', levels: [1, 2, 3] },
+  { module: 'Relatórios', icon: FileText, path: '/relatorios', levels: [1, 2, 3] },
+  { module: 'Configurações', icon: Settings, path: '/configuracoes', levels: [1, 2, 3] },
+  { module: 'Assistente IA', icon: Bot, path: '/assistente-ia', levels: [1, 2, 3] },
 ]
 
 export default function Layout() {
@@ -148,19 +89,6 @@ export default function Layout() {
     dispatch((s) => ({ ...s, isAuthenticated: false, currentUser: null }))
     navigate('/login')
   }
-
-  // Security routing enforcement
-  useEffect(() => {
-    if (
-      state.userRole === 3 &&
-      location.pathname !== '/' &&
-      location.pathname !== '/pesagem' &&
-      location.pathname !== '/manejo' &&
-      location.pathname !== '/fabrica-racao'
-    ) {
-      navigate('/')
-    }
-  }, [state.userRole, location.pathname, navigate])
 
   // Mock Weekly Backup
   useEffect(() => {
@@ -222,69 +150,47 @@ export default function Layout() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full bg-slate-50">
+      <div className="flex h-screen w-full bg-slate-50 text-black">
         <Sidebar className="border-r shadow-subtle bg-white">
-          <SidebarHeader className="p-4 flex flex-col items-center justify-center h-28 border-b bg-slate-50/50">
-            <ToribaLogo className="w-12 h-12 text-primary" />
-            <h2 className="font-bold text-primary tracking-tight text-lg mt-2 leading-none">
-              Toriba Agro
+          <SidebarHeader className="p-4 border-b bg-slate-50/50 hidden md:block">
+            <h2 className="font-bold text-primary tracking-tight text-lg leading-none">
+              Menu Principal
             </h2>
-            <span className="text-[10px] text-muted-foreground mt-1 font-medium">
-              Gestão Pecuária 360º
-            </span>
           </SidebarHeader>
           <SidebarContent className="p-2 gap-2">
             {navItems
               .filter((item) => item.levels.includes(state.userRole))
               .map((mod) => (
                 <SidebarGroup key={mod.module}>
-                  <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-bold text-primary/70 uppercase tracking-wider">
-                    <mod.icon className="w-4 h-4" />
-                    {mod.module}
-                  </div>
                   <SidebarMenu>
-                    {mod.items ? (
-                      mod.items
-                        .filter((i) => !i.levels || i.levels.includes(state.userRole))
-                        .map((i) => (
-                          <SidebarMenuItem key={i.path}>
-                            <SidebarMenuButton
-                              asChild
-                              isActive={location.pathname === i.path}
-                              className="rounded-md font-medium"
-                            >
-                              <Link to={i.path}>{i.name}</Link>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))
-                    ) : (
-                      <SidebarMenuItem>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={location.pathname === mod.path}
-                          className="rounded-md font-medium"
-                        >
-                          <Link to={mod.path!}>Acessar Módulo</Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )}
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={location.pathname === mod.path}
+                        className="rounded-md font-medium flex items-center gap-3 hover:text-primary hover:bg-primary/5 transition-colors data-[active=true]:bg-primary/10 data-[active=true]:text-primary"
+                      >
+                        <Link to={mod.path!}>
+                          <mod.icon className="w-5 h-5" />
+                          <span>{mod.module}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroup>
               ))}
           </SidebarContent>
         </Sidebar>
 
-        <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-          <header className="h-16 flex items-center justify-between px-4 sm:px-6 border-b bg-white shadow-subtle z-10 shrink-0">
+        <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-slate-50/30">
+          <header className="h-16 flex items-center justify-between px-4 sm:px-6 border-b bg-white shadow-sm z-10 shrink-0">
             <div className="flex items-center gap-4">
-              <SidebarTrigger />
-              <h1 className="font-bold text-lg text-primary hidden sm:block">
-                {state.userRole === 1
-                  ? 'Gestão Executiva'
-                  : state.userRole === 2
-                    ? 'Gestão de Produção'
-                    : 'Operação de Campo'}
-              </h1>
+              <SidebarTrigger className="text-primary hover:text-primary/80" />
+              <div className="flex items-center gap-3">
+                <ToribaLogo className="w-8 h-8 text-primary" />
+                <span className="font-bold text-xl text-primary hidden sm:block uppercase tracking-tight">
+                  Toriba Agropecuária
+                </span>
+              </div>
             </div>
 
             <div className="flex items-center gap-3 sm:gap-4">
@@ -355,7 +261,13 @@ export default function Layout() {
               </DropdownMenu>
 
               <div className="flex items-center gap-3 border-l pl-3 sm:pl-4 border-slate-200">
-                <div className="text-sm text-right hidden sm:block">
+                <Avatar className="w-9 h-9 cursor-pointer border border-primary/20 shadow-sm">
+                  <AvatarImage src={state.currentUser?.avatar} />
+                  <AvatarFallback className="bg-primary text-white font-bold text-sm">
+                    {state.currentUser?.name?.substring(0, 2).toUpperCase() || 'US'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-sm text-left hidden sm:block">
                   <p className="font-bold text-primary leading-none">{state.currentUser?.name}</p>
                   <span className="text-xs text-muted-foreground font-semibold">
                     {state.currentUser?.role === 1
@@ -381,7 +293,7 @@ export default function Layout() {
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto p-0 sm:p-4 md:p-8 animate-fade-in-up relative">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 animate-fade-in-up relative">
             <Outlet />
           </div>
         </main>
@@ -451,7 +363,7 @@ export default function Layout() {
               Descartar
             </Button>
             <Button
-              className="bg-primary text-primary-foreground font-bold"
+              className="bg-primary text-white font-bold"
               onClick={handleManualSync}
               disabled={!state.isOnline || isSyncing || state.pendingSyncQueue.length === 0}
             >

@@ -14,6 +14,11 @@ import NotFound from './pages/NotFound'
 import Dashboard from './pages/Dashboard'
 import Desempenho from './pages/dashboard/Desempenho'
 import Auditoria from './pages/admin/Auditoria'
+import Cadastros from './pages/Cadastros'
+import Financeiro from './pages/Financeiro'
+import Relatorios from './pages/Relatorios'
+import Configuracoes from './pages/Configuracoes'
+import AssistenteIA from './pages/AssistenteIA'
 import Inttegra from './pages/admin/Inttegra'
 import Importacao from './pages/admin/Importacao'
 import Pastos from './pages/estrutura/Pastos'
@@ -90,6 +95,11 @@ const AppRoutes = () => (
       <Route path="/" element={<Dashboard />} />
       <Route path="/desempenho" element={<Desempenho />} />
       <Route path="/auditoria" element={<Auditoria />} />
+      <Route path="/cadastros" element={<Cadastros />} />
+      <Route path="/financeiro" element={<Financeiro />} />
+      <Route path="/relatorios" element={<Relatorios />} />
+      <Route path="/configuracoes" element={<Configuracoes />} />
+      <Route path="/assistente-ia" element={<AssistenteIA />} />
       <Route path="/inttegra" element={<Inttegra />} />
       <Route path="/importacao" element={<Importacao />} />
       <Route path="/pastos" element={<Pastos />} />
