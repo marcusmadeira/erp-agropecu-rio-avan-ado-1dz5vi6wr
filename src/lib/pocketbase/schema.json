@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T01:07:21.925Z",
+  "generatedAt": "2026-04-09T01:14:19.271Z",
   "collections": [
     {
       "name": "users",
@@ -43,6 +43,26 @@
           "type": "number",
           "required": false,
           "system": false
+        },
+        {
+          "name": "email_notifications",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "theme",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["light", "dark"]
+        },
+        {
+          "name": "language",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["pt", "en"]
         }
       ],
       "indexes": [
