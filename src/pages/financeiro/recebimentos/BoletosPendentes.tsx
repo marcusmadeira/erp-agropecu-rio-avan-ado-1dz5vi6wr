@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import { format } from 'date-fns'
 import { MessageSquare, Mail, DollarSign } from 'lucide-react'
 import { registrarPagamento, registrarHistoricoCobranca } from '@/services/financeiro_recebimentos'
@@ -110,52 +111,135 @@ export default function BoletosPendentes({
           className="max-w-sm"
         />
       </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Cliente</TableHead>
-            <TableHead>Boleto</TableHead>
-            <TableHead>Valor</TableHead>
-            <TableHead>Vencimento</TableHead>
-            <TableHead>Dias P/ Vencer</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {pendentes.map((b) => {
-            const cliente =
-              b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id?.nome_razao_social || 'N/D'
-            const { diasAtraso } = calcularAtraso(b.data_vencimento, b.valor_boleto)
-            const diasParaVencer =
-              diasAtraso > 0
-                ? -diasAtraso
-                : Math.floor(
-                    (new Date(b.data_vencimento).getTime() - new Date().getTime()) /
-                      (1000 * 60 * 60 * 24),
-                  )
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Boleto</TableHead>
+              <TableHead>Valor</TableHead>
+              <TableHead>Vencimento</TableHead>
+              <TableHead>Dias P/ Vencer</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {pendentes.map((b) => {
+              const cliente =
+                b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id?.nome_razao_social ||
+                'N/D'
+              const { diasAtraso } = calcularAtraso(b.data_vencimento, b.valor_boleto)
+              const diasParaVencer =
+                diasAtraso > 0
+                  ? -diasAtraso
+                  : Math.floor(
+                      (new Date(b.data_vencimento).getTime() - new Date().getTime()) /
+                        (1000 * 60 * 60 * 24),
+                    )
 
-            return (
-              <TableRow key={b.id}>
-                <TableCell>{cliente}</TableCell>
-                <TableCell>{b.numero_boleto || '-'}</TableCell>
-                <TableCell>{formatCurrency(b.valor_boleto)}</TableCell>
-                <TableCell>
-                  {b.data_vencimento ? format(new Date(b.data_vencimento), 'dd/MM/yyyy') : '-'}
+              return (
+                <TableRow key={b.id}>
+                  <TableCell>{cliente}</TableCell>
+                  <TableCell>{b.numero_boleto || '-'}</TableCell>
+                  <TableCell>{formatCurrency(b.valor_boleto)}</TableCell>
+                  <TableCell>
+                    {b.data_vencimento ? format(new Date(b.data_vencimento), 'dd/MM/yyyy') : '-'}
+                  </TableCell>
+                  <TableCell>{diasParaVencer}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{b.status_boleto}</Badge>
+                  </TableCell>
+                  <TableCell className="space-x-2 flex">
+                    <Button variant="ghost" className="w-12 h-12" onClick={() => handleWhatsApp(b)}>
+                      <MessageSquare className="w-5 h-5" />
+                    </Button>
+                    <Button variant="ghost" className="w-12 h-12" onClick={() => handleEmail(b)}>
+                      <Mail className="w-5 h-5" />
+                    </Button>
+                    <Button
+                      className="h-12"
+                      variant="default"
+                      onClick={() => {
+                        setPagamentoData({
+                          id: b.id,
+                          valor: b.valor_boleto,
+                          data: new Date().toISOString().split('T')[0],
+                        })
+                        setDialogOpen(true)
+                      }}
+                    >
+                      <DollarSign className="w-5 h-5 mr-1" /> Pagar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+            {pendentes.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center">
+                  Nenhum boleto pendente encontrado.
                 </TableCell>
-                <TableCell>{diasParaVencer}</TableCell>
-                <TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {pendentes.map((b) => {
+          const cliente =
+            b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id?.nome_razao_social || 'N/D'
+          const { diasAtraso } = calcularAtraso(b.data_vencimento, b.valor_boleto)
+          const diasParaVencer =
+            diasAtraso > 0
+              ? -diasAtraso
+              : Math.floor(
+                  (new Date(b.data_vencimento).getTime() - new Date().getTime()) /
+                    (1000 * 60 * 60 * 24),
+                )
+
+          return (
+            <Card key={b.id}>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold">{cliente}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Boleto: {b.numero_boleto || '-'}
+                    </p>
+                  </div>
                   <Badge variant="outline">{b.status_boleto}</Badge>
-                </TableCell>
-                <TableCell className="space-x-2 flex">
-                  <Button size="sm" variant="ghost" onClick={() => handleWhatsApp(b)}>
-                    <MessageSquare className="w-4 h-4" />
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Valor</p>
+                    <p className="font-medium">{formatCurrency(b.valor_boleto)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Vencimento</p>
+                    <p className="font-medium">
+                      {b.data_vencimento ? format(new Date(b.data_vencimento), 'dd/MM/yyyy') : '-'}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">Dias P/ Vencer</p>
+                    <p className="font-medium">{diasParaVencer}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-12"
+                    onClick={() => handleWhatsApp(b)}
+                  >
+                    <MessageSquare className="w-5 h-5" />
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => handleEmail(b)}>
-                    <Mail className="w-4 h-4" />
+                  <Button variant="outline" className="flex-1 h-12" onClick={() => handleEmail(b)}>
+                    <Mail className="w-5 h-5" />
                   </Button>
                   <Button
-                    size="sm"
+                    className="flex-[2] h-12"
                     variant="default"
                     onClick={() => {
                       setPagamentoData({
@@ -166,21 +250,19 @@ export default function BoletosPendentes({
                       setDialogOpen(true)
                     }}
                   >
-                    <DollarSign className="w-4 h-4 mr-1" /> Pagar
+                    <DollarSign className="w-5 h-5 mr-1" /> Pagar
                   </Button>
-                </TableCell>
-              </TableRow>
-            )
-          })}
-          {pendentes.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center">
-                Nenhum boleto pendente encontrado.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+        {pendentes.length === 0 && (
+          <p className="text-center text-muted-foreground p-4">
+            Nenhum boleto pendente encontrado.
+          </p>
+        )}
+      </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>

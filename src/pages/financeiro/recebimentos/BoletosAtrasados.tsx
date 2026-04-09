@@ -8,6 +8,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -88,72 +89,156 @@ export default function BoletosAtrasados({
 
   return (
     <div className="mt-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Cliente</TableHead>
-            <TableHead>Boleto</TableHead>
-            <TableHead>Valor Orig.</TableHead>
-            <TableHead>Vencimento</TableHead>
-            <TableHead>Atraso</TableHead>
-            <TableHead>Juros/Multa</TableHead>
-            <TableHead>Total Atual</TableHead>
-            <TableHead>Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {atrasados.map((b) => {
-            const cliente =
-              b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id?.nome_razao_social || 'N/D'
-            const { diasAtraso, juros, multa, total } = calcularAtraso(
-              b.data_vencimento,
-              b.valor_boleto,
-            )
-            const isCritico = diasAtraso > 30
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Boleto</TableHead>
+              <TableHead>Valor Orig.</TableHead>
+              <TableHead>Vencimento</TableHead>
+              <TableHead>Atraso</TableHead>
+              <TableHead>Juros/Multa</TableHead>
+              <TableHead>Total Atual</TableHead>
+              <TableHead>Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {atrasados.map((b) => {
+              const cliente =
+                b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id?.nome_razao_social ||
+                'N/D'
+              const { diasAtraso, juros, multa, total } = calcularAtraso(
+                b.data_vencimento,
+                b.valor_boleto,
+              )
+              const isCritico = diasAtraso > 30
 
-            return (
-              <TableRow key={b.id} className={cn({ 'bg-red-50': isCritico })}>
-                <TableCell>{cliente}</TableCell>
-                <TableCell>{b.numero_boleto || '-'}</TableCell>
-                <TableCell>{formatCurrency(b.valor_boleto)}</TableCell>
-                <TableCell>
-                  {b.data_vencimento ? format(new Date(b.data_vencimento), 'dd/MM/yyyy') : '-'}
+              return (
+                <TableRow key={b.id} className={cn({ 'bg-red-50': isCritico })}>
+                  <TableCell>{cliente}</TableCell>
+                  <TableCell>{b.numero_boleto || '-'}</TableCell>
+                  <TableCell>{formatCurrency(b.valor_boleto)}</TableCell>
+                  <TableCell>
+                    {b.data_vencimento ? format(new Date(b.data_vencimento), 'dd/MM/yyyy') : '-'}
+                  </TableCell>
+                  <TableCell className={cn({ 'text-red-600 font-bold': isCritico })}>
+                    {diasAtraso} d
+                  </TableCell>
+                  <TableCell>{formatCurrency(juros + multa)}</TableCell>
+                  <TableCell className="font-bold">{formatCurrency(total)}</TableCell>
+                  <TableCell className="space-x-2 flex">
+                    <Button
+                      variant="ghost"
+                      className="w-12 h-12"
+                      onClick={() => handleWhatsApp(b, total)}
+                    >
+                      <MessageSquare className="w-5 h-5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-12"
+                      onClick={() => {
+                        setNegoData({ id: b.id, novo_vencimento: '', justificativa: '' })
+                        setNegoOpen(true)
+                      }}
+                    >
+                      <Handshake className="w-5 h-5 mr-1" /> Negociar
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="h-12"
+                      onClick={() => handleCancelar(b.id)}
+                    >
+                      <XCircle className="w-5 h-5 mr-1" /> Cancelar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+            {atrasados.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center">
+                  Nenhum boleto em atraso.
                 </TableCell>
-                <TableCell className={cn({ 'text-red-600 font-bold': isCritico })}>
-                  {diasAtraso} d
-                </TableCell>
-                <TableCell>{formatCurrency(juros + multa)}</TableCell>
-                <TableCell className="font-bold">{formatCurrency(total)}</TableCell>
-                <TableCell className="space-x-2 flex">
-                  <Button size="sm" variant="ghost" onClick={() => handleWhatsApp(b, total)}>
-                    <MessageSquare className="w-4 h-4" />
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {atrasados.map((b) => {
+          const cliente =
+            b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id?.nome_razao_social || 'N/D'
+          const { diasAtraso, juros, multa, total } = calcularAtraso(
+            b.data_vencimento,
+            b.valor_boleto,
+          )
+          const isCritico = diasAtraso > 30
+
+          return (
+            <Card key={b.id} className={cn({ 'border-red-200 bg-red-50': isCritico })}>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold">{cliente}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Boleto: {b.numero_boleto || '-'}
+                    </p>
+                  </div>
+                  <div className={cn('text-sm font-bold', { 'text-red-600': isCritico })}>
+                    {diasAtraso} dias
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Valor Original</p>
+                    <p className="font-medium">{formatCurrency(b.valor_boleto)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Juros/Multa</p>
+                    <p className="font-medium text-red-600">{formatCurrency(juros + multa)}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">Total Atual</p>
+                    <p className="font-bold text-lg">{formatCurrency(total)}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-12"
+                    onClick={() => handleWhatsApp(b, total)}
+                  >
+                    <MessageSquare className="w-5 h-5 mr-2" /> Cobrar
                   </Button>
                   <Button
-                    size="sm"
                     variant="outline"
+                    className="flex-1 h-12"
                     onClick={() => {
                       setNegoData({ id: b.id, novo_vencimento: '', justificativa: '' })
                       setNegoOpen(true)
                     }}
                   >
-                    <Handshake className="w-4 h-4 mr-1" /> Negociar
+                    <Handshake className="w-5 h-5 mr-2" /> Negociar
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={() => handleCancelar(b.id)}>
-                    <XCircle className="w-4 h-4 mr-1" /> Cancelar
+                  <Button
+                    variant="destructive"
+                    className="w-full h-12"
+                    onClick={() => handleCancelar(b.id)}
+                  >
+                    <XCircle className="w-5 h-5 mr-2" /> Cancelar Boleto
                   </Button>
-                </TableCell>
-              </TableRow>
-            )
-          })}
-          {atrasados.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={8} className="text-center">
-                Nenhum boleto em atraso.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+        {atrasados.length === 0 && (
+          <p className="text-center text-muted-foreground p-4">Nenhum boleto em atraso.</p>
+        )}
+      </div>
 
       <Dialog open={negoOpen} onOpenChange={setNegoOpen}>
         <DialogContent>

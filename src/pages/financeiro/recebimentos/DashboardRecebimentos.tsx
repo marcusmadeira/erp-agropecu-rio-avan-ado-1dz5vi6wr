@@ -114,7 +114,13 @@ export default function DashboardRecebimentos({ boletos }: { boletos: any[] }) {
             <CardTitle>Distribuição de Status</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ChartContainer
+              config={{
+                Pago: { label: 'Pago', color: '#094016' },
+                Pendente: { label: 'Pendente', color: '#f59e0b' },
+                Atrasado: { label: 'Atrasado', color: '#dc2626' },
+              }}
+            >
               <PieChart>
                 <Pie
                   data={pieData}
@@ -131,7 +137,7 @@ export default function DashboardRecebimentos({ boletos }: { boletos: any[] }) {
                 </Pie>
                 <ChartTooltip content={<ChartTooltipContent />} />
               </PieChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
         <Card>
