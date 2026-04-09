@@ -85,7 +85,7 @@ export default function BoletosPendentes({
   const handleEmail = async (b: any) => {
     const cliente = b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id
     try {
-      await pb.send(`/backend/v1/boletos/${b.id}/enviar-email`, { method: 'POST' })
+      await pb.send(`/backend/v1/boletos/${b.id}/send-email`, { method: 'POST' })
       await registrarHistoricoCobranca(b.id, {
         cliente_id: cliente?.id,
         tipo_cobranca: 'Email',
