@@ -15,9 +15,10 @@ export interface NascimentoDesmama {
   }
 }
 
-export const getNascimentos = () =>
+export const getNascimentos = (options?: any) =>
   pb.collection('nascimentos_e_desmama').getFullList<NascimentoDesmama>({
     expand: 'matriz_mae_id',
+    ...options,
   })
 
 export const getNascimento = (id: string) =>

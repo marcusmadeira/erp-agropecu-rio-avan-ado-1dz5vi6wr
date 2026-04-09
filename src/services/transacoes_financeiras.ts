@@ -19,10 +19,10 @@ export interface TransacaoFinanceira {
   }
 }
 
-export const getTransacoesFinanceiras = () =>
+export const getTransacoesFinanceiras = (options?: any) =>
   pb
     .collection('transacoes_financeiras')
-    .getFullList<TransacaoFinanceira>({ expand: 'parceiro_id' })
+    .getFullList<TransacaoFinanceira>({ expand: 'parceiro_id', ...options })
 export const getTransacaoFinanceira = (id: string) =>
   pb.collection('transacoes_financeiras').getOne<TransacaoFinanceira>(id, { expand: 'parceiro_id' })
 export const createTransacaoFinanceira = (data: TransacaoFinanceira) =>

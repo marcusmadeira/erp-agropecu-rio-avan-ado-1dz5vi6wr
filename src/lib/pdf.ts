@@ -158,6 +158,60 @@ export function exportAnimalPDF(animal: Animal, state: AppState) {
   printPDF(`Ficha_${animal.brinco}`, html)
 }
 
+export function exportFinancialReportPDF(data: Record<string, number>, filters: any) {
+  const html = `
+    <div class="header">
+      <div class="logo">${logoSvg} TORIBA AGROPECUÁRIA</div>
+      <div style="margin-left: auto; text-align: right;">
+        <h2 style="margin:0;">Relatório Financeiro Agrupado</h2>
+        <p style="margin: 5px 0 0 0; color: #64748b; font-size: 12px;">Gerado em: ${new Date().toLocaleString()}</p>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom: 20px;">
+      <h3>Filtros Aplicados</h3>
+      <p><strong>Período:</strong> ${filters.dateFrom || 'Início'} até ${filters.dateTo || 'Hoje'}</p>
+      <p><strong>Tipo Movimento:</strong> ${filters.tipo || 'Todos'}</p>
+      <p><strong>Classificação de Custo:</strong> ${filters.classificacao || 'Todas'}</p>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Centro de Custo</th>
+          <th class="text-right">Valor Total (R$)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${
+          Object.entries(data).length > 0
+            ? Object.entries(data)
+                .map(
+                  ([cc, val]) => `
+          <tr>
+            <td><strong>${cc}</strong></td>
+            <td class="text-right font-mono">${val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          </tr>
+        `,
+                )
+                .join('')
+            : '<tr><td colspan="2" class="text-center">Nenhum dado encontrado no período.</td></tr>'
+        }
+      </tbody>
+      <tfoot>
+        <tr>
+          <th class="text-right"><strong>TOTAL GERAL</strong></th>
+          <th class="text-right font-mono" style="font-size: 16px;"><strong>R$ ${Object.values(data)
+            .reduce((a, b) => a + b, 0)
+            .toLocaleString('pt-BR', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}</strong></th>
+        </tr>
+      </tfoot>
+    </table>
+  `
+  printPDF('Relatorio_Financeiro_Resumo', html)
+}
+
 export function exportLotePDF(lote: Lote, state: AppState) {
   const animaisLote = state.animais.filter((a) => a.loteId === lote.id && a.status === 'Ativo')
   const qtd = animaisLote.length

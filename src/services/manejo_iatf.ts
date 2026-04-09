@@ -15,9 +15,10 @@ export interface ManejoIatf {
   }
 }
 
-export const getIatfs = () =>
+export const getIatfs = (options?: any) =>
   pb.collection('manejo_iatf_curral').getFullList<ManejoIatf>({
     expand: 'matriz_id,touro_utilizado_id',
+    ...options,
   })
 
 export const getIatf = (id: string) =>
