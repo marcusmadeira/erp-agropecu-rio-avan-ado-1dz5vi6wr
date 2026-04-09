@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T00:22:57.928Z",
+  "generatedAt": "2026-04-09T00:28:51.677Z",
   "collections": [
     {
       "name": "users",
@@ -518,6 +518,182 @@
         }
       ],
       "indexes": []
+    },
+    {
+      "name": "planejamento_acasalamento",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+      },
+      "fields": [
+        {
+          "name": "matriz_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "animais"
+        },
+        {
+          "name": "touro_opcao_1_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "animais"
+        },
+        {
+          "name": "touro_opcao_2_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "animais"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_planejamento_matriz ON planejamento_acasalamento (matriz_id)"]
+    },
+    {
+      "name": "manejo_iatf_curral",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+      },
+      "fields": [
+        {
+          "name": "matriz_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "animais"
+        },
+        {
+          "name": "data_iatf",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "touro_utilizado_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "animais"
+        },
+        {
+          "name": "resultado_dg",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Prenhe", "Vazia"]
+        },
+        {
+          "name": "data_provavel_parto_dpp",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_iatf_matriz ON manejo_iatf_curral (matriz_id)"]
+    },
+    {
+      "name": "nascimentos_e_desmama",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+      },
+      "fields": [
+        {
+          "name": "matriz_mae_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "animais"
+        },
+        {
+          "name": "data_nascimento",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "sexo",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Macho", "Fêmea"]
+        },
+        {
+          "name": "peso_nascer",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status_cria",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rgn_provisorio_abcz",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_nascimentos_mae ON nascimentos_e_desmama (matriz_mae_id)"]
     }
   ]
 }
