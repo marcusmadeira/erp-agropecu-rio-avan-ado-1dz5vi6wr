@@ -43,6 +43,7 @@ import Transacoes from './pages/financeiro/Transacoes'
 import EventosComerciais from './pages/financeiro/EventosComerciais'
 import FluxoDeCaixa from './pages/financeiro/FluxoDeCaixa'
 import Parceiros from './pages/financeiro/Parceiros'
+import RecebimentoBoletos from './pages/financeiro/RecebimentoBoletos'
 import EventosVenda from './pages/vendas/Eventos'
 import EventoDetalhes from './pages/vendas/EventoDetalhes'
 import GestaoVendas from './pages/vendas/GestaoVendas'
@@ -333,6 +334,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1, 2]}>
             <Transacoes />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/recebimento-boletos"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2]}>
+            <RecebimentoBoletos />
           </AuthorizeRoute>
         }
       />

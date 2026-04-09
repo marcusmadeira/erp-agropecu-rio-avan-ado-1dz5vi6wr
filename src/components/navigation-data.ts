@@ -70,6 +70,7 @@ export const navigationMenu = [
     items: [
       { title: 'Financeiro', url: '/financeiro', icon: DollarSign },
       { title: 'Transações', url: '/transacoes', icon: Landmark },
+      { title: 'Recebimento de Boletos', url: '/recebimento-boletos', icon: DollarSign },
       { title: 'Fluxo de Caixa', url: '/fluxo-de-caixa', icon: LineChart },
       { title: 'Parceiros', url: '/parceiros', icon: Users },
       { title: 'Gestão de Vendas', url: '/vendas/gestao', icon: ShoppingCart },
