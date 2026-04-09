@@ -28,8 +28,7 @@ import Animais from './pages/rebanho/Animais'
 import CurralDigital from './pages/rebanho/CurralDigital'
 import Reclassificacao from './pages/rebanho/Reclassificacao'
 import Apartacao from './pages/rebanho/Apartacao'
-import EventosRepro from './pages/reproducao/Eventos'
-import Nascimentos from './pages/reproducao/Nascimentos'
+import Reproducao from './pages/reproducao/Reproducao'
 import Estoque from './pages/suprimentos/Estoque'
 import Manejo from './pages/suprimentos/Manejo'
 import PrevisaoDemanda from './pages/suprimentos/PrevisaoDemanda'
@@ -243,18 +242,10 @@ const AppRoutes = () => (
         }
       />
       <Route
-        path="/eventos-repro"
+        path="/reproducao"
         element={
           <AuthorizeRoute allowedRoles={[1, 3]}>
-            <EventosRepro />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/nascimentos"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 3]}>
-            <Nascimentos />
+            <Reproducao />
           </AuthorizeRoute>
         }
       />
