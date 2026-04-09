@@ -18,8 +18,9 @@ export default function HistoricoCobrancas({ historico }: { historico: any[] }) 
             <TableHead>Data / Hora</TableHead>
             <TableHead>Cliente</TableHead>
             <TableHead>Boleto</TableHead>
-            <TableHead>Tipo Cobrança</TableHead>
+            <TableHead>Tipo</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Mensagem</TableHead>
             <TableHead>Resultado</TableHead>
           </TableRow>
         </TableHeader>
@@ -29,12 +30,17 @@ export default function HistoricoCobrancas({ historico }: { historico: any[] }) 
             const boleto = h.expand?.boleto_id?.numero_boleto || 'N/D'
             return (
               <TableRow key={h.id}>
-                <TableCell>{format(new Date(h.data), 'dd/MM/yyyy HH:mm')}</TableCell>
+                <TableCell>
+                  {h.data_cobranca ? format(new Date(h.data_cobranca), 'dd/MM/yyyy HH:mm') : '-'}
+                </TableCell>
                 <TableCell>{cliente}</TableCell>
                 <TableCell>{boleto}</TableCell>
                 <TableCell>{h.tipo_cobranca}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{h.status}</Badge>
+                  <Badge variant="secondary">{h.status_cobranca}</Badge>
+                </TableCell>
+                <TableCell className="max-w-[200px] truncate" title={h.mensagem_enviada}>
+                  {h.mensagem_enviada || '-'}
                 </TableCell>
                 <TableCell>{h.resultado}</TableCell>
               </TableRow>
@@ -42,7 +48,7 @@ export default function HistoricoCobrancas({ historico }: { historico: any[] }) 
           })}
           {historico.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="text-center">
+              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                 Nenhum histórico registrado.
               </TableCell>
             </TableRow>

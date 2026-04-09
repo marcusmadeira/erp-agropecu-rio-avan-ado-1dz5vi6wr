@@ -9,8 +9,8 @@ export const getBoletosCompletos = async () => {
 
 export const getHistoricoCobrancas = async () => {
   return pb.collection('historico_cobrancas').getFullList({
-    expand: 'cliente_id,boleto_id',
-    sort: '-data',
+    expand: 'cliente_id,boleto_id,usuario_id',
+    sort: '-data_cobranca',
   })
 }
 
@@ -21,11 +21,8 @@ export const registrarPagamento = async (id: string, data: any) => {
   })
 }
 
-export const registrarHistoricoCobranca = async (id: string, data: any) => {
-  return pb.send(`/backend/v1/boletos/${id}/historico-cobranca`, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  })
+export const registrarHistoricoCobranca = async (data: any) => {
+  return pb.collection('historico_cobrancas').create(data)
 }
 
 export const cancelarBoleto = async (id: string) => {

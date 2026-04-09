@@ -115,28 +115,31 @@ export default function DashboardRecebimentos({ boletos }: { boletos: any[] }) {
           </CardHeader>
           <CardContent className="h-[300px]">
             <ChartContainer
+              className="h-full w-full"
               config={{
                 Pago: { label: 'Pago', color: '#094016' },
                 Pendente: { label: 'Pendente', color: '#f59e0b' },
                 Atrasado: { label: 'Atrasado', color: '#dc2626' },
               }}
             >
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
-              </PieChart>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </PieChart>
+              </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
         </Card>
@@ -145,14 +148,19 @@ export default function DashboardRecebimentos({ boletos }: { boletos: any[] }) {
             <CardTitle>Evolução de Recebimentos (12m)</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
-            <ChartContainer config={{ value: { label: 'Recebido', color: '#094016' } }}>
-              <LineChart data={lineData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Line type="monotone" dataKey="value" stroke="var(--color-value)" />
-              </LineChart>
+            <ChartContainer
+              className="h-full w-full"
+              config={{ value: { label: 'Recebido', color: '#094016' } }}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={lineData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Line type="monotone" dataKey="value" stroke="var(--color-value)" />
+                </LineChart>
+              </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
         </Card>

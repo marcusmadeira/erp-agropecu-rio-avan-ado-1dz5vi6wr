@@ -18,12 +18,14 @@ export default function RecebimentoBoletos() {
   const [boletos, setBoletos] = useState<any[]>([])
   const [historico, setHistorico] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const { toast } = useToast()
   const { user } = useAuth()
 
   const loadData = async () => {
     try {
       setLoading(true)
+      setError(false)
       const [bolData, histData] = await Promise.all([
         getBoletosCompletos(),
         getHistoricoCobrancas(),
@@ -31,7 +33,11 @@ export default function RecebimentoBoletos() {
       setBoletos(bolData)
       setHistorico(histData)
     } catch (err) {
-      toast({ title: 'Erro ao carregar dados', variant: 'destructive' })
+      setError(true)
+      toast({
+        title: 'Houve um problema ao carregar os dados. Por favor, tente novamente.',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -41,6 +47,7 @@ export default function RecebimentoBoletos() {
     loadData()
   }, [])
 
+  useRealtime('parcelas_venda', () => loadData())
   useRealtime('boletos', () => loadData())
   useRealtime('historico_cobrancas', () => loadData())
 
@@ -88,7 +95,20 @@ export default function RecebimentoBoletos() {
     })
   }
 
-  if (loading) return <div className="p-8">Carregando...</div>
+  if (loading && boletos.length === 0)
+    return <div className="p-8 text-center text-muted-foreground">Carregando...</div>
+
+  if (error) {
+    return (
+      <div className="p-8 max-w-7xl mx-auto flex flex-col items-center justify-center space-y-4">
+        <h2 className="text-2xl font-bold text-red-600">Erro de Conexão</h2>
+        <p className="text-muted-foreground">
+          Houve um problema ao carregar os dados. Por favor, tente novamente.
+        </p>
+        <Button onClick={loadData}>Tentar Novamente</Button>
+      </div>
+    )
+  }
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">

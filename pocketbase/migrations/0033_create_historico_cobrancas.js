@@ -9,7 +9,7 @@ migrate(
       updateRule: '@request.auth.nivel_acesso = 1',
       deleteRule: '@request.auth.nivel_acesso = 1',
       fields: [
-        { name: 'data', type: 'date', required: true },
+        { name: 'data_cobranca', type: 'date', required: true },
         {
           name: 'cliente_id',
           type: 'relation',
@@ -25,13 +25,27 @@ migrate(
           maxSelect: 1,
         },
         {
+          name: 'usuario_id',
+          type: 'relation',
+          required: true,
+          collectionId: app.findCollectionByNameOrId('users').id,
+          maxSelect: 1,
+        },
+        {
           name: 'tipo_cobranca',
           type: 'select',
           required: true,
-          values: ['WhatsApp', 'Email', 'Pessoal'],
+          values: ['WhatsApp', 'Email', 'Pessoal', 'Automática'],
           maxSelect: 1,
         },
-        { name: 'status', type: 'text', required: false },
+        {
+          name: 'status_cobranca',
+          type: 'select',
+          required: true,
+          values: ['Enviado', 'Entregue', 'Lido', 'Respondido', 'Sem_Resposta'],
+          maxSelect: 1,
+        },
+        { name: 'mensagem_enviada', type: 'text', required: false },
         { name: 'resultado', type: 'text', required: false },
         { name: 'created', type: 'autodate', onCreate: true, onUpdate: false },
         { name: 'updated', type: 'autodate', onCreate: true, onUpdate: true },

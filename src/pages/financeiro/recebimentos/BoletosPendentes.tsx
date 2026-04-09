@@ -72,11 +72,15 @@ export default function BoletosPendentes({
     const fone = cliente?.contato_whatsapp || ''
     const msg = `Olá, lembrete de vencimento do boleto ${b.numero_boleto || 'N/D'} no valor de ${formatCurrency(b.valor_boleto)} para ${format(new Date(b.data_vencimento), 'dd/MM/yyyy')}.\n\nLinha Digitável: ${b.codigo_barras || 'Não disponível'}\nLink do Boleto: ${b.url_boleto_pdf || 'Não disponível'}`
     window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`, '_blank')
-    await registrarHistoricoCobranca(b.id, {
+    await registrarHistoricoCobranca({
+      boleto_id: b.id,
       cliente_id: cliente?.id,
+      usuario_id: user?.id,
+      data_cobranca: new Date().toISOString(),
       tipo_cobranca: 'WhatsApp',
-      status: 'Enviado',
-      resultado: 'Lembrete enviado',
+      status_cobranca: 'Enviado',
+      mensagem_enviada: msg,
+      resultado: 'Lembrete enviado pelo sistema',
     })
     toast.success('Cobrança registrada!')
     onRefresh()
@@ -86,10 +90,14 @@ export default function BoletosPendentes({
     const cliente = b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id
     try {
       await pb.send(`/backend/v1/boletos/${b.id}/send-email`, { method: 'POST' })
-      await registrarHistoricoCobranca(b.id, {
+      await registrarHistoricoCobranca({
+        boleto_id: b.id,
         cliente_id: cliente?.id,
+        usuario_id: user?.id,
+        data_cobranca: new Date().toISOString(),
         tipo_cobranca: 'Email',
-        status: 'Enviado',
+        status_cobranca: 'Enviado',
+        mensagem_enviada: 'Boleto enviado por email',
         resultado: 'Boleto por email',
       })
       toast.success('Email enviado com sucesso!')
@@ -228,7 +236,7 @@ export default function BoletosPendentes({
             })}
             {pendentes.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   Nenhum boleto pendente encontrado.
                 </TableCell>
               </TableRow>

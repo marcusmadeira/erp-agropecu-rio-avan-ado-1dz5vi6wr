@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T14:29:01.456Z",
+  "generatedAt": "2026-04-09T14:42:57.069Z",
   "collections": [
     {
       "name": "users",
@@ -1765,6 +1765,90 @@
         "CREATE UNIQUE INDEX idx_boletos_numero ON boletos (numero_boleto) WHERE numero_boleto != ''",
         "CREATE INDEX idx_boletos_vencimento ON boletos (data_vencimento)",
         "CREATE INDEX idx_boletos_parcela ON boletos (parcela_id)"
+      ]
+    },
+    {
+      "name": "historico_cobrancas",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.nivel_acesso = 1",
+        "delete": "@request.auth.nivel_acesso = 1"
+      },
+      "fields": [
+        {
+          "name": "data_cobranca",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "cliente_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "parceiros_negocios"
+        },
+        {
+          "name": "boleto_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "boletos"
+        },
+        {
+          "name": "usuario_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "tipo_cobranca",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["WhatsApp", "Email", "Pessoal", "Automática"]
+        },
+        {
+          "name": "status_cobranca",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Enviado", "Entregue", "Lido", "Respondido", "Sem_Resposta"]
+        },
+        {
+          "name": "mensagem_enviada",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "resultado",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_historico_cliente ON historico_cobrancas (cliente_id)",
+        "CREATE INDEX idx_historico_boleto ON historico_cobrancas (boleto_id)"
       ]
     }
   ]

@@ -126,7 +126,7 @@ export default function BoletosRecebidos({ boletos }: { boletos: any[] }) {
             })}
             {recebidos.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   Nenhum boleto recebido.
                 </TableCell>
               </TableRow>

@@ -66,11 +66,15 @@ export default function BoletosAtrasados({
       total,
     )}. Por favor, regularize ou entre em contato.\n\nLinha Digitável: ${b.codigo_barras || 'Não disponível'}\nLink do Boleto: ${b.url_boleto_pdf || 'Não disponível'}`
     window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`, '_blank')
-    await registrarHistoricoCobranca(b.id, {
+    await registrarHistoricoCobranca({
+      boleto_id: b.id,
       cliente_id: cliente?.id,
+      usuario_id: user?.id,
+      data_cobranca: new Date().toISOString(),
       tipo_cobranca: 'WhatsApp',
-      status: 'Enviado',
-      resultado: 'Cobrança com juros',
+      status_cobranca: 'Enviado',
+      mensagem_enviada: msg,
+      resultado: 'Cobrança com juros enviada',
     })
     onRefresh()
   }
@@ -190,7 +194,7 @@ export default function BoletosAtrasados({
             })}
             {atrasados.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   Nenhum boleto em atraso.
                 </TableCell>
               </TableRow>
