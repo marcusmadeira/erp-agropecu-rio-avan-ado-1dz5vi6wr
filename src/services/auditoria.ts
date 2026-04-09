@@ -10,6 +10,21 @@ export interface AuditoriaMovimentacao {
   dados_novos?: string
   created: string
   updated: string
+  expand?: {
+    usuario_id?: {
+      id: string
+      name: string
+      email: string
+    }
+  }
+}
+
+export const getAuditoriasPaginated = async (page = 1, perPage = 20, options?: any) => {
+  return pb.collection('auditoria_movimentacoes').getList<AuditoriaMovimentacao>(page, perPage, {
+    expand: 'usuario_id',
+    sort: '-created',
+    ...options,
+  })
 }
 
 export const getAuditorias = async (options?: any) => {
