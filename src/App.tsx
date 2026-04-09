@@ -141,7 +141,7 @@ const AppRoutes = () => (
       <Route
         path="/cadastros"
         element={
-          <AuthorizeRoute allowedRoles={[1, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <Cadastros />
           </AuthorizeRoute>
         }
