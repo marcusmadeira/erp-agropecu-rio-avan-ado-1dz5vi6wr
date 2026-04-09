@@ -7,6 +7,7 @@ import useAppStore from '@/stores/useAppStore'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
 
 import Layout from './components/Layout'
+import { BackgroundSync } from './components/BackgroundSync'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
@@ -343,6 +344,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <BackgroundSync />
           <AppRoutes />
         </TooltipProvider>
       </BrowserRouter>

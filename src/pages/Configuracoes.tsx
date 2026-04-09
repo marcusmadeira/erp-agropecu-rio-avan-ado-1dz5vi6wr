@@ -3,7 +3,8 @@ import { useAuth } from '@/hooks/use-auth'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ProfileTab } from './configuracoes/ProfileTab'
 import { PreferencesTab } from './configuracoes/PreferencesTab'
-import { User, Palette } from 'lucide-react'
+import { SecurityTab } from './configuracoes/SecurityTab'
+import { User, Palette, Shield } from 'lucide-react'
 
 export default function Configuracoes() {
   const { user } = useAuth()
@@ -19,7 +20,7 @@ export default function Configuracoes() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-2 bg-slate-100 p-1 rounded-lg mb-6">
+        <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-3 bg-slate-100 p-1 rounded-lg mb-6">
           <TabsTrigger
             value="perfil"
             className="rounded-md data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"
@@ -34,6 +35,13 @@ export default function Configuracoes() {
             <Palette className="w-4 h-4 mr-2" />
             Preferências
           </TabsTrigger>
+          <TabsTrigger
+            value="seguranca"
+            className="rounded-md data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"
+          >
+            <Shield className="w-4 h-4 mr-2" />
+            Segurança e Dados
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="perfil" className="m-0 mt-6 focus-visible:outline-none">
@@ -42,6 +50,10 @@ export default function Configuracoes() {
 
         <TabsContent value="preferencias" className="m-0 mt-6 focus-visible:outline-none">
           <PreferencesTab user={user} />
+        </TabsContent>
+
+        <TabsContent value="seguranca" className="m-0 mt-6 focus-visible:outline-none">
+          <SecurityTab user={user} />
         </TabsContent>
       </Tabs>
     </div>
