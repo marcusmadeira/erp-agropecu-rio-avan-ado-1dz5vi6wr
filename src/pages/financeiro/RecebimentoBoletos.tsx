@@ -22,6 +22,8 @@ export default function RecebimentoBoletos() {
   const { toast } = useToast()
   const { user } = useAuth()
 
+  const isOperacional = user?.nivel_acesso === 3
+
   const loadData = async () => {
     try {
       setLoading(true)
@@ -52,23 +54,46 @@ export default function RecebimentoBoletos() {
   useRealtime('historico_cobrancas', () => loadData())
 
   const handleExportarPDF = () => {
-    exportToPDF({
-      title: 'Relatório de Recebimentos',
-      userName: user?.name,
-      data: boletos.map((b) => ({
-        cliente:
-          b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id?.nome_razao_social || 'N/D',
-        boleto: b.numero_boleto,
-        valor: b.valor_boleto,
-        vencimento: b.data_vencimento ? format(new Date(b.data_vencimento), 'dd/MM/yyyy') : '',
-        status: b.status_boleto,
+    const hoje = new Date()
+    const daqui30Dias = new Date()
+    daqui30Dias.setDate(hoje.getDate() + 30)
+
+    const atrasados = boletos.filter(
+      (b) =>
+        b.status_boleto === 'Vencido' ||
+        (b.status_boleto !== 'Pago' && new Date(b.data_vencimento) < hoje),
+    )
+
+    const projecao30Dias = boletos.filter((b) => {
+      if (b.status_boleto === 'Pago') return false
+      const v = new Date(b.data_vencimento)
+      return v >= hoje && v <= daqui30Dias
+    })
+
+    const totalAtrasado = atrasados.reduce((acc, b) => acc + (b.valor_boleto || 0), 0)
+    const totalProjecao = projecao30Dias.reduce((acc, b) => acc + (b.valor_boleto || 0), 0)
+
+    const dataExp = [
+      { info: '=== RESUMO FINANCEIRO ===', valor: '' },
+      { info: 'Total em Atraso', valor: `R$ ${totalAtrasado.toFixed(2)}` },
+      { info: 'Projeção 30 Dias', valor: `R$ ${totalProjecao.toFixed(2)}` },
+      { info: 'Qtd Atrasados', valor: atrasados.length.toString() },
+      { info: 'Qtd na Projeção', valor: projecao30Dias.length.toString() },
+      { info: '-------------------------', valor: '------------' },
+      { info: '=== LISTA DE ATRASADOS ===', valor: '' },
+      ...atrasados.map((b) => ({
+        info: `Bol: ${b.numero_boleto || 'N/D'} | Cliente: ${b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id?.nome_razao_social || 'N/D'}`,
+        valor: `R$ ${b.valor_boleto?.toFixed(2)} (Venc: ${b.data_vencimento ? format(new Date(b.data_vencimento), 'dd/MM/yyyy') : '-'})`,
       })),
+    ]
+
+    exportToPDF({
+      title: 'Relatório Financeiro de Recebimentos e Inadimplência',
+      userName: user?.name,
+      data: dataExp,
       columns: [
-        { header: 'Cliente', dataKey: 'cliente' },
-        { header: 'Boleto', dataKey: 'boleto' },
-        { header: 'Valor', dataKey: 'valor' },
-        { header: 'Vencimento', dataKey: 'vencimento' },
-        { header: 'Status', dataKey: 'status' },
+        { header: 'Informação', dataKey: 'info' },
+        { header: 'Valores e Detalhes', dataKey: 'valor' },
       ],
     })
   }
@@ -137,26 +162,41 @@ export default function RecebimentoBoletos() {
           </p>
         </div>
       ) : (
-        <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid grid-cols-5 w-full bg-slate-100">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="pendentes">Pendentes</TabsTrigger>
-            <TabsTrigger value="recebidos">Recebidos</TabsTrigger>
-            <TabsTrigger value="atrasados">Atrasados</TabsTrigger>
+        <Tabs defaultValue={isOperacional ? 'historico' : 'dashboard'} className="w-full">
+          <TabsList
+            className={
+              isOperacional
+                ? 'grid grid-cols-1 w-full bg-slate-100 max-w-sm'
+                : 'grid grid-cols-5 w-full bg-slate-100'
+            }
+          >
+            {!isOperacional && (
+              <>
+                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+                <TabsTrigger value="pendentes">Pendentes</TabsTrigger>
+                <TabsTrigger value="recebidos">Recebidos</TabsTrigger>
+                <TabsTrigger value="atrasados">Atrasados</TabsTrigger>
+              </>
+            )}
             <TabsTrigger value="historico">Histórico</TabsTrigger>
           </TabsList>
-          <TabsContent value="dashboard">
-            <DashboardRecebimentos boletos={boletos} />
-          </TabsContent>
-          <TabsContent value="pendentes">
-            <BoletosPendentes boletos={boletos} onRefresh={loadData} />
-          </TabsContent>
-          <TabsContent value="recebidos">
-            <BoletosRecebidos boletos={boletos} />
-          </TabsContent>
-          <TabsContent value="atrasados">
-            <BoletosAtrasados boletos={boletos} onRefresh={loadData} />
-          </TabsContent>
+
+          {!isOperacional && (
+            <>
+              <TabsContent value="dashboard">
+                <DashboardRecebimentos boletos={boletos} />
+              </TabsContent>
+              <TabsContent value="pendentes">
+                <BoletosPendentes boletos={boletos} onRefresh={loadData} />
+              </TabsContent>
+              <TabsContent value="recebidos">
+                <BoletosRecebidos boletos={boletos} />
+              </TabsContent>
+              <TabsContent value="atrasados">
+                <BoletosAtrasados boletos={boletos} onRefresh={loadData} />
+              </TabsContent>
+            </>
+          )}
           <TabsContent value="historico">
             <HistoricoCobrancas historico={historico} />
           </TabsContent>

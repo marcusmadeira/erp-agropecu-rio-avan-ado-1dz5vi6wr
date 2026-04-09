@@ -340,7 +340,7 @@ const AppRoutes = () => (
       <Route
         path="/recebimento-boletos"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <RecebimentoBoletos />
           </AuthorizeRoute>
         }

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T14:53:02.357Z",
+  "generatedAt": "2026-04-09T15:35:00.729Z",
   "collections": [
     {
       "name": "users",
@@ -1850,6 +1850,76 @@
         "CREATE INDEX idx_historico_cliente ON historico_cobrancas (cliente_id)",
         "CREATE INDEX idx_historico_boleto ON historico_cobrancas (boleto_id)"
       ]
+    },
+    {
+      "name": "configuracoes_cobranca",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.nivel_acesso = 1",
+        "update": "@request.auth.nivel_acesso = 1",
+        "delete": "@request.auth.nivel_acesso = 1"
+      },
+      "fields": [
+        {
+          "name": "taxa_juros_diaria",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "percentual_multa",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "dias_notificacao_antes",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "dias_notificacao_atraso",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "intervalo_notificacao_atraso",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ativar_juros_automaticos",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ativar_multa_automatica",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
     }
   ]
 }

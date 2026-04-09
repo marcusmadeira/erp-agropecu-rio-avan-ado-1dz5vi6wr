@@ -177,18 +177,16 @@ export default function BoletosAtrasados({
                   <TableCell className="font-bold">{formatCurrency(total)}</TableCell>
                   <TableCell className="space-x-2 flex">
                     {isManagerOrAdmin && (
-                      <Button
-                        variant="ghost"
-                        className="w-12 h-12"
-                        onClick={() => handleWhatsApp(b, total)}
-                      >
-                        <MessageSquare className="w-5 h-5" />
-                      </Button>
-                    )}
-                    {isAdmin && (
                       <>
                         <Button
-                          className="h-12 bg-green-600 hover:bg-green-700"
+                          variant="ghost"
+                          className="w-12 h-12"
+                          onClick={() => handleWhatsApp(b, total)}
+                        >
+                          <MessageSquare className="w-5 h-5" />
+                        </Button>
+                        <Button
+                          className="h-12 bg-green-600 hover:bg-green-700 text-white"
                           onClick={() => {
                             setPagamentoData({
                               id: b.id,
@@ -201,6 +199,10 @@ export default function BoletosAtrasados({
                         >
                           Pagar
                         </Button>
+                      </>
+                    )}
+                    {isAdmin && (
+                      <>
                         <Button
                           variant="outline"
                           className="h-12"
@@ -290,16 +292,14 @@ export default function BoletosAtrasados({
                 </div>
                 <div className="flex flex-wrap gap-2 pt-2">
                   {isManagerOrAdmin && (
-                    <Button
-                      variant="outline"
-                      className="flex-1 h-12"
-                      onClick={() => handleWhatsApp(b, total)}
-                    >
-                      <MessageSquare className="w-5 h-5 mr-2" /> Cobrar
-                    </Button>
-                  )}
-                  {isAdmin && (
                     <>
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-12"
+                        onClick={() => handleWhatsApp(b, total)}
+                      >
+                        <MessageSquare className="w-5 h-5 mr-2" /> Cobrar
+                      </Button>
                       <Button
                         className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-white"
                         onClick={() => {
@@ -314,6 +314,10 @@ export default function BoletosAtrasados({
                       >
                         Pagar
                       </Button>
+                    </>
+                  )}
+                  {isAdmin && (
+                    <>
                       <Button
                         variant="outline"
                         className="flex-1 h-12"
