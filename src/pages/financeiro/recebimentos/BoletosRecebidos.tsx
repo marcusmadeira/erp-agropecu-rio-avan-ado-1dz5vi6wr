@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { format } from 'date-fns'
+import { format, differenceInDays } from 'date-fns'
 import { FileText, Download } from 'lucide-react'
 import { formatCurrency } from './utils'
 import { exportToPDF } from '@/lib/export'
@@ -30,6 +30,17 @@ export default function BoletosRecebidos({ boletos }: { boletos: any[] }) {
       b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id?.nome_razao_social || 'N/D'
     const dataPag = b.expand?.parcela_id?.data_pagamento || b.updated
 
+    const dtVenc = b.data_vencimento ? new Date(b.data_vencimento) : null
+    const dtPag = new Date(dataPag)
+    let diasAtraso = 0
+    let jurosMulta = 0
+    if (dtVenc && dtPag > dtVenc) {
+      diasAtraso = differenceInDays(dtPag, dtVenc)
+      if (diasAtraso > 0) {
+        jurosMulta = b.valor_boleto * 0.005 * diasAtraso + b.valor_boleto * 0.02
+      }
+    }
+
     exportToPDF({
       title: 'Recibo de Pagamento - ' + (b.numero_boleto || 'Avulso'),
       userName: user?.name,
@@ -41,7 +52,10 @@ export default function BoletosRecebidos({ boletos }: { boletos: any[] }) {
           valor: b.data_vencimento ? format(new Date(b.data_vencimento), 'dd/MM/yyyy') : '-',
         },
         { desc: 'Data do Pagamento', valor: format(new Date(dataPag), 'dd/MM/yyyy') },
-        { desc: 'Valor Recebido', valor: formatCurrency(b.valor_boleto) },
+        { desc: 'Valor Original', valor: formatCurrency(b.valor_boleto) },
+        { desc: 'Dias de Atraso', valor: diasAtraso > 0 ? `${diasAtraso} d` : '0 d' },
+        { desc: 'Juros/Multa Pagos', valor: formatCurrency(jurosMulta) },
+        { desc: 'Valor Total Recebido', valor: formatCurrency(b.valor_boleto + jurosMulta) },
       ],
       columns: [
         { header: 'Descrição', dataKey: 'desc' },
@@ -58,9 +72,11 @@ export default function BoletosRecebidos({ boletos }: { boletos: any[] }) {
             <TableRow>
               <TableHead>Cliente</TableHead>
               <TableHead>Boleto</TableHead>
-              <TableHead>Valor</TableHead>
+              <TableHead>Valor Orig.</TableHead>
               <TableHead>Vencimento</TableHead>
               <TableHead>Pagamento</TableHead>
+              <TableHead>Dias Atraso</TableHead>
+              <TableHead>Juros/Multa</TableHead>
               <TableHead>Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -70,17 +86,29 @@ export default function BoletosRecebidos({ boletos }: { boletos: any[] }) {
                 b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id?.nome_razao_social ||
                 'N/D'
               const dataPag = b.expand?.parcela_id?.data_pagamento || b.updated
+
+              const dtVenc = b.data_vencimento ? new Date(b.data_vencimento) : null
+              const dtPag = new Date(dataPag)
+              let diasAtraso = 0
+              let jurosMulta = 0
+              if (dtVenc && dtPag > dtVenc) {
+                diasAtraso = differenceInDays(dtPag, dtVenc)
+                if (diasAtraso > 0) {
+                  jurosMulta = b.valor_boleto * 0.005 * diasAtraso + b.valor_boleto * 0.02
+                }
+              }
+
               return (
                 <TableRow key={b.id}>
                   <TableCell>{cliente}</TableCell>
                   <TableCell>{b.numero_boleto || '-'}</TableCell>
                   <TableCell>{formatCurrency(b.valor_boleto)}</TableCell>
-                  <TableCell>
-                    {b.data_vencimento ? format(new Date(b.data_vencimento), 'dd/MM/yyyy') : '-'}
-                  </TableCell>
+                  <TableCell>{dtVenc ? format(dtVenc, 'dd/MM/yyyy') : '-'}</TableCell>
                   <TableCell className="font-medium text-green-700">
-                    {format(new Date(dataPag), 'dd/MM/yyyy')}
+                    {format(dtPag, 'dd/MM/yyyy')}
                   </TableCell>
+                  <TableCell>{diasAtraso > 0 ? `${diasAtraso} d` : '-'}</TableCell>
+                  <TableCell>{diasAtraso > 0 ? formatCurrency(jurosMulta) : '-'}</TableCell>
                   <TableCell className="space-x-2 flex">
                     {b.url_boleto_pdf && (
                       <Button variant="ghost" className="w-12 h-12" asChild>
@@ -98,7 +126,7 @@ export default function BoletosRecebidos({ boletos }: { boletos: any[] }) {
             })}
             {recebidos.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">
+                <TableCell colSpan={8} className="text-center">
                   Nenhum boleto recebido.
                 </TableCell>
               </TableRow>

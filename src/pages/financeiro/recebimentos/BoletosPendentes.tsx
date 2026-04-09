@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAuth } from '@/hooks/use-auth'
 import {
   Table,
   TableBody,
@@ -33,7 +34,14 @@ export default function BoletosPendentes({
   boletos: any[]
   onRefresh: () => void
 }) {
+  const { user } = useAuth()
+  const isManagerOrAdmin = user?.nivel_acesso === 1 || user?.nivel_acesso === 2
+
   const [busca, setBusca] = useState('')
+  const [statusFilter, setStatusFilter] = useState('Todos')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+
   const pendentes = boletos
     .filter(
       (b) =>
@@ -42,6 +50,10 @@ export default function BoletosPendentes({
         b.status_boleto === 'Pendente',
     )
     .filter((b) => {
+      if (statusFilter !== 'Todos' && b.status_boleto !== statusFilter) return false
+      if (dateFrom && new Date(b.data_vencimento) < new Date(dateFrom)) return false
+      if (dateTo && new Date(b.data_vencimento) > new Date(dateTo)) return false
+
       const cliente =
         b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id?.nome_razao_social || ''
       return cliente.toLowerCase().includes(busca.toLowerCase())
@@ -58,7 +70,7 @@ export default function BoletosPendentes({
   const handleWhatsApp = async (b: any) => {
     const cliente = b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id
     const fone = cliente?.contato_whatsapp || ''
-    const msg = `Olá, lembrete de vencimento do boleto ${b.numero_boleto} no valor de ${formatCurrency(b.valor_boleto)} para ${format(new Date(b.data_vencimento), 'dd/MM/yyyy')}.`
+    const msg = `Olá, lembrete de vencimento do boleto ${b.numero_boleto || 'N/D'} no valor de ${formatCurrency(b.valor_boleto)} para ${format(new Date(b.data_vencimento), 'dd/MM/yyyy')}.\n\nLinha Digitável: ${b.codigo_barras || 'Não disponível'}\nLink do Boleto: ${b.url_boleto_pdf || 'Não disponível'}`
     window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`, '_blank')
     await registrarHistoricoCobranca(b.id, {
       cliente_id: cliente?.id,
@@ -103,13 +115,40 @@ export default function BoletosPendentes({
 
   return (
     <div className="mt-4 space-y-4">
-      <div className="flex justify-end">
-        <Input
-          placeholder="Buscar por cliente..."
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          className="max-w-sm"
-        />
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-end">
+        <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+          <Input
+            placeholder="Buscar por cliente..."
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className="md:w-64"
+          />
+          <select
+            className="flex h-10 w-full md:w-40 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="Todos">Todos os Status</option>
+            <option value="Gerado">Gerado</option>
+            <option value="Enviado">Enviado</option>
+            <option value="Pendente">Pendente</option>
+          </select>
+          <div className="flex gap-2 items-center">
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-auto"
+            />
+            <span className="text-muted-foreground">até</span>
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-auto"
+            />
+          </div>
+        </div>
       </div>
       <div className="hidden md:block">
         <Table>
@@ -151,26 +190,38 @@ export default function BoletosPendentes({
                     <Badge variant="outline">{b.status_boleto}</Badge>
                   </TableCell>
                   <TableCell className="space-x-2 flex">
-                    <Button variant="ghost" className="w-12 h-12" onClick={() => handleWhatsApp(b)}>
-                      <MessageSquare className="w-5 h-5" />
-                    </Button>
-                    <Button variant="ghost" className="w-12 h-12" onClick={() => handleEmail(b)}>
-                      <Mail className="w-5 h-5" />
-                    </Button>
-                    <Button
-                      className="h-12"
-                      variant="default"
-                      onClick={() => {
-                        setPagamentoData({
-                          id: b.id,
-                          valor: b.valor_boleto,
-                          data: new Date().toISOString().split('T')[0],
-                        })
-                        setDialogOpen(true)
-                      }}
-                    >
-                      <DollarSign className="w-5 h-5 mr-1" /> Pagar
-                    </Button>
+                    {isManagerOrAdmin && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          className="w-12 h-12"
+                          onClick={() => handleWhatsApp(b)}
+                        >
+                          <MessageSquare className="w-5 h-5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="w-12 h-12"
+                          onClick={() => handleEmail(b)}
+                        >
+                          <Mail className="w-5 h-5" />
+                        </Button>
+                        <Button
+                          className="h-12"
+                          variant="default"
+                          onClick={() => {
+                            setPagamentoData({
+                              id: b.id,
+                              valor: b.valor_boleto,
+                              data: new Date().toISOString().split('T')[0],
+                            })
+                            setDialogOpen(true)
+                          }}
+                        >
+                          <DollarSign className="w-5 h-5 mr-1" /> Pagar
+                        </Button>
+                      </>
+                    )}
                   </TableCell>
                 </TableRow>
               )
@@ -228,30 +279,38 @@ export default function BoletosPendentes({
                   </div>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1 h-12"
-                    onClick={() => handleWhatsApp(b)}
-                  >
-                    <MessageSquare className="w-5 h-5" />
-                  </Button>
-                  <Button variant="outline" className="flex-1 h-12" onClick={() => handleEmail(b)}>
-                    <Mail className="w-5 h-5" />
-                  </Button>
-                  <Button
-                    className="flex-[2] h-12"
-                    variant="default"
-                    onClick={() => {
-                      setPagamentoData({
-                        id: b.id,
-                        valor: b.valor_boleto,
-                        data: new Date().toISOString().split('T')[0],
-                      })
-                      setDialogOpen(true)
-                    }}
-                  >
-                    <DollarSign className="w-5 h-5 mr-1" /> Pagar
-                  </Button>
+                  {isManagerOrAdmin && (
+                    <>
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-12"
+                        onClick={() => handleWhatsApp(b)}
+                      >
+                        <MessageSquare className="w-5 h-5" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-12"
+                        onClick={() => handleEmail(b)}
+                      >
+                        <Mail className="w-5 h-5" />
+                      </Button>
+                      <Button
+                        className="flex-[2] h-12"
+                        variant="default"
+                        onClick={() => {
+                          setPagamentoData({
+                            id: b.id,
+                            valor: b.valor_boleto,
+                            data: new Date().toISOString().split('T')[0],
+                          })
+                          setDialogOpen(true)
+                        }}
+                      >
+                        <DollarSign className="w-5 h-5 mr-1" /> Pagar
+                      </Button>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>

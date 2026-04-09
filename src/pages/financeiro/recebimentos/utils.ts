@@ -8,7 +8,7 @@ export function calcularAtraso(dataVencimento: string | undefined, valor: number
   const diffTime = hoje.getTime() - venc.getTime()
   const diasAtraso = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)))
 
-  const juros = diasAtraso > 0 ? valor * 0.001 * diasAtraso : 0
+  const juros = diasAtraso > 0 ? valor * 0.005 * diasAtraso : 0
   const multa = diasAtraso > 0 ? valor * 0.02 : 0
   const total = valor + juros + multa
 
