@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T16:18:07.347Z",
+  "generatedAt": "2026-04-09T17:58:02.329Z",
   "collections": [
     {
       "name": "users",
@@ -1907,6 +1907,40 @@
         {
           "name": "ativar_multa_automatica",
           "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "configuracoes_sistema",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
+        "update": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
+        "delete": "@request.auth.id != '' && @request.auth.nivel_acesso = 1"
+      },
+      "fields": [
+        {
+          "name": "logo",
+          "type": "file",
           "required": false,
           "system": false
         },

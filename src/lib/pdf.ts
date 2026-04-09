@@ -1,4 +1,18 @@
 import { Animal, Lote, AppState } from '@/stores/types'
+import pb from '@/lib/pocketbase/client'
+import localLogo from '@/assets/whatsapp-image-2026-03-16-at-16.52.11-c60ad.jpeg'
+
+async function getActiveLogoUrl() {
+  try {
+    const records = await pb.collection('configuracoes_sistema').getList(1, 1)
+    if (records.items.length > 0 && records.items[0].logo) {
+      return pb.files.getURL(records.items[0], records.items[0].logo)
+    }
+  } catch (e) {
+    console.error('Failed to load dynamic logo for PDF', e)
+  }
+  return window.location.origin + localLogo
+}
 
 const logoSvg = `
   <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:40px;height:40px;margin-right:15px;vertical-align:middle;">
@@ -9,9 +23,16 @@ const logoSvg = `
   </svg>
 `
 
-function printPDF(title: string, html: string) {
+async function printPDF(title: string, html: string) {
   const win = window.open('', '_blank')
   if (!win) return
+
+  const logoUrl = await getActiveLogoUrl()
+  const absoluteLogoUrl =
+    logoUrl.startsWith('http') || logoUrl.startsWith('data:')
+      ? logoUrl
+      : window.location.origin + (logoUrl.startsWith('/') ? '' : '/') + logoUrl
+
   win.document.write(`
     <html>
       <head>
@@ -31,15 +52,23 @@ function printPDF(title: string, html: string) {
           .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; background: #e2e8f0; color: #094016; }
         </style>
       </head>
-      <body onload="window.print(); setTimeout(() => window.close(), 500);">
+      <body onload="setTimeout(() => { window.print(); setTimeout(() => window.close(), 500); }, 500);">
         ${html}
+        <div style="margin-top: 40px; border-top: 2px solid #094016; padding-top: 20px; display: flex; align-items: flex-start; page-break-inside: avoid;">
+          <img src="${absoluteLogoUrl}" style="width: 64px; height: 64px; object-fit: contain;" />
+          <div style="margin-left: 15px; font-size: 12px; color: #64748b;">
+            <p style="margin: 0; font-weight: bold; color: #094016;">TORIBA AGROPECUÁRIA</p>
+            <p style="margin: 0;">Relatório gerado eletronicamente pelo sistema Gestão Pecuária 360º</p>
+            <p style="margin: 0;">${new Date().toLocaleString()}</p>
+          </div>
+        </div>
       </body>
     </html>
   `)
   win.document.close()
 }
 
-export function exportAnimalPDF(animal: Animal, state: AppState) {
+export async function exportAnimalPDF(animal: Animal, state: AppState) {
   const lote = state.lotes.find((l) => l.id === animal.loteId)
   const pai = state.animais.find((a) => a.id === animal.pai)
   const mae = state.animais.find((a) => a.id === animal.mae)
@@ -155,10 +184,10 @@ export function exportAnimalPDF(animal: Animal, state: AppState) {
       </div>
     </div>
   `
-  printPDF(`Ficha_${animal.brinco}`, html)
+  await printPDF(`Ficha_${animal.brinco}`, html)
 }
 
-export function exportFluxoCaixaPDF(summary: any, expenses: number, filters: any) {
+export async function exportFluxoCaixaPDF(summary: any, expenses: number, filters: any) {
   const html = `
     <div class="header">
       <div class="logo">${logoSvg} TORIBA AGROPECUÁRIA</div>
@@ -195,10 +224,10 @@ export function exportFluxoCaixaPDF(summary: any, expenses: number, filters: any
       </p>
     </div>
   `
-  printPDF('Relatorio_Fluxo_Caixa', html)
+  await printPDF('Relatorio_Fluxo_Caixa', html)
 }
 
-export function exportFinancialReportPDF(data: Record<string, number>, filters: any) {
+export async function exportFinancialReportPDF(data: Record<string, number>, filters: any) {
   const html = `
     <div class="header">
       <div class="logo">${logoSvg} TORIBA AGROPECUÁRIA</div>
@@ -249,10 +278,10 @@ export function exportFinancialReportPDF(data: Record<string, number>, filters: 
       </tfoot>
     </table>
   `
-  printPDF('Relatorio_Financeiro_Resumo', html)
+  await printPDF('Relatorio_Financeiro_Resumo', html)
 }
 
-export function exportLotePDF(lote: Lote, state: AppState) {
+export async function exportLotePDF(lote: Lote, state: AppState) {
   const animaisLote = state.animais.filter((a) => a.loteId === lote.id && a.status === 'Ativo')
   const qtd = animaisLote.length
 
@@ -398,5 +427,5 @@ export function exportLotePDF(lote: Lote, state: AppState) {
       </tbody>
     </table>
   `
-  printPDF(`Relatorio_Lote_${lote.name.replace(/\s+/g, '_')}`, html)
+  await printPDF(`Relatorio_Lote_${lote.name.replace(/\s+/g, '_')}`, html)
 }

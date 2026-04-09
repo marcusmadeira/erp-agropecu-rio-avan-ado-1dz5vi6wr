@@ -17,9 +17,10 @@
     --primary: 240 100% 25%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: #1a1a1a (Black) */
-    --secondary: 0 0% 10%;
+    /* Secondary: #094016 (Toriba Green) */
+    --secondary: 134 75% 15%;
     --secondary-foreground: 0 0% 100%;
+    --brand: 134 75% 15%;
 
     /* Accent: Gray */
     --accent: 0 0% 90%;
@@ -51,6 +52,7 @@
   }
 
   .dark {
+    --brand: 134 75% 15%;
     --background: 232 30% 10%;
     --foreground: 0 0% 100%;
     --card: 232 30% 15%;

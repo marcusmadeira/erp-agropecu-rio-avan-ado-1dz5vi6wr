@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
-import logoImg from '@/assets/img_3601-c9fbb.jpg'
+import { useSystemConfig } from '@/hooks/use-system-config'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -16,6 +16,7 @@ export default function Login() {
   const { signIn } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { logoUrl } = useSystemConfig()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,16 +54,17 @@ export default function Login() {
       className="min-h-screen flex items-center justify-center bg-[#ffffff] p-4"
       style={{ fontFamily: '"Montserrat", "Roboto", sans-serif' }}
     >
-      <Card className="w-full max-w-md shadow-lg border-t-4 border-t-[#000080] animate-fade-in-up">
+      <Card className="w-full max-w-md shadow-lg border-t-4 border-t-brand animate-fade-in-up">
         <CardHeader className="text-center pb-4">
-          <div className="mx-auto w-40 mb-4">
+          <div className="mx-auto mb-4 flex justify-center">
             <img
-              src={logoImg}
+              src={logoUrl}
               alt="Toriba Agropecuária Logo"
-              className="w-full h-auto object-contain"
+              style={{ width: '120px', height: '120px' }}
+              className="object-contain"
             />
           </div>
-          <CardTitle className="text-2xl font-bold text-[#000080] tracking-tight">
+          <CardTitle className="text-2xl font-bold text-brand tracking-tight">
             Gestão Pecuária 360º
           </CardTitle>
           <CardDescription>Acesse sua conta para continuar</CardDescription>
@@ -97,7 +99,7 @@ export default function Login() {
               <div className="text-right">
                 <Link
                   to="/forgot-password"
-                  className="text-sm font-bold text-[#000080]/80 hover:text-[#000080] transition-colors"
+                  className="text-sm font-bold text-brand hover:text-brand/80 transition-colors"
                 >
                   Esqueci minha senha
                 </Link>
@@ -105,7 +107,7 @@ export default function Login() {
             </div>
             <Button
               type="submit"
-              className="w-full bg-[#000080] hover:bg-[#000060] text-white h-12 font-bold text-lg"
+              className="w-full bg-brand hover:bg-brand/90 text-white h-12 font-bold text-lg border border-brand hover:border-brand"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -123,7 +125,7 @@ export default function Login() {
             <span className="text-slate-500 font-medium">Não tem uma conta? </span>
             <Link
               to="/register"
-              className="font-bold text-[#000080] hover:text-[#000060] transition-colors"
+              className="font-bold text-brand hover:text-brand/80 transition-colors"
             >
               Cadastrar-se
             </Link>

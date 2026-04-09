@@ -6,10 +6,12 @@ import { LogOut, WifiOff } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useNetwork } from '@/hooks/use-network'
 import { FloatingAiChat } from './FloatingAiChat'
+import { useSystemConfig } from '@/hooks/use-system-config'
 
 export default function Layout() {
   const { signOut } = useAuth()
   const isOnline = useNetwork()
+  const { logoUrl } = useSystemConfig()
 
   return (
     <SidebarProvider>
@@ -18,9 +20,14 @@ export default function Layout() {
         <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-6 bg-white dark:bg-slate-950 z-10 shadow-sm">
           <div className="flex items-center gap-2 md:gap-4">
             <SidebarTrigger />
-            <h1 className="font-semibold text-[#000080] dark:text-slate-100 hidden sm:block">
-              Gestão Pecuária 360º
-            </h1>
+            <div className="hidden sm:flex items-center">
+              <img
+                src={logoUrl}
+                alt="Toriba Agropecuária"
+                style={{ height: '40px', width: 'auto' }}
+                className="object-contain"
+              />
+            </div>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
             {!isOnline && (

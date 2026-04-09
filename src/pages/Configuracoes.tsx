@@ -5,7 +5,8 @@ import { ProfileTab } from './configuracoes/ProfileTab'
 import { PreferencesTab } from './configuracoes/PreferencesTab'
 import { SecurityTab } from './configuracoes/SecurityTab'
 import { CobrancaTab } from './configuracoes/CobrancaTab'
-import { User, Palette, Shield } from 'lucide-react'
+import { BrandTab } from './configuracoes/BrandTab'
+import { User, Palette, Shield, Image as ImageIcon } from 'lucide-react'
 
 export default function Configuracoes() {
   const { user } = useAuth()
@@ -21,7 +22,7 @@ export default function Configuracoes() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-2 md:grid-cols-4 bg-slate-100 p-1 rounded-lg mb-6 gap-1">
+        <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-2 md:grid-cols-5 bg-slate-100 p-1 rounded-lg mb-6 gap-1">
           <TabsTrigger
             value="perfil"
             className="rounded-md data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"
@@ -44,13 +45,22 @@ export default function Configuracoes() {
             Segurança e Dados
           </TabsTrigger>
           {user?.nivel_acesso === 1 && (
-            <TabsTrigger
-              value="cobranca"
-              className="rounded-md data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"
-            >
-              <Shield className="w-4 h-4 mr-2" />
-              Cobrança
-            </TabsTrigger>
+            <>
+              <TabsTrigger
+                value="cobranca"
+                className="rounded-md data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Cobrança
+              </TabsTrigger>
+              <TabsTrigger
+                value="brand"
+                className="rounded-md data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"
+              >
+                <ImageIcon className="w-4 h-4 mr-2" />
+                Marca
+              </TabsTrigger>
+            </>
           )}
         </TabsList>
 
@@ -67,9 +77,14 @@ export default function Configuracoes() {
         </TabsContent>
 
         {user?.nivel_acesso === 1 && (
-          <TabsContent value="cobranca" className="m-0 mt-6 focus-visible:outline-none">
-            <CobrancaTab />
-          </TabsContent>
+          <>
+            <TabsContent value="cobranca" className="m-0 mt-6 focus-visible:outline-none">
+              <CobrancaTab />
+            </TabsContent>
+            <TabsContent value="brand" className="m-0 mt-6 focus-visible:outline-none">
+              <BrandTab />
+            </TabsContent>
+          </>
         )}
       </Tabs>
     </div>
