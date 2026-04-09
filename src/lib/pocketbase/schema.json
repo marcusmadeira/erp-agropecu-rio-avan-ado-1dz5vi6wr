@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T10:57:12.298Z",
+  "generatedAt": "2026-04-09T11:26:24.781Z",
   "collections": [
     {
       "name": "users",
@@ -246,9 +246,19 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "piquete_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "pastos_e_piquetes"
         }
       ],
-      "indexes": ["CREATE INDEX `idx_lotes_nome_lote` ON `lotes` (nome_lote)"]
+      "indexes": [
+        "CREATE INDEX `idx_lotes_nome_lote` ON `lotes` (nome_lote)",
+        "CREATE UNIQUE INDEX `idx_lotes_nome_unique` ON `lotes` (nome_lote)"
+      ]
     },
     {
       "name": "animais",
@@ -330,9 +340,38 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "nome",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "data_nascimento",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "pai_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "animais"
+        },
+        {
+          "name": "mae_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "animais"
         }
       ],
-      "indexes": ["CREATE INDEX `idx_animais_id_manejo_brinco` ON `animais` (id_manejo_brinco)"]
+      "indexes": [
+        "CREATE INDEX `idx_animais_id_manejo_brinco` ON `animais` (id_manejo_brinco)",
+        "CREATE UNIQUE INDEX `idx_animais_brinco_unique` ON `animais` (id_manejo_brinco)"
+      ]
     },
     {
       "name": "estoque_insumos",
@@ -1167,6 +1206,46 @@
         "CREATE INDEX idx_trato_lote ON trato_diario_lotes (lote_id)",
         "CREATE INDEX idx_trato_formulacao ON trato_diario_lotes (formulacao_id)"
       ]
+    },
+    {
+      "name": "pastos_e_piquetes",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "nome",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "capacidade",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
     }
   ]
 }

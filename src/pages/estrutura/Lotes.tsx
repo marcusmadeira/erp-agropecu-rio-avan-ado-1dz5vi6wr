@@ -13,9 +13,13 @@ import {
 import { getLotes } from '@/services/lotes'
 import { useRealtime } from '@/hooks/use-realtime'
 
+import LoteForm from '@/pages/cadastros/LoteForm'
+
 export default function Lotes() {
   const [lotes, setLotes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<any>(null)
 
   const loadData = async () => {
     try {
@@ -41,7 +45,12 @@ export default function Lotes() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Lotes</h2>
         <div className="flex items-center space-x-2">
-          <Button>
+          <Button
+            onClick={() => {
+              setEditingItem(null)
+              setFormOpen(true)
+            }}
+          >
             <Plus className="mr-2 h-4 w-4" /> Novo Lote
           </Button>
         </div>
@@ -90,6 +99,8 @@ export default function Lotes() {
           )}
         </CardContent>
       </Card>
+
+      <LoteForm open={formOpen} onOpenChange={setFormOpen} item={editingItem} />
     </div>
   )
 }

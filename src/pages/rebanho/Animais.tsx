@@ -13,9 +13,13 @@ import {
 import { getAnimais } from '@/services/animais'
 import { useRealtime } from '@/hooks/use-realtime'
 
+import AnimalForm from '@/pages/cadastros/AnimalForm'
+
 export default function Animais() {
   const [animais, setAnimais] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<any>(null)
 
   const loadData = async () => {
     try {
@@ -41,7 +45,12 @@ export default function Animais() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Animais</h2>
         <div className="flex items-center space-x-2">
-          <Button>
+          <Button
+            onClick={() => {
+              setEditingItem(null)
+              setFormOpen(true)
+            }}
+          >
             <Plus className="mr-2 h-4 w-4" /> Novo Animal
           </Button>
         </div>
@@ -85,6 +94,8 @@ export default function Animais() {
           )}
         </CardContent>
       </Card>
+
+      <AnimalForm open={formOpen} onOpenChange={setFormOpen} item={editingItem} />
     </div>
   )
 }
