@@ -21,6 +21,7 @@ import Financeiro from './pages/Financeiro'
 import Relatorios from './pages/Relatorios'
 import Configuracoes from './pages/Configuracoes'
 import AssistenteIA from './pages/AssistenteIA'
+import InteligenciaArtificial from './pages/InteligenciaArtificial'
 import Inttegra from './pages/admin/Inttegra'
 import Integracoes from './pages/admin/Integracoes'
 import Importacao from './pages/admin/Importacao'
@@ -178,6 +179,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <AssistenteIA />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/inteligencia-artificial"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+            <InteligenciaArtificial />
           </AuthorizeRoute>
         }
       />
