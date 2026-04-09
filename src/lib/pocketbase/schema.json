@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T12:13:26.261Z",
+  "generatedAt": "2026-04-09T12:22:06.489Z",
   "collections": [
     {
       "name": "users",
@@ -1578,6 +1578,193 @@
       "indexes": [
         "CREATE INDEX idx_itens_venda_venda ON itens_venda (venda_id)",
         "CREATE INDEX idx_itens_venda_animal ON itens_venda (animal_id)"
+      ]
+    },
+    {
+      "name": "parcelas_venda",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+      },
+      "fields": [
+        {
+          "name": "venda_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "vendas"
+        },
+        {
+          "name": "numero_parcela",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "valor_parcela",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_vencimento",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_pagamento",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status_parcela",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Pendente", "Paga", "Atrasada", "Cancelada"]
+        },
+        {
+          "name": "dias_atraso",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "juros_atraso",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "multa_atraso",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "valor_total_com_juros",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_parcelas_venda_venda ON parcelas_venda (venda_id)",
+        "CREATE INDEX idx_parcelas_venda_vencimento ON parcelas_venda (data_vencimento)"
+      ]
+    },
+    {
+      "name": "boletos",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+      },
+      "fields": [
+        {
+          "name": "parcela_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "parcelas_venda"
+        },
+        {
+          "name": "numero_boleto",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "codigo_barras",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "data_emissao",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "data_vencimento",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "valor_boleto",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "banco_emissor",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status_boleto",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Gerado", "Enviado", "Pago", "Vencido", "Cancelado"]
+        },
+        {
+          "name": "data_envio_cliente",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "url_boleto_pdf",
+          "type": "url",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_boletos_numero ON boletos (numero_boleto) WHERE numero_boleto != ''",
+        "CREATE INDEX idx_boletos_vencimento ON boletos (data_vencimento)",
+        "CREATE INDEX idx_boletos_parcela ON boletos (parcela_id)"
       ]
     }
   ]
