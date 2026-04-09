@@ -16,8 +16,9 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from '@/components/ui/chart'
-import { ArrowUpCircle, ArrowDownCircle, Wallet } from 'lucide-react'
+import { ArrowUpCircle, ArrowDownCircle, Wallet, Cloud, Droplets } from 'lucide-react'
 import { getTransacoesFinanceiras, TransacaoFinanceira } from '@/services/transacoes_financeiras'
+import { getWeather, WeatherData } from '@/services/integracoes'
 import { useRealtime } from '@/hooks/use-realtime'
 import { format, subMonths, isSameMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -53,6 +54,7 @@ const pieChartConfig = {
 
 export default function Dashboard() {
   const [transactions, setTransactions] = useState<TransacaoFinanceira[]>([])
+  const [weather, setWeather] = useState<WeatherData | null>(null)
 
   const loadData = async () => {
     try {
@@ -60,6 +62,12 @@ export default function Dashboard() {
       setTransactions(data)
     } catch (err) {
       console.error(err)
+    }
+    try {
+      const w = await getWeather()
+      setWeather(w)
+    } catch (err) {
+      console.error('Failed to load weather:', err)
     }
   }
 
@@ -138,7 +146,7 @@ export default function Dashboard() {
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dashboard Financeiro</h1>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-4">
         <Card className="bg-white border-slate-200 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">
@@ -174,6 +182,29 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold font-mono">{formatCurrency(saldoLiquido)}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-slate-200 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">Clima Local</CardTitle>
+            <Cloud className="h-4 w-4 text-sky-500" />
+          </CardHeader>
+          <CardContent>
+            {weather ? (
+              <div className="flex flex-col">
+                <div className="text-2xl font-bold text-slate-900">{weather.temperatura}°C</div>
+                <div className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                  <span>{weather.condicao}</span>
+                  <span className="flex items-center">
+                    <Droplets className="h-3 w-3 mr-0.5 text-blue-400" />{' '}
+                    {weather.probabilidade_chuva}%
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-slate-500">Carregando...</div>
+            )}
           </CardContent>
         </Card>
       </div>

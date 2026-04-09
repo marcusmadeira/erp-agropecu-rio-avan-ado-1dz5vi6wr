@@ -22,6 +22,7 @@ import Relatorios from './pages/Relatorios'
 import Configuracoes from './pages/Configuracoes'
 import AssistenteIA from './pages/AssistenteIA'
 import Inttegra from './pages/admin/Inttegra'
+import Integracoes from './pages/admin/Integracoes'
 import Importacao from './pages/admin/Importacao'
 import Pastos from './pages/estrutura/Pastos'
 import Lotes from './pages/estrutura/Lotes'
@@ -185,6 +186,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1]}>
             <Inttegra />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/integracoes"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <Integracoes />
           </AuthorizeRoute>
         }
       />
