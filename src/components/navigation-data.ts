@@ -27,6 +27,7 @@ import {
   Tractor,
   CloudSun,
   Bell,
+  ShieldCheck,
 } from 'lucide-react'
 
 export const navigationMenu = [
@@ -86,6 +87,7 @@ export const navigationMenu = [
       { title: 'Inttegra', url: '/inttegra', icon: LinkIcon },
       { title: 'Integrações', url: '/integracoes', icon: Globe },
       { title: 'Importação', url: '/importacao', icon: Upload },
+      { title: 'QA & Integridade', url: '/qa-dashboard', icon: ShieldCheck },
       { title: 'Configurações', url: '/configuracoes', icon: Settings },
     ],
   },

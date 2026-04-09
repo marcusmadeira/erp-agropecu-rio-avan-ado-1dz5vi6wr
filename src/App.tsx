@@ -25,6 +25,7 @@ import InteligenciaArtificial from './pages/InteligenciaArtificial'
 import Inttegra from './pages/admin/Inttegra'
 import Integracoes from './pages/admin/Integracoes'
 import Importacao from './pages/admin/Importacao'
+import QADashboard from './pages/admin/QADashboard'
 import Pastos from './pages/estrutura/Pastos'
 import Lotes from './pages/estrutura/Lotes'
 import Animais from './pages/rebanho/Animais'
@@ -171,6 +172,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1]}>
             <Configuracoes />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/qa-dashboard"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <QADashboard />
           </AuthorizeRoute>
         }
       />
