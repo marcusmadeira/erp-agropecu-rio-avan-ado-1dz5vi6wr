@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-08T23:46:59.789Z",
+  "generatedAt": "2026-04-09T00:02:15.182Z",
   "collections": [
     {
       "name": "users",
@@ -96,6 +96,223 @@
         }
       ],
       "indexes": ["CREATE INDEX idx_conversas_ia_usuario ON conversas_ia (usuario_id, created)"]
+    },
+    {
+      "name": "parceiros_negocios",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+      },
+      "fields": [
+        {
+          "name": "nome_razao_social",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "tipo_documento",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["CPF", "CNPJ"]
+        },
+        {
+          "name": "numero_documento",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "contato_whatsapp",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "categoria_parceiro",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Fornecedor", "Cliente", "Funcionário", "Transportadora"]
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_parceiros_numero_documento ON parceiros_negocios (numero_documento)"
+      ]
+    },
+    {
+      "name": "lotes",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+      },
+      "fields": [
+        {
+          "name": "nome_lote",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "centro_custo",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["CC01-Nelore PO", "CC02-Comercial TIP"]
+        },
+        {
+          "name": "quantidade_cabecas",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "peso_medio_lote",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "custo_acumulado_nutricao",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_lotes_nome_lote ON lotes (nome_lote)"]
+    },
+    {
+      "name": "animais",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+      },
+      "fields": [
+        {
+          "name": "id_manejo_brinco",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "rgd_rgn_abcz",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "categoria",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Matriz PO", "Touro PO", "Bezerro", "Novilha TIP", "Garrote TIP"]
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "lote_atual",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "lotes"
+        },
+        {
+          "name": "peso_atual_kg",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "genealogia_pai",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "genealogia_mae",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "custo_variavel_acumulado",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_animais_id_manejo_brinco ON animais (id_manejo_brinco)"]
     }
   ]
 }
