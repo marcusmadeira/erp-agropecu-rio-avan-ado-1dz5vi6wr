@@ -1,5 +1,5 @@
 import pb from '@/lib/pocketbase/client'
-import { Lote } from './lotes'
+import type { Lote } from './lotes'
 
 export interface Animal {
   id: string
@@ -20,10 +20,14 @@ export interface Animal {
 }
 
 export const getAnimais = () =>
-  pb.collection('animais').getFullList<Animal>({ expand: 'lote_atual' })
+  pb.collection('animais').getFullList<Animal>({ sort: '-created', expand: 'lote_atual' })
+
 export const getAnimal = (id: string) =>
   pb.collection('animais').getOne<Animal>(id, { expand: 'lote_atual' })
+
 export const createAnimal = (data: Partial<Animal>) => pb.collection('animais').create<Animal>(data)
+
 export const updateAnimal = (id: string, data: Partial<Animal>) =>
   pb.collection('animais').update<Animal>(id, data)
+
 export const deleteAnimal = (id: string) => pb.collection('animais').delete(id)

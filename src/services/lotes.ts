@@ -11,9 +11,13 @@ export interface Lote {
   updated: string
 }
 
-export const getLotes = () => pb.collection('lotes').getFullList<Lote>()
+export const getLotes = () => pb.collection('lotes').getFullList<Lote>({ sort: '-created' })
+
 export const getLote = (id: string) => pb.collection('lotes').getOne<Lote>(id)
+
 export const createLote = (data: Partial<Lote>) => pb.collection('lotes').create<Lote>(data)
+
 export const updateLote = (id: string, data: Partial<Lote>) =>
   pb.collection('lotes').update<Lote>(id, data)
+
 export const deleteLote = (id: string) => pb.collection('lotes').delete(id)

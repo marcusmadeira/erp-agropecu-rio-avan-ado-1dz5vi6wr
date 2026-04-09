@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T00:05:47.906Z",
+  "generatedAt": "2026-04-09T00:12:30.094Z",
   "collections": [
     {
       "name": "users",
@@ -168,7 +168,7 @@
         }
       ],
       "indexes": [
-        "CREATE INDEX idx_parceiros_numero_documento ON parceiros_negocios (numero_documento)"
+        "CREATE INDEX `idx_parceiros_numero_documento` ON `parceiros_negocios` (numero_documento)"
       ]
     },
     {
@@ -228,7 +228,7 @@
           "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
-      "indexes": ["CREATE INDEX idx_lotes_nome_lote ON lotes (nome_lote)"]
+      "indexes": ["CREATE INDEX `idx_lotes_nome_lote` ON `lotes` (nome_lote)"]
     },
     {
       "name": "animais",
@@ -312,7 +312,7 @@
           "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
-      "indexes": ["CREATE INDEX idx_animais_id_manejo_brinco ON animais (id_manejo_brinco)"]
+      "indexes": ["CREATE INDEX `idx_animais_id_manejo_brinco` ON `animais` (id_manejo_brinco)"]
     }
   ]
 }
