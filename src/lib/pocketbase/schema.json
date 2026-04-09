@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T00:19:12.072Z",
+  "generatedAt": "2026-04-09T00:22:57.928Z",
   "collections": [
     {
       "name": "users",
@@ -313,6 +313,211 @@
         }
       ],
       "indexes": ["CREATE INDEX `idx_animais_id_manejo_brinco` ON `animais` (id_manejo_brinco)"]
+    },
+    {
+      "name": "estoque_insumos",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+      },
+      "fields": [
+        {
+          "name": "produto",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "quantidade_atual",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "unidade_medida",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "custo_medio_unitario",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "estoque_minimo_critico",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "consumo_medio_diario",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_estoque_insumos_produto ON estoque_insumos (produto)"]
+    },
+    {
+      "name": "transacoes_financeiras",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+      },
+      "fields": [
+        {
+          "name": "data_competencia",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_vencimento",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_efetivacao_real",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "descricao_lancamento",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "parceiro_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "parceiros_negocios"
+        },
+        {
+          "name": "tipo_movimento",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Receita", "Despesa"]
+        },
+        {
+          "name": "classificacao_custo",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["FIXA", "VARIÁVEL"]
+        },
+        {
+          "name": "centro_custo",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["CC01", "CC02", "CC03"]
+        },
+        {
+          "name": "valor_total",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status_pagamento",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Pendente", "Recebido", "Atrasado"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_transacoes_fin_data_venc ON transacoes_financeiras (data_vencimento)"
+      ]
+    },
+    {
+      "name": "estoque_semen",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+      },
+      "fields": [
+        {
+          "name": "touro_doador",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "botijao_armazenado",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "doses_palhetas_disponiveis",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
     }
   ]
 }
