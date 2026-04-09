@@ -28,6 +28,7 @@ import {
   CloudSun,
   Bell,
   ShieldCheck,
+  ShoppingCart,
 } from 'lucide-react'
 
 export const navigationMenu = [
@@ -69,6 +70,7 @@ export const navigationMenu = [
       { title: 'Financeiro', url: '/financeiro', icon: DollarSign },
       { title: 'Transações', url: '/transacoes', icon: Landmark },
       { title: 'Parceiros', url: '/parceiros', icon: Users },
+      { title: 'Vendas', url: '/vendas/geral', icon: ShoppingCart },
       { title: 'Eventos Comerciais', url: '/eventos-comerciais', icon: CalendarDays },
       { title: 'Eventos de Venda', url: '/vendas/eventos', icon: CalendarDays },
     ],

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T12:09:33.887Z",
+  "generatedAt": "2026-04-09T12:13:26.261Z",
   "collections": [
     {
       "name": "users",
@@ -1437,6 +1437,148 @@
         }
       ],
       "indexes": []
+    },
+    {
+      "name": "vendas",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+      },
+      "fields": [
+        {
+          "name": "evento_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "eventos_venda"
+        },
+        {
+          "name": "cliente_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "parceiros_negocios"
+        },
+        {
+          "name": "data_venda",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "tipo_gado",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Comercial", "PO"]
+        },
+        {
+          "name": "quantidade_animais",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "valor_total_venda",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "forma_pagamento",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["AVista", "Parcelado"]
+        },
+        {
+          "name": "status_venda",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Pendente", "Confirmada", "Entregue"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_vendas_evento ON vendas (evento_id)",
+        "CREATE INDEX idx_vendas_cliente ON vendas (cliente_id)",
+        "CREATE INDEX idx_vendas_data ON vendas (data_venda)"
+      ]
+    },
+    {
+      "name": "itens_venda",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+      },
+      "fields": [
+        {
+          "name": "venda_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "vendas"
+        },
+        {
+          "name": "animal_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "animais"
+        },
+        {
+          "name": "valor_unitario",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "desconto_aplicado",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_itens_venda_venda ON itens_venda (venda_id)",
+        "CREATE INDEX idx_itens_venda_animal ON itens_venda (animal_id)"
+      ]
     }
   ]
 }

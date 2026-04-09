@@ -44,6 +44,8 @@ import EventosComerciais from './pages/financeiro/EventosComerciais'
 import Parceiros from './pages/financeiro/Parceiros'
 import EventosVenda from './pages/vendas/Eventos'
 import EventoDetalhes from './pages/vendas/EventoDetalhes'
+import VendasList from './pages/vendas/VendasList'
+import VendaForm from './pages/vendas/VendaForm'
 import Maquinario from './pages/operacoes/Maquinario'
 import Clima from './pages/operacoes/Clima'
 import Notificacoes from './pages/Notificacoes'
@@ -344,6 +346,22 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1, 2]}>
             <EventosComerciais />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/vendas/geral"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2]}>
+            <VendasList />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/vendas/nova"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2]}>
+            <VendaForm />
           </AuthorizeRoute>
         }
       />
