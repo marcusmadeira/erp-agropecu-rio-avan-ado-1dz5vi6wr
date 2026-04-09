@@ -50,16 +50,21 @@ async function printPDF(title: string, html: string) {
           .text-right { text-align: right; }
           .text-center { text-align: center; }
           .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; background: #e2e8f0; color: #094016; }
+          .footer { margin-top: 40px; border-top: 2px solid #094016; padding-top: 20px; display: flex; align-items: flex-start; page-break-inside: avoid; }
+          .footer-logo { width: 64px; height: 64px; object-fit: contain; flex-shrink: 0; }
+          .footer-text { margin-left: 15px; font-size: 12px; color: #64748b; }
+          .footer-text-brand { margin: 0; font-weight: bold; color: #094016; }
+          .footer-text-p { margin: 0; }
         </style>
       </head>
       <body onload="setTimeout(() => { window.print(); setTimeout(() => window.close(), 500); }, 500);">
         ${html}
-        <div style="margin-top: 40px; border-top: 2px solid #094016; padding-top: 20px; display: flex; align-items: flex-start; page-break-inside: avoid;">
-          <img src="${absoluteLogoUrl}" style="width: 64px; height: 64px; object-fit: contain;" />
-          <div style="margin-left: 15px; font-size: 12px; color: #64748b;">
-            <p style="margin: 0; font-weight: bold; color: #094016;">TORIBA AGROPECUÁRIA</p>
-            <p style="margin: 0;">Relatório gerado eletronicamente pelo sistema Gestão Pecuária 360º</p>
-            <p style="margin: 0;">${new Date().toLocaleString()}</p>
+        <div class="footer">
+          <img src="${absoluteLogoUrl}" class="footer-logo" />
+          <div class="footer-text">
+            <p class="footer-text-brand">TORIBA AGROPECUÁRIA</p>
+            <p class="footer-text-p">Relatório gerado eletronicamente pelo sistema Gestão Pecuária 360º</p>
+            <p class="footer-text-p">${new Date().toLocaleString()}</p>
           </div>
         </div>
       </body>
