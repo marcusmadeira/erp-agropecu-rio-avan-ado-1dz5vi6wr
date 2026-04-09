@@ -6,6 +6,7 @@ routerAdd(
     const body = e.requestInfo().body
     const valorPago = body.valor_pago
     const dataPagamento = body.data_pagamento || new Date().toISOString()
+    const formaPagamento = body.forma_pagamento || 'Pix'
 
     $app.runInTransaction((txApp) => {
       const boleto = txApp.findRecordById('boletos', id)
@@ -29,12 +30,12 @@ routerAdd(
       transacao.set('data_efetivacao_real', dataPagamento)
       transacao.set(
         'descricao_lancamento',
-        `Recebimento Parcela ${parcela.get('numero_parcela')} - Venda ${vendaId}`,
+        `Recebimento Parcela ${parcela.get('numero_parcela')} - Venda ${vendaId} (${formaPagamento})`,
       )
       transacao.set('parceiro_id', clienteId)
       transacao.set('tipo_movimento', 'Receita')
       transacao.set('classificacao_custo', 'VARIÁVEL')
-      transacao.set('centro_custo', 'CC01')
+      transacao.set('centro_custo', 'CC02')
       transacao.set('valor_total', valorPago || parcela.get('valor_parcela'))
       transacao.set('status_pagamento', 'Recebido')
       txApp.save(transacao)
@@ -51,6 +52,7 @@ routerAdd(
           status_boleto: 'Pago',
           data_pagamento: dataPagamento,
           valor_pago: valorPago,
+          forma_pagamento: formaPagamento,
         }),
       )
       txApp.saveNoValidate(auditoria)

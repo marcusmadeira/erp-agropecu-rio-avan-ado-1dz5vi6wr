@@ -3,6 +3,7 @@ import { DollarSign, AlertCircle, CheckCircle, TrendingDown } from 'lucide-react
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts'
 import { format, isSameMonth } from 'date-fns'
+import { calcularAtraso } from './utils'
 
 export default function DashboardRecebimentos({ boletos }: { boletos: any[] }) {
   const hoje = new Date()
@@ -17,31 +18,30 @@ export default function DashboardRecebimentos({ boletos }: { boletos: any[] }) {
 
   boletos.forEach((b) => {
     const parcela = b.expand?.parcela_id || {}
-    const valor = b.valor_boleto || parcela.valor_total_com_juros || parcela.valor_parcela || 0
+    const valorOriginal = b.valor_boleto || parcela.valor_parcela || 0
     const status = b.status_boleto
     const dtVenc = b.data_vencimento ? new Date(b.data_vencimento) : hoje
 
-    totalEsperado += valor
+    const { total: valorComJuros } = calcularAtraso(b.data_vencimento, valorOriginal)
+
+    totalEsperado += valorOriginal
 
     if (status === 'Pago') {
       statusCount.Pago += 1
-      if (
-        b.expand?.parcela_id?.data_pagamento &&
-        isSameMonth(new Date(b.expand.parcela_id.data_pagamento), hoje)
-      ) {
-        recebidoMes += valor
+      if (parcela.data_pagamento && isSameMonth(new Date(parcela.data_pagamento), hoje)) {
+        recebidoMes += valorOriginal
       }
     } else if (status === 'Vencido' || (status !== 'Pago' && dtVenc < hoje)) {
       statusCount.Atrasado += 1
-      emAtraso += valor
+      emAtraso += valorComJuros
     } else {
       statusCount.Pendente += 1
-      aReceber += valor
+      aReceber += valorOriginal
     }
 
     const monthKey = format(dtVenc, 'MMM/yy')
     if (!evolution[monthKey]) evolution[monthKey] = 0
-    if (status === 'Pago') evolution[monthKey] += valor
+    if (status === 'Pago') evolution[monthKey] += valorOriginal
   })
 
   const taxaInadimplencia = totalEsperado > 0 ? (emAtraso / totalEsperado) * 100 : 0

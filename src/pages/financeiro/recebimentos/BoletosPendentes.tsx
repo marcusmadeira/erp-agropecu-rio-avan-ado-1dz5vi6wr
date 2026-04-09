@@ -64,6 +64,7 @@ export default function BoletosPendentes({
     id: '',
     valor: 0,
     data: new Date().toISOString().split('T')[0],
+    forma_pagamento: 'Pix',
   })
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -112,6 +113,7 @@ export default function BoletosPendentes({
       await registrarPagamento(pagamentoData.id, {
         valor_pago: pagamentoData.valor,
         data_pagamento: pagamentoData.data,
+        forma_pagamento: pagamentoData.forma_pagamento,
       })
       toast.success('Pagamento registrado com sucesso!')
       setDialogOpen(false)
@@ -354,6 +356,21 @@ export default function BoletosPendentes({
                 value={pagamentoData.data}
                 onChange={(e) => setPagamentoData({ ...pagamentoData, data: e.target.value })}
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Forma de Pagamento</Label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={pagamentoData.forma_pagamento}
+                onChange={(e) =>
+                  setPagamentoData({ ...pagamentoData, forma_pagamento: e.target.value })
+                }
+              >
+                <option value="Pix">Pix</option>
+                <option value="Transferência Bancária">Transferência Bancária</option>
+                <option value="Dinheiro">Dinheiro</option>
+                <option value="Cartão">Cartão</option>
+              </select>
             </div>
           </div>
           <DialogFooter>

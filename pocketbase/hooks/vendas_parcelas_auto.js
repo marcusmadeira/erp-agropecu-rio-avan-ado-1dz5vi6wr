@@ -5,6 +5,7 @@ onRecordAfterCreateSuccess((e) => {
 
   try {
     const parcelasCol = $app.findCollectionByNameOrId('parcelas_venda')
+    const boletosCol = $app.findCollectionByNameOrId('boletos')
 
     let qtdParcelas = formaPagamento === 'Parcelado' ? 3 : 1
     let valorParcela = valorTotal / qtdParcelas
@@ -23,9 +24,18 @@ onRecordAfterCreateSuccess((e) => {
       parcela.set('dias_atraso', 0)
 
       $app.save(parcela)
+
+      const boleto = new Record(boletosCol)
+      boleto.set('parcela_id', parcela.id)
+      boleto.set('numero_boleto', `BOL-${venda.id.substring(0, 5).toUpperCase()}-${i}`)
+      boleto.set('valor_boleto', valorParcela)
+      boleto.set('data_vencimento', vencimento.toISOString())
+      boleto.set('status_boleto', 'Gerado')
+
+      $app.save(boleto)
     }
   } catch (err) {
-    console.log('Erro auto parcela:', err.message)
+    console.log('Erro auto parcela e boleto:', err.message)
   }
 
   e.next()
