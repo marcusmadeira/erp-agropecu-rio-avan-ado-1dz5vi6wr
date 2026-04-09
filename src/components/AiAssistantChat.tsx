@@ -16,19 +16,32 @@ export function AiAssistantChat({ contextData, onAcceptSuggestion }: AiAssistant
   const [input, setInput] = useState('')
 
   useEffect(() => {
-    if (contextData.categoria === 'Bezerro' && contextData.animais?.length > 0) {
+    if (contextData.categoria && contextData.animais?.length > 0) {
       const maes = contextData.animais.filter((a: any) => a.categoria === 'Matriz PO')
       const pais = contextData.animais.filter((a: any) => a.categoria === 'Touro PO')
 
-      const suggestion: any = { peso_atual_kg: 250 }
-      if (maes.length > 0) suggestion.mae_id = maes[0].id
-      if (pais.length > 0) suggestion.pai_id = pais[0].id
+      let pesoSugerido = 0
+      if (contextData.categoria === 'Bezerro') pesoSugerido = 250
+      else if (contextData.categoria === 'Matriz PO') pesoSugerido = 450
+      else if (contextData.categoria === 'Touro PO') pesoSugerido = 800
+      else pesoSugerido = 300
+
+      const suggestion: any = { peso_atual_kg: pesoSugerido }
+      if (contextData.categoria === 'Bezerro') {
+        if (maes.length > 0) suggestion.mae_id = maes[0].id
+        if (pais.length > 0) suggestion.pai_id = pais[0].id
+      }
+
+      const txt =
+        contextData.categoria === 'Bezerro'
+          ? `Notei que você selecionou "Bezerro". Sugiro um peso inicial de ${pesoSugerido}kg e preenchi sugestões de Pai e Mãe com base na genealogia histórica para evitar consanguinidade. Deseja aplicar?`
+          : `Para a categoria "${contextData.categoria}", o peso médio histórico aponta ${pesoSugerido}kg. Posso preencher isso para você?`
 
       setMessages((prev) => [
         ...prev,
         {
           role: 'ai',
-          text: 'Notei que você selecionou "Bezerro". Sugiro um peso inicial de 250kg e preenchi sugestões de Pai e Mãe com base no rebanho. Deseja aplicar?',
+          text: txt,
           suggestion,
         },
       ])

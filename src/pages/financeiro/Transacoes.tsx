@@ -218,14 +218,17 @@ export default function Transacoes() {
                   : null
 
                 return (
-                  <TableRow key={t.id}>
-                    <TableCell className="font-mono text-xs font-bold text-secondary flex justify-between items-center md:table-cell border-b md:border-b-0 pb-2 md:pb-4">
+                  <TableRow
+                    key={t.id}
+                    className="flex flex-col md:table-row mb-4 border rounded-xl md:border-0 md:rounded-none bg-white p-4 md:p-0 shadow-sm md:shadow-none"
+                  >
+                    <TableCell className="font-mono text-xs font-bold text-secondary flex justify-between items-center md:table-cell border-b md:border-b-0 pb-2 md:pb-4 p-0 md:p-4">
                       <span className="md:hidden text-muted-foreground font-normal">
                         Vencimento
                       </span>
                       {safeFormatDate(t.Data_Vencimento)}
                     </TableCell>
-                    <TableCell className="font-bold text-secondary flex flex-col md:table-cell py-3 md:py-4">
+                    <TableCell className="font-bold text-secondary flex flex-col md:table-cell py-3 md:py-4 p-0 md:p-4 mt-2 md:mt-0">
                       <span className="md:hidden text-muted-foreground font-normal text-xs mb-1">
                         Descrição / Parceiro
                       </span>
@@ -250,7 +253,7 @@ export default function Transacoes() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="flex justify-between items-center md:table-cell py-2 md:py-4 border-t border-slate-100 md:border-0">
+                    <TableCell className="flex justify-between items-center md:table-cell py-2 md:py-4 border-t border-slate-100 md:border-0 p-0 md:p-4 mt-2 md:mt-0">
                       <span className="md:hidden text-muted-foreground font-normal text-xs">
                         DRE
                       </span>
@@ -264,12 +267,12 @@ export default function Transacoes() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-xs font-bold text-secondary flex justify-between items-center md:table-cell py-2 md:py-4">
+                    <TableCell className="text-xs font-bold text-secondary flex justify-between items-center md:table-cell py-2 md:py-4 p-0 md:p-4">
                       <span className="md:hidden text-muted-foreground font-normal">C.Custo</span>
                       {t.Centro_Custo_Direcionado}
                     </TableCell>
                     <TableCell
-                      className={`text-right font-mono font-bold flex justify-between items-center md:table-cell py-2 md:py-4 ${t.Tipo_Movimento === 'Receita' ? 'text-primary' : 'text-destructive'}`}
+                      className={`text-right font-mono font-bold flex justify-between items-center md:table-cell py-2 md:py-4 p-0 md:p-4 ${t.Tipo_Movimento === 'Receita' ? 'text-primary' : 'text-destructive'}`}
                     >
                       <span className="md:hidden text-muted-foreground font-normal text-xs">
                         Valor
@@ -279,7 +282,7 @@ export default function Transacoes() {
                         {formatCurrency(t.Valor_Total)}
                       </span>
                     </TableCell>
-                    <TableCell className="flex justify-between items-center md:table-cell py-2 md:py-4">
+                    <TableCell className="flex justify-between items-center md:table-cell py-2 md:py-4 p-0 md:p-4">
                       <span className="md:hidden text-muted-foreground font-normal text-xs">
                         Status
                       </span>
@@ -295,15 +298,15 @@ export default function Transacoes() {
                         {t.Status_Pagamento}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right pt-4 pb-2 md:py-4 border-t border-slate-100 md:border-0 flex justify-end md:table-cell">
-                      <div className="flex justify-end gap-2 items-center">
+                    <TableCell className="text-right pt-4 pb-2 md:py-4 border-t border-slate-100 md:border-0 flex justify-end md:table-cell p-0 md:p-4 mt-2 md:mt-0">
+                      <div className="flex justify-end gap-2 items-center w-full md:w-auto">
                         {t.Tipo_Movimento === 'Receita' &&
                           t.Status_Pagamento !== 'Efetivado' &&
                           partner?.Telefone_WhatsApp && (
                             <Button
-                              size="icon"
+                              size="sm"
                               variant="outline"
-                              className="h-7 w-7 text-primary border-primary hover:bg-primary/10"
+                              className="h-8 flex-1 md:flex-none text-emerald-700 border-emerald-600 hover:bg-emerald-50"
                               onClick={() =>
                                 window.open(
                                   `https://wa.me/${partner.Telefone_WhatsApp!.replace(/\D/g, '')}?text=Olá ${encodeURIComponent(partner.Nome_Razao_Social)}, lembramos do vencimento do boleto no valor de R$ ${t.Valor_Total.toFixed(2)}.`,
@@ -312,17 +315,18 @@ export default function Transacoes() {
                               }
                               title="Cobrar via WhatsApp"
                             >
-                              <MessageSquare className="w-3 h-3" />
+                              <MessageSquare className="w-4 h-4 md:mr-0 lg:mr-2" />
+                              <span className="md:hidden lg:inline">Cobrar via WhatsApp</span>
                             </Button>
                           )}
                         {t.Status_Pagamento !== 'Efetivado' && (
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-7 text-primary border-primary hover:bg-primary/10"
+                            className="h-8 flex-1 md:flex-none text-primary border-primary hover:bg-primary/10"
                             onClick={() => handlePay(t.id, t.Descricao_Lancamento)}
                           >
-                            <Check className="w-3 h-3 mr-1" /> Efetivar
+                            <Check className="w-4 h-4 mr-2" /> Efetivar
                           </Button>
                         )}
                       </div>

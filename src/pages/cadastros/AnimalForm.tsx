@@ -34,29 +34,39 @@ import { Loader2, Sparkles, Check, X, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AiAssistantChat } from '@/components/AiAssistantChat'
 
-const schema = z.object({
-  nome: z.string().min(1, 'Obrigatório').max(100, 'Máximo 100 caracteres'),
-  id_manejo_brinco: z.string().min(1, 'Obrigatório').max(20, 'Máximo 20 caracteres'),
-  rgd_rgn_abcz: z.string().max(50, 'Máximo 50 caracteres').optional().or(z.literal('')),
-  categoria: z.enum(['Matriz PO', 'Touro PO', 'Bezerro', 'Novilha TIP', 'Garrote TIP'], {
-    required_error: 'Obrigatório',
-  }),
-  data_nascimento: z
-    .string()
-    .min(1, 'Obrigatório')
-    .refine((v) => {
-      const d = new Date(v)
-      d.setHours(23, 59, 59, 999)
-      return d <= new Date()
-    }, 'Não pode ser no futuro'),
-  peso_atual_kg: z.coerce
-    .number({ required_error: 'Obrigatório' })
-    .positive('Deve ser positivo')
-    .max(2000, 'Máximo 2000kg'),
-  pai_id: z.string().optional().or(z.literal('')),
-  mae_id: z.string().optional().or(z.literal('')),
-  lote_atual: z.string().min(1, 'Obrigatório'),
-})
+const schema = z
+  .object({
+    nome: z.string().min(1, 'Obrigatório').max(100, 'Máximo 100 caracteres'),
+    id_manejo_brinco: z.string().min(1, 'Obrigatório').max(20, 'Máximo 20 caracteres'),
+    rgd_rgn_abcz: z.string().max(50, 'Máximo 50 caracteres').optional().or(z.literal('')),
+    categoria: z.enum(['Matriz PO', 'Touro PO', 'Bezerro', 'Novilha TIP', 'Garrote TIP'], {
+      required_error: 'Obrigatório',
+    }),
+    data_nascimento: z
+      .string()
+      .min(1, 'Obrigatório')
+      .refine((v) => {
+        const d = new Date(v)
+        d.setHours(23, 59, 59, 999)
+        return d <= new Date()
+      }, 'Não pode ser no futuro'),
+    peso_atual_kg: z.coerce
+      .number({ required_error: 'Obrigatório' })
+      .positive('Deve ser positivo')
+      .max(2000, 'Máximo 2000kg'),
+    pai_id: z.string().optional().or(z.literal('')),
+    mae_id: z.string().optional().or(z.literal('')),
+    lote_atual: z.string().min(1, 'Obrigatório'),
+  })
+  .superRefine((data, ctx) => {
+    if (data.pai_id && data.mae_id && data.pai_id === data.mae_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Integridade Genética: Pai e Mãe não podem ser o mesmo animal.',
+        path: ['pai_id'],
+      })
+    }
+  })
 
 type FormData = z.infer<typeof schema>
 
