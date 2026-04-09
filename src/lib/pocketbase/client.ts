@@ -1,5 +1,5 @@
 import PocketBase from 'pocketbase'
-import { addToOfflineQueue } from './offline-sync'
+import { addToOfflineQueue } from '@/lib/offline-sync'
 
 const originalFetch = window.fetch
 window.fetch = async (input, init) => {
