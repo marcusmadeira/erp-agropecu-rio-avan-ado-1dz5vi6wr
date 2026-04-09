@@ -158,6 +158,46 @@ export function exportAnimalPDF(animal: Animal, state: AppState) {
   printPDF(`Ficha_${animal.brinco}`, html)
 }
 
+export function exportFluxoCaixaPDF(summary: any, expenses: number, filters: any) {
+  const html = `
+    <div class="header">
+      <div class="logo">${logoSvg} TORIBA AGROPECUÁRIA</div>
+      <div style="margin-left: auto; text-align: right;">
+        <h2 style="margin:0;">Relatório de Fluxo de Caixa</h2>
+        <p style="margin: 5px 0 0 0; color: #64748b; font-size: 12px;">Gerado em: ${new Date().toLocaleString()}</p>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom: 20px;">
+      <h3>Filtros Aplicados</h3>
+      <p><strong>Período:</strong> ${filters.period === 'all' ? 'Todo o Período' : filters.period}</p>
+      <p><strong>Cliente:</strong> ${filters.client === 'all' ? 'Todos' : filters.client}</p>
+      <p><strong>Tipo de Gado:</strong> ${filters.livestockType === 'all' ? 'Todos' : filters.livestockType}</p>
+      <p><strong>Forma de Pagamento:</strong> ${filters.paymentMethod === 'all' ? 'Todas' : filters.paymentMethod}</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3>Resumo de Receitas</h3>
+        <p><strong>Receita Realizada (Paga):</strong> R$ ${summary.realized.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+        <p><strong>Receita Esperada (Pendente):</strong> R$ ${summary.expected.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+        <p><strong>Atrasos:</strong> R$ ${summary.arrears.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+        <hr style="margin: 10px 0; border: 0; border-top: 1px dashed #cbd5e1;" />
+        <p><strong>Total de Entradas (Realizada):</strong> R$ ${summary.realized.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+      </div>
+      <div class="card">
+        <h3>Resumo de Despesas</h3>
+        <p><strong>Despesas Totais:</strong> R$ ${expenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top: 20px; background-color: #f1f5f9;">
+      <h3>Saldo Consolidado (Realizado - Despesas)</h3>
+      <p style="font-size: 24px; font-weight: bold; color: ${summary.realized - expenses >= 0 ? '#094016' : '#dc2626'};">
+        R$ ${(summary.realized - expenses).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+      </p>
+    </div>
+  `
+  printPDF('Relatorio_Fluxo_Caixa', html)
+}
+
 export function exportFinancialReportPDF(data: Record<string, number>, filters: any) {
   const html = `
     <div class="header">
