@@ -239,14 +239,18 @@ export default function QADashboard() {
         .getFirstListItem('nome_razao_social="QA_TEST_PARCEIRO"')
         .catch(() => null)
       if (p) await pb.collection('parceiros_negocios').delete(p.id)
-    } catch (_) {}
+    } catch (_) {
+      // Ignore errors during cleanup
+    }
     try {
       const a = await pb
         .collection('animais')
         .getFirstListItem('id_manejo_brinco="QA_TEST_BRINCO"')
         .catch(() => null)
       if (a) await pb.collection('animais').delete(a.id)
-    } catch (_) {}
+    } catch (_) {
+      // Ignore errors during cleanup
+    }
 
     setIsChecking(false)
     checkPWA()
