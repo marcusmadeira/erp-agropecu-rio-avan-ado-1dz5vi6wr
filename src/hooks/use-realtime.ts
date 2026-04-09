@@ -21,21 +21,32 @@ export function useRealtime(
 
     let unsubscribeFn: (() => Promise<void>) | undefined
     let cancelled = false
+    let retryTimeout: ReturnType<typeof setTimeout>
 
-    pb.collection(collectionName)
-      .subscribe('*', (e) => {
-        callbackRef.current(e)
-      })
-      .then((fn) => {
+    const startSubscription = async () => {
+      if (cancelled) return
+      try {
+        const fn = await pb.collection(collectionName).subscribe('*', (e) => {
+          callbackRef.current(e)
+        })
         if (cancelled) {
           fn().catch(() => {})
         } else {
           unsubscribeFn = fn
         }
-      })
+      } catch (err: any) {
+        if (!cancelled) {
+          // Retry automatically if the client ID is missing or connection fails
+          retryTimeout = setTimeout(startSubscription, 2000)
+        }
+      }
+    }
+
+    startSubscription()
 
     return () => {
       cancelled = true
+      clearTimeout(retryTimeout)
       if (unsubscribeFn) {
         unsubscribeFn().catch(() => {})
       }

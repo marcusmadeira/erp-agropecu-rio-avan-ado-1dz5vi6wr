@@ -22,11 +22,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let mounted = true
+
+    const validateSession = async () => {
+      if (pb.authStore.isValid) {
+        try {
+          await pb.collection('users').authRefresh()
+        } catch (err: any) {
+          if (err.status !== 0) {
+            pb.authStore.clear()
+          }
+        }
+      }
+      if (mounted) {
+        setLoading(false)
+      }
+    }
+
+    validateSession()
+
     const unsubscribe = pb.authStore.onChange((_token, record) => {
-      setUser(record)
+      if (mounted) {
+        setUser(record)
+      }
     })
-    setLoading(false)
+
     return () => {
+      mounted = false
       unsubscribe()
     }
   }, [])
