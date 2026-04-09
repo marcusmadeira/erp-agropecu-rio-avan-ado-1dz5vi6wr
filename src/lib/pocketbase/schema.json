@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T00:28:51.677Z",
+  "generatedAt": "2026-04-09T00:32:45.531Z",
   "collections": [
     {
       "name": "users",
@@ -694,6 +694,190 @@
         }
       ],
       "indexes": ["CREATE INDEX idx_nascimentos_mae ON nascimentos_e_desmama (matriz_mae_id)"]
+    },
+    {
+      "name": "pesagens_diarias",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+      },
+      "fields": [
+        {
+          "name": "animal_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "animais"
+        },
+        {
+          "name": "data_pesagem",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "peso_kg",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "responsavel_pesagem",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_pesagens_animal_data ON pesagens_diarias (animal_id, data_pesagem)"
+      ]
+    },
+    {
+      "name": "auditoria_movimentacoes",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
+        "view": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
+        "create": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
+        "update": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
+        "delete": "@request.auth.id != '' && @request.auth.nivel_acesso = 1"
+      },
+      "fields": [
+        {
+          "name": "usuario_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "tipo_acao",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Criação", "Edição", "Exclusão"]
+        },
+        {
+          "name": "tabela_afetada",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "registro_id",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "dados_anteriores",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "dados_novos",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_auditoria_usuario_created ON auditoria_movimentacoes (usuario_id, created)"
+      ]
+    },
+    {
+      "name": "logs_sistema",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
+        "view": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
+        "create": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
+        "update": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
+        "delete": "@request.auth.id != '' && @request.auth.nivel_acesso = 1"
+      },
+      "fields": [
+        {
+          "name": "usuario_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "tipo_evento",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Login", "Logout", "Erro", "Integração"]
+        },
+        {
+          "name": "descricao_evento",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status_evento",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Sucesso", "Falha"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_logs_evento_created ON logs_sistema (tipo_evento, created)"]
     }
   ]
 }
