@@ -35,3 +35,11 @@ export const renegociarBoleto = async (id: string, data: any) => {
     body: JSON.stringify(data),
   })
 }
+
+export const getConfiguracaoCobranca = async () => {
+  try {
+    return await pb.collection('configuracoes_cobranca').getFirstListItem('')
+  } catch (err) {
+    return null
+  }
+}

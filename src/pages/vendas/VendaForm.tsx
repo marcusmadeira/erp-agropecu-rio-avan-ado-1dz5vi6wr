@@ -35,6 +35,7 @@ export default function VendaForm() {
     tipo_gado: 'Comercial',
     forma_pagamento: 'AVista',
     status_venda: 'Pendente',
+    numero_parcelas: 1,
   })
 
   const [items, setItems] = useState<any[]>([])
@@ -182,7 +183,13 @@ export default function VendaForm() {
               <Label>Forma de Pagamento *</Label>
               <Select
                 value={formData.forma_pagamento}
-                onValueChange={(v) => setFormData({ ...formData, forma_pagamento: v })}
+                onValueChange={(v) => {
+                  setFormData({
+                    ...formData,
+                    forma_pagamento: v,
+                    numero_parcelas: v === 'AVista' ? 1 : Math.max(2, formData.numero_parcelas),
+                  })
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -193,6 +200,21 @@ export default function VendaForm() {
                 </SelectContent>
               </Select>
             </div>
+            {formData.forma_pagamento === 'Parcelado' && (
+              <div className="space-y-2">
+                <Label>Número de Parcelas *</Label>
+                <Input
+                  type="number"
+                  min="2"
+                  max="48"
+                  value={formData.numero_parcelas}
+                  onChange={(e) =>
+                    setFormData({ ...formData, numero_parcelas: parseInt(e.target.value) || 1 })
+                  }
+                  required
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Status da Venda *</Label>
               <Select

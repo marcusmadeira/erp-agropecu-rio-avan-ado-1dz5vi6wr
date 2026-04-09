@@ -31,6 +31,9 @@ import { formatCurrency, calcularAtraso } from './utils'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
+import { useRealtime } from '@/hooks/use-realtime'
+import { getConfiguracaoCobranca } from '@/services/financeiro_recebimentos'
+import { useEffect } from 'react'
 
 export default function BoletosAtrasados({
   boletos,
@@ -42,6 +45,21 @@ export default function BoletosAtrasados({
   const { user } = useAuth()
   const isAdmin = user?.nivel_acesso === 1
   const isManagerOrAdmin = user?.nivel_acesso === 1 || user?.nivel_acesso === 2
+
+  const [config, setConfig] = useState<any>(null)
+
+  const loadConfig = async () => {
+    const data = await getConfiguracaoCobranca()
+    if (data) setConfig(data)
+  }
+
+  useEffect(() => {
+    loadConfig()
+  }, [])
+
+  useRealtime('configuracoes_cobranca', () => {
+    loadConfig()
+  })
 
   const atrasados = boletos
     .filter(
@@ -150,6 +168,7 @@ export default function BoletosAtrasados({
               const { diasAtraso, juros, multa, total } = calcularAtraso(
                 b.data_vencimento,
                 b.valor_boleto,
+                config,
               )
               const isCritico = diasAtraso > 30
               const isWarning = diasAtraso > 7 && diasAtraso <= 30
@@ -250,6 +269,7 @@ export default function BoletosAtrasados({
           const { diasAtraso, juros, multa, total } = calcularAtraso(
             b.data_vencimento,
             b.valor_boleto,
+            config,
           )
           const isCritico = diasAtraso > 30
           const isWarning = diasAtraso > 7 && diasAtraso <= 30

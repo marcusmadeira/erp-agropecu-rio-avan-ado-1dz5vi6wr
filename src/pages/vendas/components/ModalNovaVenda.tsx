@@ -61,7 +61,12 @@ export function ModalNovaVenda({ open, onOpenChange, onSuccess }: any) {
         variant: 'destructive',
       })
     try {
-      const payload = { ...form, data_venda: new Date().toISOString(), status_venda: 'Confirmada' }
+      const payload = {
+        ...form,
+        data_venda: new Date().toISOString(),
+        status_venda: 'Confirmada',
+        numero_parcelas: form.forma_pagamento === 'Parcelado' ? Number(parcelas) : 1,
+      }
       if (payload.evento_id === 'none') delete payload.evento_id
       await createVendaCompleta(payload, selected, Number(parcelas))
       toast({ title: 'Venda confirmada e parcelas geradas!' })
