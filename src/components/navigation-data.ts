@@ -48,6 +48,7 @@ export const navigationMenu = [
       { title: 'Lotes', url: '/lotes', icon: Box },
       { title: 'Pastos', url: '/pastos', icon: Map },
       { title: 'Pesagem', url: '/pesagem', icon: Scale },
+      { title: 'Importar Animais (IA)', url: '/importar-animais', icon: Upload },
       { title: 'Reclassificação', url: '/reclassificacao', icon: ArrowLeftRight },
       { title: 'Apartação', url: '/apartacao', icon: SplitSquareHorizontal },
       { title: 'Reprodução', url: '/reproducao', icon: Baby },

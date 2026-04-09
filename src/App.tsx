@@ -26,6 +26,7 @@ import Inttegra from './pages/admin/Inttegra'
 import Integracoes from './pages/admin/Integracoes'
 import Importacao from './pages/admin/Importacao'
 import QADashboard from './pages/admin/QADashboard'
+import ImportarAnimais from './pages/rebanho/ImportarAnimais'
 import Pastos from './pages/estrutura/Pastos'
 import Lotes from './pages/estrutura/Lotes'
 import Animais from './pages/rebanho/Animais'
@@ -252,6 +253,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1, 3]}>
             <Pesagem />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/importar-animais"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 3]}>
+            <ImportarAnimais />
           </AuthorizeRoute>
         }
       />
