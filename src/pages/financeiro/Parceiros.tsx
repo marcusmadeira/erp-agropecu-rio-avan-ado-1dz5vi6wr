@@ -1,9 +1,7 @@
-import { useState } from 'react'
-import useAppStore from '@/stores/useAppStore'
-import { Card, CardContent } from '@/components/ui/card'
+import { useEffect, useState } from 'react'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -12,351 +10,85 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { useToast } from '@/hooks/use-toast'
-import { Users, Plus, Edit2 } from 'lucide-react'
-import { ParceiroNegocio } from '@/stores/types'
-
-const CATEGORIAS_DISPONIVEIS = [
-  'Fornecedor',
-  'Cliente',
-  'Funcionário',
-  'Transportadora',
-  'Proprietário',
-]
+import { getParceiros } from '@/services/parceiros_negocios'
+import { useRealtime } from '@/hooks/use-realtime'
 
 export default function Parceiros() {
-  const { state, dispatch } = useAppStore()
-  const { toast } = useToast()
-  const [filterCat, setFilterCat] = useState('ALL')
-  const [filterStatus, setFilterStatus] = useState('ALL')
-  const [open, setOpen] = useState(false)
+  const [parceiros, setParceiros] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const [form, setForm] = useState<Partial<ParceiroNegocio>>({
-    Nome_Razao_Social: '',
-    Tipo_Documento: 'CNPJ',
-    Numero_Documento: '',
-    Telefone_WhatsApp: '',
-    Email: '',
-    Categoria_Parceiro: [],
-    Status: 'Ativo',
-    ID_Inttegra: '',
-  })
-  const [editingId, setEditingId] = useState<string | null>(null)
-
-  const filtered = state.parceiros.filter((p) => {
-    if (filterStatus !== 'ALL' && p.Status !== filterStatus) return false
-    if (filterCat !== 'ALL' && !p.Categoria_Parceiro.includes(filterCat)) return false
-    return true
-  })
-
-  const openNew = () => {
-    setEditingId(null)
-    setForm({
-      Nome_Razao_Social: '',
-      Tipo_Documento: 'CNPJ',
-      Numero_Documento: '',
-      Telefone_WhatsApp: '',
-      Email: '',
-      Categoria_Parceiro: [],
-      Status: 'Ativo',
-      ID_Inttegra: '',
-    })
-    setOpen(true)
-  }
-
-  const openEdit = (p: ParceiroNegocio) => {
-    setEditingId(p.id)
-    setForm(p)
-    setOpen(true)
-  }
-
-  const toggleCat = (cat: string) => {
-    setForm((prev) => {
-      const cats = prev.Categoria_Parceiro || []
-      return {
-        ...prev,
-        Categoria_Parceiro: cats.includes(cat) ? cats.filter((c) => c !== cat) : [...cats, cat],
-      }
-    })
-  }
-
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (
-      !form.Nome_Razao_Social ||
-      !form.Numero_Documento ||
-      !form.Telefone_WhatsApp ||
-      (form.Categoria_Parceiro && form.Categoria_Parceiro.length === 0)
-    ) {
-      toast({
-        title: 'Aviso',
-        description: 'Preencha os campos obrigatórios (Nome, Doc, WhatsApp e Categoria).',
-        variant: 'destructive',
-      })
-      return
+  const loadData = async () => {
+    try {
+      const data = await getParceiros()
+      setParceiros(data)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
     }
-
-    dispatch((s) => {
-      if (editingId) {
-        return {
-          ...s,
-          parceiros: s.parceiros.map((p) =>
-            p.id === editingId ? ({ ...p, ...form } as ParceiroNegocio) : p,
-          ),
-        }
-      } else {
-        return {
-          ...s,
-          parceiros: [{ ...form, id: Math.random().toString() } as ParceiroNegocio, ...s.parceiros],
-        }
-      }
-    })
-    setOpen(false)
-    toast({ title: 'Parceiro de Negócio Salvo' })
   }
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  useRealtime('parceiros_negocios', () => {
+    loadData()
+  })
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center flex-wrap gap-4">
-        <div className="flex items-center gap-3">
-          <Users className="w-8 h-8 text-primary" />
-          <div>
-            <h2 className="text-2xl font-bold text-primary">Parceiros de Negócios</h2>
-            <p className="text-sm text-muted-foreground">Fornecedores, Clientes e CRM WhatsApp</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Select value={filterCat} onValueChange={setFilterCat}>
-            <SelectTrigger className="w-[160px] bg-white">
-              <SelectValue placeholder="Categoria" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Todas Categorias</SelectItem>
-              {CATEGORIAS_DISPONIVEIS.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[120px] bg-white">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Todos</SelectItem>
-              <SelectItem value="Ativo">Ativos</SelectItem>
-              <SelectItem value="Inativo">Inativos</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={openNew} className="bg-primary">
-            <Plus className="w-4 h-4 mr-2" /> Novo Parceiro
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">Parceiros de Negócios</h2>
+        <div className="flex items-center space-x-2">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" /> Novo Parceiro
           </Button>
         </div>
       </div>
 
-      <Card className="shadow-subtle">
-        <CardContent className="p-0 overflow-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome / Razão Social</TableHead>
-                <TableHead>Contato (CRM)</TableHead>
-                <TableHead>Documento</TableHead>
-                <TableHead>Categorias</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ação</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-semibold text-secondary">
-                    {p.Nome_Razao_Social}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {p.Telefone_WhatsApp ? `WA: ${p.Telefone_WhatsApp}` : '-'} <br />
-                    {p.Email ? `EM: ${p.Email}` : ''}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {p.Tipo_Documento}: {p.Numero_Documento}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1 flex-wrap">
-                      {p.Categoria_Parceiro.map((c) => (
-                        <Badge
-                          key={c}
-                          variant="outline"
-                          className="text-[10px] bg-slate-50 border-border text-secondary"
-                        >
-                          {c}
-                        </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={p.Status === 'Ativo' ? 'default' : 'secondary'}
-                      className={
-                        p.Status === 'Ativo' ? 'bg-primary' : 'bg-muted text-muted-foreground'
-                      }
-                    >
-                      {p.Status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEdit(p)}
-                      className="text-primary hover:bg-primary/10"
-                    >
-                      <Edit2 className="w-4 h-4 mr-1" /> Editar
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filtered.length === 0 && (
+      <Card>
+        <CardHeader>
+          <CardTitle>Listagem de Parceiros</CardTitle>
+          <CardDescription>
+            Gerencie fornecedores, clientes, funcionários e transportadoras.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center p-8">Carregando...</div>
+          ) : parceiros.length === 0 ? (
+            <div className="flex justify-center p-8 text-muted-foreground">
+              Nenhum parceiro encontrado.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
-                    Nenhum parceiro encontrado.
-                  </TableCell>
+                  <TableHead>Nome/Razão Social</TableHead>
+                  <TableHead>Documento</TableHead>
+                  <TableHead>Categoria</TableHead>
+                  <TableHead>Contato</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {parceiros.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.nome_razao_social}</TableCell>
+                    <TableCell>
+                      {p.numero_documento} {p.tipo_documento ? `(${p.tipo_documento})` : ''}
+                    </TableCell>
+                    <TableCell>{p.categoria_parceiro}</TableCell>
+                    <TableCell>{p.contato_whatsapp}</TableCell>
+                    <TableCell>{p.status}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle className="text-primary">
-              {editingId ? 'Editar Parceiro' : 'Novo Parceiro de Negócios'}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSave} className="space-y-4 mt-4">
-            <div className="space-y-1">
-              <Label>
-                Nome ou Razão Social <span className="text-rose-500">*</span>
-              </Label>
-              <Input
-                required
-                value={form.Nome_Razao_Social}
-                onChange={(e) => setForm({ ...form, Nome_Razao_Social: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label>Tipo de Documento</Label>
-                <Select
-                  value={form.Tipo_Documento}
-                  onValueChange={(v: any) => setForm({ ...form, Tipo_Documento: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CPF">CPF</SelectItem>
-                    <SelectItem value="CNPJ">CNPJ</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label>
-                  Número do Doc. (Chave) <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  required
-                  value={form.Numero_Documento}
-                  onChange={(e) => setForm({ ...form, Numero_Documento: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label>
-                  Telefone / WhatsApp (CRM) <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  required
-                  value={form.Telefone_WhatsApp || ''}
-                  onChange={(e) => setForm({ ...form, Telefone_WhatsApp: e.target.value })}
-                  placeholder="Ex: 5511999999999"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>E-mail Corporativo</Label>
-                <Input
-                  type="email"
-                  value={form.Email || ''}
-                  onChange={(e) => setForm({ ...form, Email: e.target.value })}
-                  placeholder="contato@empresa.com"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>
-                Classificação (Múltipla Escolha) <span className="text-rose-500">*</span>
-              </Label>
-              <div className="grid grid-cols-2 gap-2 border border-border rounded-md p-3 bg-slate-50">
-                {CATEGORIAS_DISPONIVEIS.map((cat) => (
-                  <label key={cat} className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form.Categoria_Parceiro?.includes(cat)}
-                      onChange={() => toggleCat(cat)}
-                      className="rounded border-border text-primary focus:ring-primary"
-                    />
-                    <span className="text-sm font-medium text-secondary">{cat}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label>Status Cadastral</Label>
-                <Select
-                  value={form.Status}
-                  onValueChange={(v: any) => setForm({ ...form, Status: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Ativo">Ativo</SelectItem>
-                    <SelectItem value="Inativo">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label>ID Integração (Opcional)</Label>
-                <Input
-                  value={form.ID_Inttegra || ''}
-                  onChange={(e) => setForm({ ...form, ID_Inttegra: e.target.value })}
-                  placeholder="INT-001"
-                />
-              </div>
-            </div>
-
-            <Button type="submit" className="w-full bg-primary mt-4">
-              Salvar Registro
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

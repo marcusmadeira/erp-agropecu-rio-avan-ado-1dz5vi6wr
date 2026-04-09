@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import useAppStore from '@/stores/useAppStore'
-import { Card, CardContent } from '@/components/ui/card'
+import { useEffect, useState } from 'react'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -10,146 +10,84 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { useToast } from '@/hooks/use-toast'
-import { FileText } from 'lucide-react'
-import { exportLotePDF } from '@/lib/pdf'
-import { formatCurrency } from '@/lib/utils'
+import { getLotes } from '@/services/lotes'
+import { useRealtime } from '@/hooks/use-realtime'
 
 export default function Lotes() {
-  const { state, dispatch } = useAppStore()
-  const { toast } = useToast()
-  const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({ name: '', costCenter: 'CC01-PO' as any })
+  const [lotes, setLotes] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const handleSave = () => {
-    dispatch((s) => ({
-      ...s,
-      lotes: [
-        ...s.lotes,
-        { id: Math.random().toString(), name: form.name, costCenter: form.costCenter },
-      ],
-    }))
-    setOpen(false)
-    toast({ title: 'Lote criado com sucesso!' })
+  const loadData = async () => {
+    try {
+      const data = await getLotes()
+      setLotes(data)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
   }
 
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  useRealtime('lotes', () => {
+    loadData()
+  })
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-primary">Manejo de Lotes</h2>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90">Novo Lote</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="text-primary">Criar Lote</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <Input
-                placeholder="Nome do Lote"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
-              <Select
-                value={form.costCenter}
-                onValueChange={(v) => setForm({ ...form, costCenter: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Centro de Custo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CC01-PO">CC01-PO (Nelore Puro)</SelectItem>
-                  <SelectItem value="CC02-TIP">CC02-TIP (Comercial/Engorda)</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={handleSave} className="w-full bg-primary hover:bg-primary/90">
-                Salvar
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">Lotes</h2>
+        <div className="flex items-center space-x-2">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" /> Novo Lote
+          </Button>
+        </div>
       </div>
 
-      <Card className="shadow-subtle">
-        <CardContent className="p-0 overflow-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome do Lote</TableHead>
-                <TableHead>Centro de Custo</TableHead>
-                <TableHead>Piquete Atual</TableHead>
-                <TableHead className="text-right">Cabeças</TableHead>
-                <TableHead className="text-right">Peso Médio</TableHead>
-                <TableHead className="text-right">Custo Nutrição</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {state.lotes.map((l) => {
-                const animals = state.animais.filter(
-                  (a) => a.loteId === l.id && a.status === 'Ativo',
-                )
-                const pasto = state.pastos.find((p) => p.loteId === l.id)
-                const lotManejos = state.manejos.filter((m) => m.loteId === l.id)
-                const custoNutricao = lotManejos.reduce((acc, m) => acc + (m.cost || 0), 0)
-
-                const avgWeight =
-                  animals.length > 0
-                    ? animals.reduce((acc, a) => acc + a.pesoAtual, 0) / animals.length
-                    : 0
-                return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Listagem de Lotes</CardTitle>
+          <CardDescription>Acompanhe os lotes do seu rebanho e seus custos.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center p-8">Carregando...</div>
+          ) : lotes.length === 0 ? (
+            <div className="flex justify-center p-8 text-muted-foreground">
+              Nenhum lote encontrado.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Centro de Custo</TableHead>
+                  <TableHead className="text-right">Qtd. Cabeças</TableHead>
+                  <TableHead className="text-right">Peso Médio (kg)</TableHead>
+                  <TableHead className="text-right">Custo Nutrição</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {lotes.map((l) => (
                   <TableRow key={l.id}>
-                    <TableCell className="font-semibold text-secondary">{l.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="border-border text-secondary">
-                        {l.costCenter}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {pasto ? pasto.name : 'Sem Piquete'}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-bold text-secondary">
-                      {animals.length}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {avgWeight.toFixed(1)} kg
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-bold text-primary">
-                      {formatCurrency(custoNutricao)}
-                    </TableCell>
+                    <TableCell className="font-medium">{l.nome_lote}</TableCell>
+                    <TableCell>{l.centro_custo}</TableCell>
+                    <TableCell className="text-right">{l.quantidade_cabecas}</TableCell>
+                    <TableCell className="text-right">{l.peso_medio_lote}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => exportLotePDF(l, state)}
-                        title="Exportar Relatório PDF"
-                        className="text-primary border-primary hover:bg-primary/10"
-                      >
-                        <FileText className="w-4 h-4 mr-2" /> PDF
-                      </Button>
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(l.custo_acumulado_nutricao || 0)}
                     </TableCell>
                   </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
