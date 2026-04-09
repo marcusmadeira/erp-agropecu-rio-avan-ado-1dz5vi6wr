@@ -173,7 +173,7 @@ const AppRoutes = () => (
       <Route
         path="/assistente-ia"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <AssistenteIA />
           </AuthorizeRoute>
         }

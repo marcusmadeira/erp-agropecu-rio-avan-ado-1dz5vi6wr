@@ -68,7 +68,7 @@ const navItems = [
   { module: 'Transações', icon: DollarSign, path: '/financeiro', levels: [1, 2] },
   { module: 'Relatórios', icon: FileText, path: '/relatorios', levels: [1, 2] },
   { module: 'Configurações', icon: Settings, path: '/configuracoes', levels: [1] },
-  { module: 'Assistente IA', icon: Bot, path: '/assistente-ia', levels: [1] },
+  { module: 'Assistente IA', icon: Bot, path: '/assistente-ia', levels: [1, 2, 3] },
 ]
 
 export default function Layout() {
