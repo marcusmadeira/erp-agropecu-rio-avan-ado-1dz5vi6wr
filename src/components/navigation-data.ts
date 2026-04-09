@@ -1,0 +1,88 @@
+import {
+  LayoutDashboard,
+  TrendingUp,
+  Activity,
+  Database,
+  DollarSign,
+  FileText,
+  Settings,
+  Bot,
+  Link as LinkIcon,
+  Upload,
+  Map,
+  Box,
+  Scale,
+  ArrowLeftRight,
+  SplitSquareHorizontal,
+  Baby,
+  Package,
+  Wrench,
+  PieChart,
+  Factory,
+  Landmark,
+  Users,
+  CalendarDays,
+  Tractor,
+  CloudSun,
+  Bell,
+} from 'lucide-react'
+
+export const navigationMenu = [
+  {
+    title: 'Geral',
+    items: [
+      { title: 'Dashboard', url: '/', icon: LayoutDashboard },
+      { title: 'Desempenho', url: '/desempenho', icon: TrendingUp },
+      { title: 'Assistente IA', url: '/assistente-ia', icon: Bot },
+      { title: 'Notificações', url: '/notificacoes', icon: Bell, badge: true },
+    ],
+  },
+  {
+    title: 'Rebanho & Estrutura',
+    items: [
+      { title: 'Animais', url: '/animais', icon: Activity },
+      { title: 'Lotes', url: '/lotes', icon: Box },
+      { title: 'Pastos', url: '/pastos', icon: Map },
+      { title: 'Pesagem', url: '/pesagem', icon: Scale },
+      { title: 'Reclassificação', url: '/reclassificacao', icon: ArrowLeftRight },
+      { title: 'Apartação', url: '/apartacao', icon: SplitSquareHorizontal },
+      { title: 'Reprodução', url: '/reproducao', icon: Baby },
+    ],
+  },
+  {
+    title: 'Suprimentos',
+    items: [
+      { title: 'Estoque', url: '/estoque', icon: Package },
+      { title: 'Manejo', url: '/manejo', icon: Wrench },
+      { title: 'Previsão de Demanda', url: '/previsao-demanda', icon: PieChart },
+      { title: 'Fábrica de Ração', url: '/fabrica-racao', icon: Factory },
+    ],
+  },
+  {
+    title: 'Financeiro',
+    items: [
+      { title: 'Financeiro', url: '/financeiro', icon: DollarSign },
+      { title: 'Transações', url: '/transacoes', icon: Landmark },
+      { title: 'Parceiros', url: '/parceiros', icon: Users },
+      { title: 'Eventos Comerciais', url: '/eventos-comerciais', icon: CalendarDays },
+    ],
+  },
+  {
+    title: 'Operações',
+    items: [
+      { title: 'Maquinário', url: '/maquinario', icon: Tractor },
+      { title: 'Clima', url: '/clima', icon: CloudSun },
+    ],
+  },
+  {
+    title: 'Administração',
+    items: [
+      { title: 'Cadastros', url: '/cadastros', icon: Database },
+      { title: 'Relatórios', url: '/relatorios', icon: FileText },
+      { title: 'Auditoria', url: '/auditoria', icon: Activity },
+      { title: 'Inttegra', url: '/inttegra', icon: LinkIcon },
+      { title: 'Importação', url: '/importacao', icon: Upload },
+      { title: 'Configurações', url: '/configuracoes', icon: Settings },
+    ],
+  },
+]

@@ -39,6 +39,7 @@ import EventosComerciais from './pages/financeiro/EventosComerciais'
 import Parceiros from './pages/financeiro/Parceiros'
 import Maquinario from './pages/operacoes/Maquinario'
 import Clima from './pages/operacoes/Clima'
+import Notificacoes from './pages/Notificacoes'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth()
@@ -319,6 +320,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1]}>
             <Clima />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/notificacoes"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+            <Notificacoes />
           </AuthorizeRoute>
         }
       />
