@@ -23,8 +23,13 @@ import { getAnimais } from '@/services/animais'
 import PesagemTable from '@/components/pesagem/PesagemTable'
 import PesagemForm from '@/components/pesagem/PesagemForm'
 import PesagemChart from '@/components/pesagem/PesagemChart'
+import { useAuth } from '@/hooks/use-auth'
+import { ExportButtons } from '@/components/ExportButtons'
+import { exportToPDF, exportToExcel } from '@/lib/export'
+import { format } from 'date-fns'
 
 export default function Pesagem() {
+  const { user } = useAuth()
   const { toast } = useToast()
   const [pesagens, setPesagens] = useState<PesagemDiaria[]>([])
   const [animais, setAnimais] = useState<any[]>([])
@@ -109,6 +114,18 @@ export default function Pesagem() {
     setIsFormOpen(true)
   }
 
+  const exportColumns = [
+    { header: 'Animal', dataKey: (r: any) => r.expand?.animal_id?.id_manejo_brinco || '-' },
+    {
+      header: 'Data Pesagem',
+      dataKey: (r: any) =>
+        r.data_pesagem ? format(new Date(r.data_pesagem.replace(' ', 'T')), 'dd/MM/yyyy') : '-',
+    },
+    { header: 'Peso (kg)', dataKey: 'peso_kg' },
+    { header: 'Responsável', dataKey: 'responsavel_pesagem' },
+    { header: 'Observações', dataKey: 'observacoes' },
+  ]
+
   if (loading)
     return (
       <div className="p-8 text-center text-slate-500 font-medium">
@@ -169,10 +186,30 @@ export default function Pesagem() {
       <PesagemChart data={filteredData} animalFilter={animalFilter} />
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-        <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <Search className="w-5 h-5 text-slate-400" />
-          Histórico de Pesagens
-        </h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Search className="w-5 h-5 text-slate-400" />
+            Histórico de Pesagens
+          </h2>
+          <ExportButtons
+            onExportPDF={() =>
+              exportToPDF({
+                title: 'Histórico de Pesagens',
+                data: filteredData,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+            onExportExcel={() =>
+              exportToExcel({
+                title: 'Histórico de Pesagens',
+                data: filteredData,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+          />
+        </div>
         <PesagemTable data={filteredData} onEdit={openEdit} onDelete={handleDelete} />
       </div>
 

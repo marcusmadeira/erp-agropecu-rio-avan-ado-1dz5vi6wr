@@ -33,6 +33,8 @@ import {
 } from '@/components/ui/table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Edit, Trash2, Plus, AlertTriangle } from 'lucide-react'
+import { ExportButtons } from '@/components/ExportButtons'
+import { exportToPDF, exportToExcel } from '@/lib/export'
 
 export function InsumosTab() {
   const { user } = useAuth()
@@ -99,6 +101,15 @@ export function InsumosTab() {
     }
   }
 
+  const exportColumns = [
+    { header: 'Produto', dataKey: 'produto' },
+    { header: 'Qtd. Atual', dataKey: 'quantidade_atual' },
+    { header: 'Unidade', dataKey: 'unidade_medida' },
+    { header: 'Custo Unit.', dataKey: 'custo_medio_unitario' },
+    { header: 'Mínimo', dataKey: 'estoque_minimo_critico' },
+    { header: 'Consumo/Dia', dataKey: 'consumo_medio_diario' },
+  ]
+
   const handleDelete = async () => {
     if (!deleteId) return
     try {
@@ -116,14 +127,34 @@ export function InsumosTab() {
       <Card className="shadow-subtle border-none">
         <CardHeader className="flex flex-row justify-between items-center bg-slate-50 border-b">
           <CardTitle className="text-lg text-slate-800">Insumos Cadastrados</CardTitle>
-          {canEdit && (
-            <Button
-              onClick={() => handleOpenDialog()}
-              className="bg-primary hover:bg-primary/90 text-white"
-            >
-              <Plus className="w-4 h-4 mr-2" /> Novo Insumo
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            <ExportButtons
+              onExportPDF={() =>
+                exportToPDF({
+                  title: 'Estoque de Insumos',
+                  data: items,
+                  columns: exportColumns,
+                  userName: user?.name || '',
+                })
+              }
+              onExportExcel={() =>
+                exportToExcel({
+                  title: 'Estoque de Insumos',
+                  data: items,
+                  columns: exportColumns,
+                  userName: user?.name || '',
+                })
+              }
+            />
+            {canEdit && (
+              <Button
+                onClick={() => handleOpenDialog()}
+                className="bg-primary hover:bg-primary/90 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" /> Novo Insumo
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <Table>

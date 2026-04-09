@@ -15,6 +15,8 @@ import { Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import ParceiroForm from './ParceiroForm'
 import { useAuth } from '@/hooks/use-auth'
+import { ExportButtons } from '@/components/ExportButtons'
+import { exportToPDF, exportToExcel } from '@/lib/export'
 
 export default function ParceirosTab() {
   const [data, setData] = useState<any[]>([])
@@ -67,6 +69,17 @@ export default function ParceirosTab() {
     setFormOpen(true)
   }
 
+  const exportColumns = [
+    { header: 'Nome/Razão Social', dataKey: 'nome_razao_social' },
+    {
+      header: 'Documento',
+      dataKey: (r: any) =>
+        r.tipo_documento ? `${r.tipo_documento}: ${r.numero_documento}` : r.numero_documento || '-',
+    },
+    { header: 'Categoria', dataKey: 'categoria_parceiro' },
+    { header: 'Status', dataKey: 'status' },
+  ]
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -79,11 +92,31 @@ export default function ParceirosTab() {
             className="pl-8"
           />
         </div>
-        {canEdit && (
-          <Button onClick={openNew}>
-            <Plus className="w-4 h-4 mr-2" /> Novo Registro
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ExportButtons
+            onExportPDF={() =>
+              exportToPDF({
+                title: 'Parceiros de Negócios',
+                data: filtered,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+            onExportExcel={() =>
+              exportToExcel({
+                title: 'Parceiros de Negócios',
+                data: filtered,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+          />
+          {canEdit && (
+            <Button onClick={openNew}>
+              <Plus className="w-4 h-4 mr-2" /> Novo Registro
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="border rounded-md">

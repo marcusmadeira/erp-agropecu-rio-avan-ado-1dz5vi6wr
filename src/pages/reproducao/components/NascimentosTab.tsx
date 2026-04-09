@@ -40,6 +40,9 @@ import { useToast } from '@/hooks/use-toast'
 import { getNascimentos, saveNascimento, deleteNascimento } from '@/services/reproducao'
 import { useRealtime } from '@/hooks/use-realtime'
 import { format } from 'date-fns'
+import { useAuth } from '@/hooks/use-auth'
+import { ExportButtons } from '@/components/ExportButtons'
+import { exportToPDF, exportToExcel } from '@/lib/export'
 
 const schema = z.object({
   matriz_mae_id: z.string().min(1, 'Matriz mãe é obrigatória'),
@@ -56,6 +59,7 @@ export default function NascimentosTab({ animais }: { animais: any[] }) {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const { toast } = useToast()
+  const { user } = useAuth()
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -126,6 +130,21 @@ export default function NascimentosTab({ animais }: { animais: any[] }) {
     }
   }
 
+  const exportColumns = [
+    { header: 'Matriz Mãe', dataKey: (r: any) => r.expand?.matriz_mae_id?.id_manejo_brinco || '-' },
+    {
+      header: 'Data Nascimento',
+      dataKey: (r: any) =>
+        r.data_nascimento
+          ? format(new Date(r.data_nascimento.replace(' ', 'T')), 'dd/MM/yyyy')
+          : '-',
+    },
+    { header: 'Sexo', dataKey: 'sexo' },
+    { header: 'Peso Nascer', dataKey: 'peso_nascer' },
+    { header: 'Status Cria', dataKey: 'status_cria' },
+    { header: 'RGN Prov.', dataKey: 'rgn_provisorio_abcz' },
+  ]
+
   const confirmDelete = async () => {
     if (!deleteId) return
     try {
@@ -142,9 +161,32 @@ export default function NascimentosTab({ animais }: { animais: any[] }) {
     <div className="bg-white rounded-lg shadow-sm border p-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-primary">Nascimentos e Desmama</h2>
-        <Button onClick={onOpenNew} className="bg-primary hover:bg-primary/90 text-white font-bold">
-          <Plus className="w-4 h-4 mr-2" /> Novo Nascimento
-        </Button>
+        <div className="flex items-center gap-2">
+          <ExportButtons
+            onExportPDF={() =>
+              exportToPDF({
+                title: 'Nascimentos e Desmama',
+                data,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+            onExportExcel={() =>
+              exportToExcel({
+                title: 'Nascimentos e Desmama',
+                data,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+          />
+          <Button
+            onClick={onOpenNew}
+            className="bg-primary hover:bg-primary/90 text-white font-bold"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Novo Nascimento
+          </Button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">

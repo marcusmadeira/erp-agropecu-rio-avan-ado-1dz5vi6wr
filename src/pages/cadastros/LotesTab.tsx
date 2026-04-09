@@ -15,6 +15,8 @@ import { Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import LoteForm from './LoteForm'
 import { useAuth } from '@/hooks/use-auth'
+import { ExportButtons } from '@/components/ExportButtons'
+import { exportToPDF, exportToExcel } from '@/lib/export'
 
 export default function LotesTab() {
   const [data, setData] = useState<any[]>([])
@@ -65,6 +67,13 @@ export default function LotesTab() {
     setFormOpen(true)
   }
 
+  const exportColumns = [
+    { header: 'Nome do Lote', dataKey: 'nome_lote' },
+    { header: 'Centro de Custo', dataKey: 'centro_custo' },
+    { header: 'Qtd. Cabeças', dataKey: 'quantidade_cabecas' },
+    { header: 'Peso Médio (kg)', dataKey: 'peso_medio_lote' },
+  ]
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -77,11 +86,31 @@ export default function LotesTab() {
             className="pl-8"
           />
         </div>
-        {canEdit && (
-          <Button onClick={openNew}>
-            <Plus className="w-4 h-4 mr-2" /> Novo Registro
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ExportButtons
+            onExportPDF={() =>
+              exportToPDF({
+                title: 'Lotes',
+                data: filtered,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+            onExportExcel={() =>
+              exportToExcel({
+                title: 'Lotes',
+                data: filtered,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+          />
+          {canEdit && (
+            <Button onClick={openNew}>
+              <Plus className="w-4 h-4 mr-2" /> Novo Registro
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="border rounded-md">

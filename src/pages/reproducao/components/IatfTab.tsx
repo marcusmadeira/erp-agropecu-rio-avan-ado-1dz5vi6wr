@@ -40,6 +40,9 @@ import { useToast } from '@/hooks/use-toast'
 import { getIatfs, saveIatf, deleteIatf } from '@/services/reproducao'
 import { useRealtime } from '@/hooks/use-realtime'
 import { format } from 'date-fns'
+import { useAuth } from '@/hooks/use-auth'
+import { ExportButtons } from '@/components/ExportButtons'
+import { exportToPDF, exportToExcel } from '@/lib/export'
 
 const schema = z.object({
   matriz_id: z.string().min(1, 'Matriz é obrigatória'),
@@ -55,6 +58,7 @@ export default function IatfTab({ animais }: { animais: any[] }) {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const { toast } = useToast()
+  const { user } = useAuth()
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -129,6 +133,27 @@ export default function IatfTab({ animais }: { animais: any[] }) {
     }
   }
 
+  const exportColumns = [
+    { header: 'Matriz', dataKey: (r: any) => r.expand?.matriz_id?.id_manejo_brinco || '-' },
+    {
+      header: 'Data IATF',
+      dataKey: (r: any) =>
+        r.data_iatf ? format(new Date(r.data_iatf.replace(' ', 'T')), 'dd/MM/yyyy') : '-',
+    },
+    {
+      header: 'Touro Utilizado',
+      dataKey: (r: any) => r.expand?.touro_utilizado_id?.id_manejo_brinco || '-',
+    },
+    { header: 'Resultado DG', dataKey: 'resultado_dg' },
+    {
+      header: 'DPP',
+      dataKey: (r: any) =>
+        r.data_provavel_parto_dpp
+          ? format(new Date(r.data_provavel_parto_dpp.replace(' ', 'T')), 'dd/MM/yyyy')
+          : '-',
+    },
+  ]
+
   const confirmDelete = async () => {
     if (!deleteId) return
     try {
@@ -145,9 +170,32 @@ export default function IatfTab({ animais }: { animais: any[] }) {
     <div className="bg-white rounded-lg shadow-sm border p-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-primary">Manejo IATF</h2>
-        <Button onClick={onOpenNew} className="bg-primary hover:bg-primary/90 text-white font-bold">
-          <Plus className="w-4 h-4 mr-2" /> Novo Manejo IATF
-        </Button>
+        <div className="flex items-center gap-2">
+          <ExportButtons
+            onExportPDF={() =>
+              exportToPDF({
+                title: 'Manejo IATF',
+                data,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+            onExportExcel={() =>
+              exportToExcel({
+                title: 'Manejo IATF',
+                data,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+          />
+          <Button
+            onClick={onOpenNew}
+            className="bg-primary hover:bg-primary/90 text-white font-bold"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Novo Manejo IATF
+          </Button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">

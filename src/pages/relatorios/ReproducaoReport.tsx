@@ -6,8 +6,12 @@ import { getNascimentos, NascimentoDesmama } from '@/services/nascimentos'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { PieChart, Pie, Cell, Tooltip } from 'recharts'
 import { Activity, Baby, AlertTriangle, Loader2 } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
+import { ExportButtons } from '@/components/ExportButtons'
+import { exportToPDF, exportToExcel } from '@/lib/export'
 
 export default function ReproducaoReport() {
+  const { user } = useAuth()
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [iatfs, setIatfs] = useState<ManejoIatf[]>([])
@@ -63,6 +67,20 @@ export default function ReproducaoReport() {
     }
   }, [iatfs, nascimentos])
 
+  const exportColumns = [
+    { header: 'Métrica', dataKey: 'metrica' },
+    { header: 'Valor', dataKey: 'valor' },
+  ]
+
+  const exportData = [
+    { metrica: 'Taxa de Prenhez', valor: `${metrics.taxaPrenhez}%` },
+    { metrica: 'Total de Diagnósticos', valor: metrics.prenhes + metrics.vazias },
+    { metrica: 'Prenhes', valor: metrics.prenhes },
+    { metrica: 'Vazias', valor: metrics.vazias },
+    { metrica: 'Nascimentos Registrados', valor: metrics.totalNascimentos },
+    { metrica: 'Taxa de Mortalidade Bezerros', valor: `${metrics.taxaMort}%` },
+  ]
+
   const pieData = [
     { name: 'Prenhe', value: metrics.prenhes, fill: '#0f172a' },
     { name: 'Vazia', value: metrics.vazias, fill: '#cbd5e1' },
@@ -71,8 +89,26 @@ export default function ReproducaoReport() {
   return (
     <div className="space-y-6">
       <Card className="border-slate-200 shadow-sm">
-        <CardHeader className="bg-slate-50 border-b pb-4">
+        <CardHeader className="bg-slate-50 border-b pb-4 flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Filtros de Reprodução</CardTitle>
+          <ExportButtons
+            onExportPDF={() =>
+              exportToPDF({
+                title: 'Relatório de Reprodução',
+                data: exportData,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+            onExportExcel={() =>
+              exportToExcel({
+                title: 'Relatório de Reprodução',
+                data: exportData,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+          />
         </CardHeader>
         <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">

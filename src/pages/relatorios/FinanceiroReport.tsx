@@ -20,8 +20,12 @@ import {
 import { getTransacoesFinanceiras, TransacaoFinanceira } from '@/services/transacoes_financeiras'
 import { exportFinancialReportPDF } from '@/lib/pdf'
 import { Download, Loader2 } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
+import { ExportButtons } from '@/components/ExportButtons'
+import { exportToPDF, exportToExcel } from '@/lib/export'
 
 export default function FinanceiroReport() {
+  const { user } = useAuth()
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [tipo, setTipo] = useState('Todos')
@@ -61,9 +65,16 @@ export default function FinanceiroReport() {
     )
   }, [transacoes])
 
-  const handleExport = () => {
-    exportFinancialReportPDF(groupedData, { dateFrom, dateTo, tipo, classificacao })
-  }
+  const exportColumns = [
+    { header: 'Centro de Custo', dataKey: 'cc' },
+    {
+      header: 'Valor Total Consolidado (R$)',
+      dataKey: (r: any) =>
+        r.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    },
+  ]
+
+  const exportData = Object.entries(groupedData).map(([cc, total]) => ({ cc, total }))
 
   return (
     <div className="space-y-6">
@@ -114,14 +125,30 @@ export default function FinanceiroReport() {
       <Card className="border-slate-200 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between bg-slate-50 border-b pb-4">
           <CardTitle className="text-lg text-slate-800">Resumo por Centro de Custo</CardTitle>
-          <Button
-            onClick={handleExport}
-            className="bg-slate-900 text-white hover:bg-slate-800"
-            disabled={Object.keys(groupedData).length === 0}
+          <div
+            className={
+              Object.keys(groupedData).length === 0 ? 'opacity-50 pointer-events-none' : ''
+            }
           >
-            <Download className="w-4 h-4 mr-2" />
-            Exportar PDF
-          </Button>
+            <ExportButtons
+              onExportPDF={() =>
+                exportToPDF({
+                  title: 'Relatório Financeiro',
+                  data: exportData,
+                  columns: exportColumns,
+                  userName: user?.name || '',
+                })
+              }
+              onExportExcel={() =>
+                exportToExcel({
+                  title: 'Relatório Financeiro',
+                  data: exportData,
+                  columns: exportColumns,
+                  userName: user?.name || '',
+                })
+              }
+            />
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (

@@ -33,6 +33,8 @@ import {
 } from '@/components/ui/table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Edit, Trash2, Plus } from 'lucide-react'
+import { ExportButtons } from '@/components/ExportButtons'
+import { exportToPDF, exportToExcel } from '@/lib/export'
 
 export function SemenTab() {
   const { user } = useAuth()
@@ -92,6 +94,12 @@ export function SemenTab() {
     }
   }
 
+  const exportColumns = [
+    { header: 'Touro Doador', dataKey: 'touro_doador' },
+    { header: 'Botijão Armazenado', dataKey: 'botijao_armazenado' },
+    { header: 'Doses Disponíveis', dataKey: 'doses_palhetas_disponiveis' },
+  ]
+
   const handleDelete = async () => {
     if (!deleteId) return
     try {
@@ -109,14 +117,34 @@ export function SemenTab() {
       <Card className="shadow-subtle border-none">
         <CardHeader className="flex flex-row justify-between items-center bg-slate-50 border-b">
           <CardTitle className="text-lg text-slate-800">Estoque de Sêmen</CardTitle>
-          {canEdit && (
-            <Button
-              onClick={() => handleOpenDialog()}
-              className="bg-primary hover:bg-primary/90 text-white"
-            >
-              <Plus className="w-4 h-4 mr-2" /> Novo Sêmen
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            <ExportButtons
+              onExportPDF={() =>
+                exportToPDF({
+                  title: 'Estoque de Sêmen',
+                  data: items,
+                  columns: exportColumns,
+                  userName: user?.name || '',
+                })
+              }
+              onExportExcel={() =>
+                exportToExcel({
+                  title: 'Estoque de Sêmen',
+                  data: items,
+                  columns: exportColumns,
+                  userName: user?.name || '',
+                })
+              }
+            />
+            {canEdit && (
+              <Button
+                onClick={() => handleOpenDialog()}
+                className="bg-primary hover:bg-primary/90 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" /> Novo Sêmen
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <Table>

@@ -14,8 +14,12 @@ import { getPesagens, PesagemDiaria } from '@/services/pesagens'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { Scale, TrendingUp, Users, Loader2 } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
+import { ExportButtons } from '@/components/ExportButtons'
+import { exportToPDF, exportToExcel } from '@/lib/export'
 
 export default function DesempenhoReport() {
+  const { user } = useAuth()
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [loteId, setLoteId] = useState('Todos')
@@ -97,6 +101,37 @@ export default function DesempenhoReport() {
     }
   }, [animais, pesagens])
 
+  const exportColumns = [
+    { header: 'Animal', dataKey: 'brinco' },
+    { header: 'Categoria', dataKey: 'categoria' },
+    { header: 'Peso Atual (kg)', dataKey: (r: any) => r.peso.toFixed(1) },
+    { header: 'GMD (kg/dia)', dataKey: (r: any) => r.gmd.toFixed(3) },
+  ]
+
+  const exportData = useMemo(() => {
+    return animais.map((a) => {
+      const p = pesagens
+        .filter((pes) => pes.animal_id === a.id)
+        .sort((x, y) => x.data_pesagem.localeCompare(y.data_pesagem))
+      let gmd = 0
+      let avgWeight = p.length > 0 ? p[p.length - 1].peso_kg : 0
+      if (p.length > 1) {
+        const first = p[0]
+        const last = p[p.length - 1]
+        const days =
+          (new Date(last.data_pesagem).getTime() - new Date(first.data_pesagem).getTime()) /
+          (1000 * 3600 * 24)
+        if (days > 0) gmd = (last.peso_kg - first.peso_kg) / days
+      }
+      return {
+        brinco: a.id_manejo_brinco,
+        categoria: a.categoria,
+        peso: avgWeight,
+        gmd: gmd,
+      }
+    })
+  }, [animais, pesagens])
+
   const chartData = useMemo(() => {
     const grouped = pesagens.reduce(
       (acc, p) => {
@@ -119,8 +154,26 @@ export default function DesempenhoReport() {
   return (
     <div className="space-y-6">
       <Card className="border-slate-200 shadow-sm">
-        <CardHeader className="bg-slate-50 border-b pb-4">
+        <CardHeader className="bg-slate-50 border-b pb-4 flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Filtros de Desempenho</CardTitle>
+          <ExportButtons
+            onExportPDF={() =>
+              exportToPDF({
+                title: 'Relatório de Desempenho',
+                data: exportData,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+            onExportExcel={() =>
+              exportToExcel({
+                title: 'Relatório de Desempenho',
+                data: exportData,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+          />
         </CardHeader>
         <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">

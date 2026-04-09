@@ -5,8 +5,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Loader2 } from 'lucide-react'
 import { RebanhoTab } from '@/components/desempenho/RebanhoTab'
 import { EstoqueTab } from '@/components/desempenho/EstoqueTab'
+import { useAuth } from '@/hooks/use-auth'
+import { ExportButtons } from '@/components/ExportButtons'
+import { exportToPDF, exportToExcel } from '@/lib/export'
 
 export default function Desempenho() {
+  const { user } = useAuth()
+  const [activeTab, setActiveTab] = useState('rebanho')
   const [animais, setAnimais] = useState<any[]>([])
   const [estoque, setEstoque] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -41,16 +46,73 @@ export default function Desempenho() {
     )
   }
 
+  const handleExportPDF = () => {
+    if (activeTab === 'rebanho') {
+      exportToPDF({
+        title: 'Desempenho - Rebanho',
+        data: animais,
+        columns: [
+          { header: 'Brinco', dataKey: 'id_manejo_brinco' },
+          { header: 'Categoria', dataKey: 'categoria' },
+          { header: 'Lote', dataKey: (r: any) => r.expand?.lote_atual?.nome_lote || '-' },
+          { header: 'Peso Atual (kg)', dataKey: 'peso_atual_kg' },
+        ],
+        userName: user?.name || '',
+      })
+    } else {
+      exportToPDF({
+        title: 'Desempenho - Estoque',
+        data: estoque,
+        columns: [
+          { header: 'Produto', dataKey: 'produto' },
+          { header: 'Qtd Atual', dataKey: 'quantidade_atual' },
+          { header: 'Unidade', dataKey: 'unidade_medida' },
+        ],
+        userName: user?.name || '',
+      })
+    }
+  }
+
+  const handleExportExcel = () => {
+    if (activeTab === 'rebanho') {
+      exportToExcel({
+        title: 'Desempenho - Rebanho',
+        data: animais,
+        columns: [
+          { header: 'Brinco', dataKey: 'id_manejo_brinco' },
+          { header: 'Categoria', dataKey: 'categoria' },
+          { header: 'Lote', dataKey: (r: any) => r.expand?.lote_atual?.nome_lote || '-' },
+          { header: 'Peso Atual (kg)', dataKey: 'peso_atual_kg' },
+        ],
+        userName: user?.name || '',
+      })
+    } else {
+      exportToExcel({
+        title: 'Desempenho - Estoque',
+        data: estoque,
+        columns: [
+          { header: 'Produto', dataKey: 'produto' },
+          { header: 'Qtd Atual', dataKey: 'quantidade_atual' },
+          { header: 'Unidade', dataKey: 'unidade_medida' },
+        ],
+        userName: user?.name || '',
+      })
+    }
+  }
+
   return (
     <div className="space-y-6 pb-10 animate-fade-in text-black">
-      <div>
-        <h2 className="text-2xl font-bold text-[#0f172a] tracking-tight">Desempenho</h2>
-        <p className="text-sm text-muted-foreground">
-          Monitoramento em tempo real do Rebanho e Estoque.
-        </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-[#0f172a] tracking-tight">Desempenho</h2>
+          <p className="text-sm text-muted-foreground">
+            Monitoramento em tempo real do Rebanho e Estoque.
+          </p>
+        </div>
+        <ExportButtons onExportPDF={handleExportPDF} onExportExcel={handleExportExcel} />
       </div>
 
-      <Tabs defaultValue="rebanho" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="bg-white border mb-4">
           <TabsTrigger
             value="rebanho"

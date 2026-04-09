@@ -15,6 +15,8 @@ import { Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import AnimalForm from './AnimalForm'
 import { useAuth } from '@/hooks/use-auth'
+import { ExportButtons } from '@/components/ExportButtons'
+import { exportToPDF, exportToExcel } from '@/lib/export'
 
 export default function AnimaisTab() {
   const [data, setData] = useState<any[]>([])
@@ -67,6 +69,14 @@ export default function AnimaisTab() {
     setFormOpen(true)
   }
 
+  const exportColumns = [
+    { header: 'Brinco', dataKey: 'id_manejo_brinco' },
+    { header: 'Categoria', dataKey: 'categoria' },
+    { header: 'Lote Atual', dataKey: (r: any) => r.expand?.lote_atual?.nome_lote || '-' },
+    { header: 'Peso (kg)', dataKey: 'peso_atual_kg' },
+    { header: 'Status', dataKey: 'status' },
+  ]
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -79,11 +89,31 @@ export default function AnimaisTab() {
             className="pl-8"
           />
         </div>
-        {canEdit && (
-          <Button onClick={openNew}>
-            <Plus className="w-4 h-4 mr-2" /> Novo Registro
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ExportButtons
+            onExportPDF={() =>
+              exportToPDF({
+                title: 'Animais',
+                data: filtered,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+            onExportExcel={() =>
+              exportToExcel({
+                title: 'Animais',
+                data: filtered,
+                columns: exportColumns,
+                userName: user?.name || '',
+              })
+            }
+          />
+          {canEdit && (
+            <Button onClick={openNew}>
+              <Plus className="w-4 h-4 mr-2" /> Novo Registro
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="border rounded-md">
