@@ -219,48 +219,70 @@ export default function Transacoes() {
 
                 return (
                   <TableRow key={t.id}>
-                    <TableCell className="font-mono text-xs font-bold text-secondary">
+                    <TableCell className="font-mono text-xs font-bold text-secondary flex justify-between items-center md:table-cell border-b md:border-b-0 pb-2 md:pb-4">
+                      <span className="md:hidden text-muted-foreground font-normal">
+                        Vencimento
+                      </span>
                       {safeFormatDate(t.Data_Vencimento)}
                     </TableCell>
-                    <TableCell className="font-bold text-secondary">
-                      {t.Descricao_Lancamento}
-                      {partner && (
-                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1 font-medium">
-                          <User className="w-3 h-3" /> {partner.Nome_Razao_Social}
+                    <TableCell className="font-bold text-secondary flex flex-col md:table-cell py-3 md:py-4">
+                      <span className="md:hidden text-muted-foreground font-normal text-xs mb-1">
+                        Descrição / Parceiro
+                      </span>
+                      <div>
+                        {t.Descricao_Lancamento}
+                        {partner && (
+                          <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1 font-medium">
+                            <User className="w-3 h-3" /> {partner.Nome_Razao_Social}
+                          </div>
+                        )}
+                        <div className="text-[10px] uppercase mt-1 flex gap-1">
+                          <span
+                            className={
+                              t.Tipo_Movimento === 'Receita'
+                                ? 'text-primary font-bold'
+                                : 'text-destructive font-bold'
+                            }
+                          >
+                            {t.Tipo_Movimento}
+                          </span>
+                          <span className="text-muted-foreground">• {t.Classificacao_Custo}</span>
                         </div>
-                      )}
-                      <div className="text-[10px] uppercase mt-1 flex gap-1">
-                        <span
-                          className={
-                            t.Tipo_Movimento === 'Receita'
-                              ? 'text-primary font-bold'
-                              : 'text-destructive font-bold'
-                          }
-                        >
-                          {t.Tipo_Movimento}
-                        </span>
-                        <span className="text-muted-foreground">• {t.Classificacao_Custo}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="text-xs font-bold text-secondary">
-                        {t.Macroconta_Inttegra}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground font-medium">
-                        {t.Categoria_Inttegra}{' '}
-                        {t.Subcategoria_Detalhe ? ` > ${t.Subcategoria_Detalhe}` : ''}
+                    <TableCell className="flex justify-between items-center md:table-cell py-2 md:py-4 border-t border-slate-100 md:border-0">
+                      <span className="md:hidden text-muted-foreground font-normal text-xs">
+                        DRE
+                      </span>
+                      <div className="text-right md:text-left">
+                        <div className="text-xs font-bold text-secondary">
+                          {t.Macroconta_Inttegra}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground font-medium">
+                          {t.Categoria_Inttegra}{' '}
+                          {t.Subcategoria_Detalhe ? ` > ${t.Subcategoria_Detalhe}` : ''}
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-xs font-bold text-secondary">
+                    <TableCell className="text-xs font-bold text-secondary flex justify-between items-center md:table-cell py-2 md:py-4">
+                      <span className="md:hidden text-muted-foreground font-normal">C.Custo</span>
                       {t.Centro_Custo_Direcionado}
                     </TableCell>
                     <TableCell
-                      className={`text-right font-mono font-bold ${t.Tipo_Movimento === 'Receita' ? 'text-primary' : 'text-destructive'}`}
+                      className={`text-right font-mono font-bold flex justify-between items-center md:table-cell py-2 md:py-4 ${t.Tipo_Movimento === 'Receita' ? 'text-primary' : 'text-destructive'}`}
                     >
-                      {t.Tipo_Movimento === 'Receita' ? '+' : '-'}
-                      {formatCurrency(t.Valor_Total)}
+                      <span className="md:hidden text-muted-foreground font-normal text-xs">
+                        Valor
+                      </span>
+                      <span>
+                        {t.Tipo_Movimento === 'Receita' ? '+' : '-'}
+                        {formatCurrency(t.Valor_Total)}
+                      </span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="flex justify-between items-center md:table-cell py-2 md:py-4">
+                      <span className="md:hidden text-muted-foreground font-normal text-xs">
+                        Status
+                      </span>
                       <Badge
                         variant={
                           t.Status_Pagamento === 'Efetivado'
@@ -273,7 +295,7 @@ export default function Transacoes() {
                         {t.Status_Pagamento}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right pt-4 pb-2 md:py-4 border-t border-slate-100 md:border-0 flex justify-end md:table-cell">
                       <div className="flex justify-end gap-2 items-center">
                         {t.Tipo_Movimento === 'Receita' &&
                           t.Status_Pagamento !== 'Efetivado' &&

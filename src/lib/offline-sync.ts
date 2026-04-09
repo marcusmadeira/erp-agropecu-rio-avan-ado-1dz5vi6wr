@@ -39,14 +39,22 @@ export const processOfflineQueue = async () => {
 
   for (const action of queue) {
     try {
-      await fetch(action.url, {
+      const res = await fetch(action.url, {
         method: action.method,
         headers: action.headers,
         body: action.body,
       })
-      console.log(`[Offline Sync] Successfully synced action ${action.id}`)
+
+      if (!res.ok) {
+        console.error(`[Offline Sync] Action ${action.id} failed with status ${res.status}`)
+        if (res.status >= 500) {
+          remaining.push(action)
+        }
+      } else {
+        console.log(`[Offline Sync] Successfully synced action ${action.id}`)
+      }
     } catch (e) {
-      console.error(`[Offline Sync] Failed to sync action ${action.id}`, e)
+      console.error(`[Offline Sync] Network failure syncing action ${action.id}`, e)
       remaining.push(action)
     }
   }
