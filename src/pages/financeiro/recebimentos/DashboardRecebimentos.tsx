@@ -1,17 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DollarSign, AlertCircle, CheckCircle, TrendingDown } from 'lucide-react'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-} from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts'
 import { format, isSameMonth } from 'date-fns'
 
 export default function DashboardRecebimentos({ boletos }: { boletos: any[] }) {
@@ -26,7 +16,8 @@ export default function DashboardRecebimentos({ boletos }: { boletos: any[] }) {
   const evolution: Record<string, number> = {}
 
   boletos.forEach((b) => {
-    const valor = b.valor_boleto || b.expand?.parcela_id?.valor_parcela || 0
+    const parcela = b.expand?.parcela_id || {}
+    const valor = b.valor_boleto || parcela.valor_total_com_juros || parcela.valor_parcela || 0
     const status = b.status_boleto
     const dtVenc = b.data_vencimento ? new Date(b.data_vencimento) : hoje
 
@@ -122,24 +113,22 @@ export default function DashboardRecebimentos({ boletos }: { boletos: any[] }) {
                 Atrasado: { label: 'Atrasado', color: '#dc2626' },
               }}
             >
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </PieChart>
             </ChartContainer>
           </CardContent>
         </Card>
@@ -152,15 +141,13 @@ export default function DashboardRecebimentos({ boletos }: { boletos: any[] }) {
               className="h-full w-full"
               config={{ value: { label: 'Recebido', color: '#094016' } }}
             >
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={lineData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line type="monotone" dataKey="value" stroke="var(--color-value)" />
-                </LineChart>
-              </ResponsiveContainer>
+              <LineChart data={lineData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line type="monotone" dataKey="value" stroke="var(--color-value)" />
+              </LineChart>
             </ChartContainer>
           </CardContent>
         </Card>

@@ -120,39 +120,48 @@ export default function RecebimentoBoletos() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExportarExcel}>
+          <Button variant="outline" onClick={handleExportarExcel} disabled={boletos.length === 0}>
             <Download className="w-4 h-4 mr-2" /> Excel
           </Button>
-          <Button variant="default" onClick={handleExportarPDF}>
+          <Button variant="default" onClick={handleExportarPDF} disabled={boletos.length === 0}>
             <Download className="w-4 h-4 mr-2" /> PDF
           </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid grid-cols-5 w-full bg-slate-100">
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="pendentes">Pendentes</TabsTrigger>
-          <TabsTrigger value="recebidos">Recebidos</TabsTrigger>
-          <TabsTrigger value="atrasados">Atrasados</TabsTrigger>
-          <TabsTrigger value="historico">Histórico</TabsTrigger>
-        </TabsList>
-        <TabsContent value="dashboard">
-          <DashboardRecebimentos boletos={boletos} />
-        </TabsContent>
-        <TabsContent value="pendentes">
-          <BoletosPendentes boletos={boletos} onRefresh={loadData} />
-        </TabsContent>
-        <TabsContent value="recebidos">
-          <BoletosRecebidos boletos={boletos} />
-        </TabsContent>
-        <TabsContent value="atrasados">
-          <BoletosAtrasados boletos={boletos} onRefresh={loadData} />
-        </TabsContent>
-        <TabsContent value="historico">
-          <HistoricoCobrancas historico={historico} />
-        </TabsContent>
-      </Tabs>
+      {boletos.length === 0 && historico.length === 0 ? (
+        <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-12 text-center flex flex-col items-center justify-center">
+          <p className="text-muted-foreground text-lg font-medium">Nenhum dado disponível</p>
+          <p className="text-sm text-slate-500 mt-2">
+            Ainda não há boletos ou parcelas registradas para exibição.
+          </p>
+        </div>
+      ) : (
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid grid-cols-5 w-full bg-slate-100">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="pendentes">Pendentes</TabsTrigger>
+            <TabsTrigger value="recebidos">Recebidos</TabsTrigger>
+            <TabsTrigger value="atrasados">Atrasados</TabsTrigger>
+            <TabsTrigger value="historico">Histórico</TabsTrigger>
+          </TabsList>
+          <TabsContent value="dashboard">
+            <DashboardRecebimentos boletos={boletos} />
+          </TabsContent>
+          <TabsContent value="pendentes">
+            <BoletosPendentes boletos={boletos} onRefresh={loadData} />
+          </TabsContent>
+          <TabsContent value="recebidos">
+            <BoletosRecebidos boletos={boletos} />
+          </TabsContent>
+          <TabsContent value="atrasados">
+            <BoletosAtrasados boletos={boletos} onRefresh={loadData} />
+          </TabsContent>
+          <TabsContent value="historico">
+            <HistoricoCobrancas historico={historico} />
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   )
 }
