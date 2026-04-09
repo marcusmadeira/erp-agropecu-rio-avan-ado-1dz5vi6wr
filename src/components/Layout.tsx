@@ -28,6 +28,7 @@ import {
   RefreshCw,
   AlertTriangle,
   Heart,
+  Scale,
 } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
 import { useEffect, useState } from 'react'
@@ -65,6 +66,7 @@ const navItems = [
   { module: 'Dashboard Financeiro', icon: Home, path: '/', levels: [1] },
   { module: 'Rebanho + Estoque', icon: LineChart, path: '/desempenho', levels: [1, 2, 3] },
   { module: 'Parceiros, Animais, Lotes', icon: Users, path: '/cadastros', levels: [1, 3] },
+  { module: 'Pesagem', icon: Scale, path: '/pesagem', levels: [1, 3] },
   { module: 'Reprodução', icon: Heart, path: '/reproducao', levels: [1, 3] },
   { module: 'Insumos, Rações', icon: Box, path: '/estoque', levels: [1] },
   { module: 'Transações', icon: DollarSign, path: '/financeiro', levels: [1, 2] },

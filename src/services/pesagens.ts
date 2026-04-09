@@ -9,6 +9,13 @@ export interface PesagemDiaria {
   observacoes?: string
   created: string
   updated: string
+  expand?: {
+    animal_id?: {
+      id: string
+      id_manejo_brinco: string
+      [key: string]: any
+    }
+  }
 }
 
 export const getPesagens = async (options?: any) => {

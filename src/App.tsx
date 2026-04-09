@@ -25,6 +25,7 @@ import Importacao from './pages/admin/Importacao'
 import Pastos from './pages/estrutura/Pastos'
 import Lotes from './pages/estrutura/Lotes'
 import Animais from './pages/rebanho/Animais'
+import Pesagem from './pages/rebanho/Pesagem'
 import CurralDigital from './pages/rebanho/CurralDigital'
 import Reclassificacao from './pages/rebanho/Reclassificacao'
 import Apartacao from './pages/rebanho/Apartacao'
@@ -221,7 +222,7 @@ const AppRoutes = () => (
         path="/pesagem"
         element={
           <AuthorizeRoute allowedRoles={[1, 3]}>
-            <CurralDigital />
+            <Pesagem />
           </AuthorizeRoute>
         }
       />
