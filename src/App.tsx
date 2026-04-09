@@ -42,6 +42,8 @@ import FabricaRacao from './pages/suprimentos/FabricaRacao'
 import Transacoes from './pages/financeiro/Transacoes'
 import EventosComerciais from './pages/financeiro/EventosComerciais'
 import Parceiros from './pages/financeiro/Parceiros'
+import EventosVenda from './pages/vendas/Eventos'
+import EventoDetalhes from './pages/vendas/EventoDetalhes'
 import Maquinario from './pages/operacoes/Maquinario'
 import Clima from './pages/operacoes/Clima'
 import Notificacoes from './pages/Notificacoes'
@@ -342,6 +344,22 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1, 2]}>
             <EventosComerciais />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/vendas/eventos"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+            <EventosVenda />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/vendas/eventos/:id"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+            <EventoDetalhes />
           </AuthorizeRoute>
         }
       />

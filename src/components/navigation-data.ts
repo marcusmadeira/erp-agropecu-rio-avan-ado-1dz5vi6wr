@@ -70,6 +70,7 @@ export const navigationMenu = [
       { title: 'Transações', url: '/transacoes', icon: Landmark },
       { title: 'Parceiros', url: '/parceiros', icon: Users },
       { title: 'Eventos Comerciais', url: '/eventos-comerciais', icon: CalendarDays },
+      { title: 'Eventos de Venda', url: '/vendas/eventos', icon: CalendarDays },
     ],
   },
   {

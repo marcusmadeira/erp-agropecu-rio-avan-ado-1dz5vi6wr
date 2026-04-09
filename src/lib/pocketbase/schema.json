@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T11:48:28.088Z",
+  "generatedAt": "2026-04-09T12:09:33.887Z",
   "collections": [
     {
       "name": "users",
@@ -1288,6 +1288,137 @@
           "name": "registros_ids",
           "type": "json",
           "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "eventos_venda",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+      },
+      "fields": [
+        {
+          "name": "nome_evento",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "tipo_evento",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Leilão", "Feira", "Venda_Fazenda"]
+        },
+        {
+          "name": "data_evento",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "local",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "responsavel_evento",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Planejado", "Em_Andamento", "Finalizado"]
+        },
+        {
+          "name": "custo_total_evento",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "receita_total_evento",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "custos_evento",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+      },
+      "fields": [
+        {
+          "name": "evento_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "eventos_venda"
+        },
+        {
+          "name": "descricao_custo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "valor_custo",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_custo",
+          "type": "date",
+          "required": true,
           "system": false
         },
         {
