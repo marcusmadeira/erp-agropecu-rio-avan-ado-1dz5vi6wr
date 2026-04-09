@@ -1,0 +1,23 @@
+{
+  "name": "Gestão Pecuária 360º",
+  "short_name": "Pecuária 360",
+  "description": "Sistema ERP relacional completo e avançado para gestão de pecuária de corte",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000080",
+  "theme_color": "#000080",
+  "icons": [
+    {
+      "src": "https://img.usecurling.com/p/192/192?q=farm&color=blue",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://img.usecurling.com/p/512/512?q=farm&color=blue",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
