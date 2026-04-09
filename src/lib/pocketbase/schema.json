@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T10:49:58.655Z",
+  "generatedAt": "2026-04-09T10:57:12.298Z",
   "collections": [
     {
       "name": "users",
@@ -959,6 +959,213 @@
       ],
       "indexes": [
         "CREATE INDEX idx_notificacoes_usuario ON notificacoes (usuario_id, created DESC)"
+      ]
+    },
+    {
+      "name": "formulacoes_racao",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+      },
+      "fields": [
+        {
+          "name": "nome_formulacao",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "custo_kg_produzido",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "itens_formulacao",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+      },
+      "fields": [
+        {
+          "name": "formulacao_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "formulacoes_racao"
+        },
+        {
+          "name": "insumo_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "estoque_insumos"
+        },
+        {
+          "name": "quantidade_kg",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_itens_form_formulacao ON itens_formulacao (formulacao_id)",
+        "CREATE INDEX idx_itens_form_insumo ON itens_formulacao (insumo_id)"
+      ]
+    },
+    {
+      "name": "producao_diaria_racao",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)"
+      },
+      "fields": [
+        {
+          "name": "data",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "formulacao_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "formulacoes_racao"
+        },
+        {
+          "name": "quantidade_kg_produzida",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "custo_total",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_producao_formulacao ON producao_diaria_racao (formulacao_id)"]
+    },
+    {
+      "name": "trato_diario_lotes",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)"
+      },
+      "fields": [
+        {
+          "name": "data",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "lote_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "lotes"
+        },
+        {
+          "name": "formulacao_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "formulacoes_racao"
+        },
+        {
+          "name": "quantidade_kg_servida",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "custo_total_trato",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_trato_lote ON trato_diario_lotes (lote_id)",
+        "CREATE INDEX idx_trato_formulacao ON trato_diario_lotes (formulacao_id)"
       ]
     }
   ]
