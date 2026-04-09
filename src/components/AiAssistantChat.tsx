@@ -48,20 +48,34 @@ export function AiAssistantChat({ contextData, onAcceptSuggestion }: AiAssistant
     }
   }, [contextData.categoria, contextData.animais])
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return
-    setMessages((prev) => [...prev, { role: 'user', text: input }])
+    const userMsg = input
+    setMessages((prev) => [...prev, { role: 'user', text: userMsg }])
     setInput('')
 
-    setTimeout(() => {
+    try {
+      const pb = (await import('@/lib/pocketbase/client')).default
+      const res = await pb.send('/backend/v1/ai-assistant', {
+        method: 'POST',
+        body: JSON.stringify({ pergunta: userMsg }),
+      })
       setMessages((prev) => [
         ...prev,
         {
           role: 'ai',
-          text: 'Ainda estou em fase de aprendizado contínuo, mas registrei sua preferência para melhorar as próximas sugestões!',
+          text: res.resposta || 'Anotado! Como posso ajudar mais?',
         },
       ])
-    }, 1000)
+    } catch (e) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'ai',
+          text: 'Ainda estou em fase de aprendizado contínuo. Desculpe, não consegui conectar à base no momento.',
+        },
+      ])
+    }
   }
 
   return (

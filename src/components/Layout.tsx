@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { LogOut, WifiOff } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useNetwork } from '@/hooks/use-network'
+import { FloatingAiChat } from './FloatingAiChat'
 
 export default function Layout() {
   const { signOut } = useAuth()
@@ -42,6 +43,7 @@ export default function Layout() {
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 dark:bg-slate-900">
           <Outlet />
+          <FloatingAiChat />
         </main>
       </SidebarInset>
     </SidebarProvider>
