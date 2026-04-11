@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T18:07:26.753Z",
+  "generatedAt": "2026-04-11T13:56:50.920Z",
   "collections": [
     {
       "name": "users",
@@ -39,12 +39,6 @@
           "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
-          "name": "nivel_acesso",
-          "type": "number",
-          "required": false,
-          "system": false
-        },
-        {
           "name": "email_notifications",
           "type": "bool",
           "required": false,
@@ -63,6 +57,19 @@
           "required": false,
           "system": false,
           "selectValues": ["pt", "en"]
+        },
+        {
+          "name": "nivel_acesso",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Gerente", "Financeiro", "Operacional"]
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
