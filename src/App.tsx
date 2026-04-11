@@ -11,7 +11,6 @@ import { BackgroundSync } from './components/BackgroundSync'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
 import EmailConfirmation from './pages/EmailConfirmation'
 import NotFound from './pages/NotFound'
 import Dashboard from './pages/Dashboard'
@@ -107,19 +106,12 @@ const AppRoutes = () => (
         </PublicRoute>
       }
     />
+    <Route path="/forgot-password" element={<Navigate to="/recuperar-senha" replace />} />
     <Route
-      path="/forgot-password"
+      path="/recuperar-senha"
       element={
         <PublicRoute>
           <ForgotPassword />
-        </PublicRoute>
-      }
-    />
-    <Route
-      path="/reset-password"
-      element={
-        <PublicRoute>
-          <ResetPassword />
         </PublicRoute>
       }
     />

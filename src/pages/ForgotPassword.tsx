@@ -3,25 +3,29 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import { ToribaLogo } from '@/components/ToribaLogo'
+import pb from '@/lib/pocketbase/client'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 export default function ForgotPassword() {
-  const [method, setMethod] = useState<'email' | 'whatsapp'>('email')
-  const [contact, setContact] = useState('')
+  const [step, setStep] = useState<1 | 2>(1)
+  const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { toast } = useToast()
 
-  const handleRecover = (e: React.FormEvent) => {
+  const handleRequestCode = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!contact) {
+    if (!email || !email.includes('@')) {
       toast({
-        title: 'Campo obrigatório',
-        description: 'Por favor, preencha o campo de contato.',
+        title: 'E-mail inválido',
+        description: 'Por favor, insira um endereço de e-mail válido.',
         variant: 'destructive',
       })
       return
@@ -29,15 +33,82 @@ export default function ForgotPassword() {
 
     setIsLoading(true)
 
-    setTimeout(() => {
-      setIsLoading(false)
-      const methodLabel = method === 'email' ? 'E-mail' : 'WhatsApp'
-      toast({
-        title: 'Recuperação Solicitada',
-        description: `Link de recuperação enviado com sucesso via ${methodLabel}.`,
+    try {
+      await pb.send('/backend/v1/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+        headers: { 'Content-Type': 'application/json' },
       })
-      navigate('/reset-password')
-    }, 1500)
+
+      toast({
+        title: 'Código Enviado',
+        description: 'Verifique sua caixa de entrada com o código de 6 dígitos.',
+      })
+      setStep(2)
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (code.length !== 6) {
+      toast({
+        title: 'Código inválido',
+        description: 'O código deve ter exatamente 6 dígitos.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (password !== confirmPassword) {
+      toast({
+        title: 'As senhas não conferem',
+        description: 'A nova senha e a confirmação devem ser iguais.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (password.length < 8) {
+      toast({
+        title: 'Senha muito curta',
+        description: 'A senha deve ter pelo menos 8 caracteres.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const res = await pb.send('/backend/v1/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ email, code, newPassword: password }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      toast({
+        title: 'Sucesso',
+        description: res.message || 'Senha redefinida com sucesso! Você já pode fazer login.',
+      })
+      navigate('/login')
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: getErrorMessage(error) || 'Código inválido ou expirado',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -57,57 +128,107 @@ export default function ForgotPassword() {
           <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
             <ToribaLogo className="w-10 h-10 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold text-primary tracking-tight">
+          <CardTitle className="text-2xl font-bold text-primary tracking-tight font-sans">
             Recuperar Senha
           </CardTitle>
-          <CardDescription>Escolha como deseja receber o link de acesso</CardDescription>
+          <CardDescription className="font-sans">
+            {step === 1
+              ? 'Informe seu e-mail para receber o código de verificação'
+              : 'Insira o código recebido e sua nova senha'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleRecover} className="space-y-6">
-            <RadioGroup
-              value={method}
-              onValueChange={(value: 'email' | 'whatsapp') => setMethod(value)}
-              className="flex gap-4"
+          {step === 1 ? (
+            <form onSubmit={handleRequestCode} className="space-y-6 font-sans">
+              <div className="space-y-2">
+                <Label htmlFor="email">Endereço de E-mail</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="usuario@toriba.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-primary hover:bg-[#073010] text-white h-12"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  'Enviar Código'
+                )}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleResetPassword} className="space-y-4 font-sans">
+              <div className="space-y-2">
+                <Label htmlFor="code">Código de Verificação (6 dígitos)</Label>
+                <Input
+                  id="code"
+                  type="text"
+                  placeholder="000000"
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Nova Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Mínimo 8 caracteres"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Repita a nova senha"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-primary hover:bg-[#073010] text-white h-12 mt-4"
+                disabled={isLoading || !code || !password || !confirmPassword}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Redefinir Senha'
+                )}
+              </Button>
+            </form>
+          )}
+
+          <div className="mt-6 text-center">
+            <Link
+              to="/login"
+              className="text-sm text-primary/80 hover:text-primary font-medium font-sans"
             >
-              <div className="flex items-center space-x-2 border rounded-md p-3 flex-1 cursor-pointer hover:bg-slate-50 transition-colors">
-                <RadioGroupItem value="email" id="r-email" />
-                <Label htmlFor="r-email" className="cursor-pointer flex-1">
-                  E-mail
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 border rounded-md p-3 flex-1 cursor-pointer hover:bg-slate-50 transition-colors">
-                <RadioGroupItem value="whatsapp" id="r-whatsapp" />
-                <Label htmlFor="r-whatsapp" className="cursor-pointer flex-1">
-                  WhatsApp
-                </Label>
-              </div>
-            </RadioGroup>
-
-            <div className="space-y-2">
-              <Label htmlFor="contact">
-                {method === 'email' ? 'Endereço de E-mail' : 'Número de WhatsApp'}
-              </Label>
-              <Input
-                id="contact"
-                type={method === 'email' ? 'email' : 'tel'}
-                placeholder={method === 'email' ? 'usuario@toriba.com' : '(00) 00000-0000'}
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
-                required
-              />
-            </div>
-
-            <Button type="submit" className="w-full bg-primary h-12" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                'Enviar Link de Recuperação'
-              )}
-            </Button>
-          </form>
+              Voltar para Login
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
