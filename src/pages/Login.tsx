@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,8 +15,19 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const { signIn } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const { toast } = useToast()
   const { logoUrl } = useSystemConfig()
+
+  useEffect(() => {
+    if (location.state && typeof location.state === 'object' && 'message' in location.state) {
+      toast({
+        title: 'Sucesso',
+        description: (location.state as { message: string }).message,
+      })
+      window.history.replaceState({}, document.title)
+    }
+  }, [location.state, toast])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()

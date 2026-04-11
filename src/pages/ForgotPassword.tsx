@@ -70,8 +70,8 @@ export default function ForgotPassword() {
 
     if (password !== confirmPassword) {
       toast({
-        title: 'As senhas não conferem',
-        description: 'A nova senha e a confirmação devem ser iguais.',
+        title: 'Erro',
+        description: 'As senhas não conferem',
         variant: 'destructive',
       })
       return
@@ -89,21 +89,19 @@ export default function ForgotPassword() {
     setIsLoading(true)
 
     try {
-      const res = await pb.send('/backend/v1/auth/reset-password', {
+      await pb.send('/backend/v1/auth/reset-password', {
         method: 'POST',
         body: JSON.stringify({ email, code, newPassword: password }),
         headers: { 'Content-Type': 'application/json' },
       })
 
-      toast({
-        title: 'Sucesso',
-        description: res.message || 'Senha redefinida com sucesso! Você já pode fazer login.',
+      navigate('/login', {
+        state: { message: 'Senha redefinida com sucesso! Faça login com suas novas credenciais' },
       })
-      navigate('/login')
     } catch (error) {
       toast({
         title: 'Erro',
-        description: getErrorMessage(error) || 'Código inválido ou expirado',
+        description: 'Código inválido ou expirado',
         variant: 'destructive',
       })
     } finally {
@@ -154,7 +152,7 @@ export default function ForgotPassword() {
 
               <Button
                 type="submit"
-                className="w-full bg-primary hover:bg-[#073010] text-white h-12"
+                className="w-full bg-[#094016] hover:bg-[#073010] text-white h-12"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -206,7 +204,7 @@ export default function ForgotPassword() {
 
               <Button
                 type="submit"
-                className="w-full bg-primary hover:bg-[#073010] text-white h-12 mt-4"
+                className="w-full bg-[#094016] hover:bg-[#073010] text-white h-12 mt-4"
                 disabled={isLoading || !code || !password || !confirmPassword}
               >
                 {isLoading ? (

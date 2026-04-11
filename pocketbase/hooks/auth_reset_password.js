@@ -30,7 +30,9 @@ routerAdd('POST', '/backend/v1/auth/reset-password', (e) => {
     user.set('validade_codigo', '')
     $app.saveNoValidate(user)
 
-    return e.json(200, { message: 'Senha redefinida com sucesso! Você já pode fazer login.' })
+    return e.json(200, {
+      message: 'Senha redefinida com sucesso! Faça login com suas novas credenciais',
+    })
   } catch (err) {
     if (err.message === 'sql: no rows in result set') {
       throw new NotFoundError('Usuário não encontrado.')
