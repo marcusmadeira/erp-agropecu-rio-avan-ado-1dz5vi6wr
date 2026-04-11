@@ -97,17 +97,11 @@ export default function Register() {
         nivel_acesso: values.nivel_acesso,
       })
 
-      try {
-        await pb.collection('users').requestVerification(values.email)
-      } catch (e) {
-        console.error('Verification email error', e)
-      }
-
       toast({
         title: 'Cadastro realizado!',
         description: 'Redirecionando para as instruções...',
       })
-      navigate('/confirmacao-email', { replace: true })
+      navigate('/confirmacao-email', { replace: true, state: { email: values.email } })
     } catch (error: any) {
       const fieldErrors = extractFieldErrors(error)
       if (Object.keys(fieldErrors).length > 0) {

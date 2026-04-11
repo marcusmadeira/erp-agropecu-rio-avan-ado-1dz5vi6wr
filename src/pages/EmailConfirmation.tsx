@@ -32,14 +32,14 @@ export default function EmailConfirmation() {
       })
 
       toast({
-        title: 'Email verificado!',
-        description: 'Sua conta foi ativada com sucesso. Você já pode fazer login.',
+        title: 'Sucesso!',
+        description: 'Email confirmado com sucesso! Faça login com suas credenciais',
       })
       navigate('/login')
     } catch (error: any) {
       toast({
         title: 'Código inválido',
-        description: error?.response?.message || 'Verifique o código digitado e tente novamente.',
+        description: 'O código inserido está incorreto ou expirou.',
         variant: 'destructive',
       })
     } finally {

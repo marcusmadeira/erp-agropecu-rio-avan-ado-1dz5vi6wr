@@ -18,13 +18,13 @@ routerAdd('POST', '/backend/v1/auth/verify-code', (e) => {
     const validadeStr = user.get('validade_codigo')
 
     if (!storedCode || storedCode !== code) {
-      throw new BadRequestError('Código inválido.')
+      throw new BadRequestError('Código inválido')
     }
 
     if (validadeStr) {
       const validade = new Date(validadeStr)
       if (validade < new Date()) {
-        throw new BadRequestError('Código expirado.')
+        throw new BadRequestError('Código expirado')
       }
     }
 
