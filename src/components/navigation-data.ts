@@ -76,6 +76,7 @@ export const navigationMenu = [
     items: [
       { title: 'Financeiro', url: '/financeiro', icon: DollarSign, roles: [1, 2] },
       { title: 'Transações', url: '/transacoes', icon: Landmark, roles: [1, 2] },
+      { title: 'Despesas e Pagamentos', url: '/despesas', icon: DollarSign, roles: [1, 2] },
       {
         title: 'Controle de Recebimento',
         url: '/controle-recebimento',

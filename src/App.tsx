@@ -42,6 +42,7 @@ import Manejo from './pages/suprimentos/Manejo'
 import PrevisaoDemanda from './pages/suprimentos/PrevisaoDemanda'
 import FabricaRacao from './pages/suprimentos/FabricaRacao'
 import Transacoes from './pages/financeiro/Transacoes'
+import DespesasPagamentos from './pages/financeiro/DespesasPagamentos'
 import EventosComerciais from './pages/financeiro/EventosComerciais'
 import FluxoDeCaixa from './pages/financeiro/FluxoDeCaixa'
 import Parceiros from './pages/financeiro/Parceiros'
@@ -367,6 +368,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1, 2]}>
             <Transacoes />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/despesas"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2]}>
+            <DespesasPagamentos />
           </AuthorizeRoute>
         }
       />
