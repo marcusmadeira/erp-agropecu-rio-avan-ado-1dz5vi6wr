@@ -417,9 +417,17 @@ const AppRoutes = () => (
             <VendasList />
           </AuthorizeRoute>
         }
-      />{' '}
+      />
       <Route
         path="/vendas/nova"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2]}>
+            <VendaForm />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/vendas/editar/:id"
         element={
           <AuthorizeRoute allowedRoles={[1, 2]}>
             <VendaForm />

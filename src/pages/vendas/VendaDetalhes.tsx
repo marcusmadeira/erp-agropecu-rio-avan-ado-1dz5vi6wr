@@ -80,13 +80,40 @@ export default function VendaDetalhes() {
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Valor Total</p>
-                <p className="font-semibold text-emerald-700 text-lg">
+                <p className="font-semibold text-lg" style={{ color: '#094016' }}>
                   R$ {venda.valor_total_venda.toFixed(2)}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Forma de Pagamento</p>
                 <p className="font-semibold text-gray-900">{venda.forma_pagamento}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Custo Animais</p>
+                <p className="font-semibold text-orange-600">
+                  R${' '}
+                  {itens
+                    .reduce(
+                      (acc, item) => acc + (item.expand?.animal_id?.custo_variavel_acumulado || 0),
+                      0,
+                    )
+                    .toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Margem (Lucro)</p>
+                <p className="font-semibold" style={{ color: '#094016' }}>
+                  {(() => {
+                    const cost = itens.reduce(
+                      (acc, item) => acc + (item.expand?.animal_id?.custo_variavel_acumulado || 0),
+                      0,
+                    )
+                    const margin = venda.valor_total_venda - cost
+                    const percent =
+                      venda.valor_total_venda > 0 ? (margin / venda.valor_total_venda) * 100 : 0
+                    return `R$ ${margin.toFixed(2)} (${percent.toFixed(1)}%)`
+                  })()}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -100,6 +127,7 @@ export default function VendaDetalhes() {
                   <tr>
                     <th className="p-4 font-semibold text-gray-600">Animal (Brinco)</th>
                     <th className="p-4 font-semibold text-gray-600">Categoria</th>
+                    <th className="p-4 text-right font-semibold text-gray-600">Custo</th>
                     <th className="p-4 text-right font-semibold text-gray-600">Valor Un.</th>
                     <th className="p-4 text-right font-semibold text-gray-600">Desconto</th>
                     <th className="p-4 text-right font-semibold text-gray-600">Valor Final</th>
@@ -108,12 +136,14 @@ export default function VendaDetalhes() {
                 <tbody className="divide-y divide-gray-100">
                   {itens.map((item) => {
                     const final = item.valor_unitario - (item.desconto_aplicado || 0)
+                    const cost = item.expand?.animal_id?.custo_variavel_acumulado || 0
                     return (
                       <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                         <td className="p-4 font-medium text-gray-900">
                           {item.expand?.animal_id?.id_manejo_brinco}
                         </td>
                         <td className="p-4 text-gray-600">{item.expand?.animal_id?.categoria}</td>
+                        <td className="p-4 text-right text-orange-600">R$ {cost.toFixed(2)}</td>
                         <td className="p-4 text-right text-gray-600">
                           R$ {item.valor_unitario.toFixed(2)}
                         </td>
@@ -122,7 +152,7 @@ export default function VendaDetalhes() {
                             ? `- R$ ${item.desconto_aplicado.toFixed(2)}`
                             : '-'}
                         </td>
-                        <td className="p-4 text-right font-bold text-gray-900">
+                        <td className="p-4 text-right font-bold" style={{ color: '#094016' }}>
                           R$ {final.toFixed(2)}
                         </td>
                       </tr>
