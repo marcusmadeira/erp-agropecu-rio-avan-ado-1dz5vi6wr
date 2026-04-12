@@ -1,5 +1,4 @@
-import { useState, useRef } from 'react'
-import useAppStore from '@/stores/useAppStore'
+import { useState, useRef, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,36 +16,99 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
-import { UploadCloud, FileSpreadsheet, Download, RefreshCw, AlertCircle } from 'lucide-react'
-import { format, parseISO } from 'date-fns'
+import { UploadCloud, FileSpreadsheet, RefreshCw, Trash2, ArrowRight } from 'lucide-react'
+import {
+  processarImportacao,
+  desfazerImportacao,
+  getHistoricoImportacoes,
+} from '@/services/importacao'
+import { useRealtime } from '@/hooks/use-realtime'
+import { ImportHistoryTable } from '@/components/importacao/ImportHistoryTable'
 
-type DataType =
-  | '1-Cadastro de Animais'
-  | '1.1-Importação ABCZ (PO)'
-  | '2-Histórico de Pesagem'
-  | '3-Eventos Reprodutivos'
-  | '4-Financeiro'
-  | '5-Parceiros de Negócios'
+type DataType = 'animais' | 'parceiros' | 'transacoes' | ''
+
+const systemFields = {
+  animais: [
+    { key: 'id_manejo_brinco', label: 'Brinco (Obrigatório)' },
+    { key: 'nome', label: 'Nome' },
+    { key: 'categoria', label: 'Categoria' },
+    { key: 'peso_atual_kg', label: 'Peso Atual (kg)' },
+  ],
+  parceiros: [
+    { key: 'nome_razao_social', label: 'Nome/Razão Social (Obrigatório)' },
+    { key: 'numero_documento', label: 'CPF/CNPJ (Obrigatório)' },
+    { key: 'tipo_documento', label: 'Tipo (CPF ou CNPJ)' },
+    { key: 'categoria_parceiro', label: 'Categoria' },
+  ],
+  transacoes: [
+    { key: 'descricao_lancamento', label: 'Descrição (Obrigatória)' },
+    { key: 'valor_total', label: 'Valor Total (Obrigatório)' },
+    { key: 'tipo_movimento', label: 'Tipo Movimento' },
+    { key: 'data_competencia', label: 'Data Competência' },
+    { key: 'data_vencimento', label: 'Data Vencimento' },
+    { key: 'status_pagamento', label: 'Status' },
+    { key: 'parceiro_documento', label: 'CPF/CNPJ do Parceiro' },
+  ],
+}
 
 export default function Importacao() {
-  const { state, dispatch } = useAppStore()
   const { toast } = useToast()
-
-  const [dragActive, setDragActive] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [dataType, setDataType] = useState<DataType | ''>('')
-  const [isProcessing, setIsProcessing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true)
-    } else if (e.type === 'dragleave') {
-      setDragActive(false)
+  const [dataType, setDataType] = useState<DataType>('')
+  const [strategy, setStrategy] = useState<'apenas_validos' | 'parar_falha'>('apenas_validos')
+  const [dragActive, setDragActive] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([])
+  const [csvRows, setCsvRows] = useState<any[]>([])
+  const [mapping, setMapping] = useState<Record<string, string>>({})
+
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [history, setHistory] = useState<any[]>([])
+  const [isUndoing, setIsUndoing] = useState<string | null>(null)
+
+  const loadHistory = async () => {
+    try {
+      const data = await getHistoricoImportacoes()
+      setHistory(data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  useEffect(() => {
+    loadHistory()
+  }, [])
+
+  useRealtime('historico_importacoes', () => {
+    loadHistory()
+  })
+
+  const parseCSV = (text: string) => {
+    const lines = text
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean)
+    if (lines.length === 0) return { headers: [], rows: [] }
+    const separator = lines[0].includes(';') ? ';' : ','
+    const headers = lines[0].split(separator).map((h) => h.trim().replace(/^"|"$/g, ''))
+    const rows = []
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(separator).map((v) => v.trim().replace(/^"|"$/g, ''))
+      const obj: Record<string, string> = {}
+      headers.forEach((h, idx) => {
+        obj[h] = values[idx] || ''
+      })
+      rows.push(obj)
+    }
+    return { headers, rows }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0])
     }
   }
 
@@ -55,404 +117,187 @@ export default function Importacao() {
     e.stopPropagation()
     setDragActive(false)
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0]
-      if (file.name.endsWith('.csv')) {
-        setSelectedFile(file)
-      } else {
-        toast({
-          title: 'Formato inválido',
-          description: 'Por favor, envie um arquivo CSV.',
-          variant: 'destructive',
-        })
-      }
+      handleFile(e.dataTransfer.files[0])
     }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0])
-    }
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true)
+    else if (e.type === 'dragleave') setDragActive(false)
   }
 
-  const parseCSV = (text: string) => {
-    const lines = text
-      .split('\n')
-      .map((l) => l.trim())
-      .filter(Boolean)
-    if (lines.length === 0) return []
-    const headers = lines[0].split(',').map((h) => h.trim())
-    const rows = []
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map((v) => v.trim())
-      const obj: any = {}
-      headers.forEach((h, idx) => {
-        obj[h] = values[idx] || ''
+  const handleFile = (file: File) => {
+    if (!file.name.endsWith('.csv')) {
+      toast({
+        title: 'Formato inválido',
+        description: 'Por favor, envie um arquivo CSV.',
+        variant: 'destructive',
       })
-      rows.push(obj)
+      return
     }
-    return rows
-  }
-
-  const processImport = () => {
-    if (!selectedFile || !dataType) return
-    setIsProcessing(true)
-
+    setSelectedFile(file)
     const reader = new FileReader()
     reader.onload = (e) => {
       const text = e.target?.result as string
-      const rows = parseCSV(text)
-      const errors: string[] = []
+      const { headers, rows } = parseCSV(text)
+      setCsvHeaders(headers)
+      setCsvRows(rows)
 
-      dispatch((s) => {
-        const newState = { ...s }
-        let successCount = 0
-
-        if (dataType === '1.1-Importação ABCZ (PO)') {
-          rows.forEach((row, i) => {
-            const rgn = row['Série/RGD'] || row['RGD']
-            const brinco = row['Brinco'] || `PO-${rgn}`
-            if (!rgn) {
-              errors.push(`Linha ${i + 1}: Série/RGD vazio`)
-              return
-            }
-            const existing = newState.animais.find((a) => a.rgn === rgn || a.brinco === brinco)
-
-            const category =
-              row['Sexo'] === 'Macho' ? 'Touro' : row['Sexo'] === 'Fêmea' ? 'Matriz' : 'Bezerro'
-            const gender = row['Sexo'] === 'Macho' ? 'M' : 'F'
-            const loteId =
-              newState.lotes.find((l) => l.costCenter === 'CC01-PO')?.id ||
-              newState.lotes[0]?.id ||
-              'l1'
-
-            if (existing) {
-              // Upsert existing PO animal
-              existing.nomeAnimal = row['Nome do Animal'] || existing.nomeAnimal
-              existing.categoria = category
-              existing.rgn = rgn
-              existing.costCenter = 'CC01-PO'
-              existing.gender = gender as any
-              successCount++
-            } else {
-              const pai = newState.animais.find((a) => a.brinco === row['Pai'])?.id
-              const mae = newState.animais.find((a) => a.brinco === row['Mãe'])?.id
-
-              newState.animais.push({
-                id: Math.random().toString(),
-                brinco: brinco,
-                rgn: rgn,
-                nomeAnimal: row['Nome do Animal'] || '',
-                loteId: loteId,
-                categoria: category,
-                pesoAtual: Number(row['Peso']) || 0,
-                pesoEntrada: Number(row['Peso']) || 0,
-                gmd: 0,
-                status: 'Ativo',
-                birthDate: new Date().toISOString(),
-                costCenter: 'CC01-PO',
-                gender: gender as any,
-                pai: pai,
-                mae: mae,
-              })
-              successCount++
-            }
-          })
-        } else if (dataType === '1-Cadastro de Animais') {
-          rows.forEach((row, i) => {
-            const brinco = row['Brinco']
-            if (!brinco) {
-              errors.push(`Linha ${i + 1}: Brinco vazio`)
-              return
-            }
-            const animal = newState.animais.find(
-              (a) => a.brinco === brinco || (a.rgn && a.rgn === row['RGD']),
-            )
-            const loteName = row['Lote_Atual']
-            const loteId =
-              newState.lotes.find((l) => l.name === loteName)?.id || newState.lotes[0]?.id || 'l1'
-
-            if (animal) {
-              animal.loteId = loteId
-              animal.pesoAtual = Number(row['Peso_Atual']) || animal.pesoAtual
-              animal.categoria = row['Categoria'] || animal.categoria
-              animal.nomeAnimal = row['Nome_Animal'] || animal.nomeAnimal
-              successCount++
-            } else {
-              const newAnimal = {
-                id: Math.random().toString(),
-                brinco: brinco,
-                rgn: row['RGD'] || '',
-                nomeAnimal: row['Nome_Animal'] || '',
-                loteId: loteId,
-                categoria: row['Categoria'] || 'Bezerro',
-                pesoAtual: Number(row['Peso_Atual']) || 0,
-                pesoEntrada: Number(row['Peso_Atual']) || 0,
-                gmd: 0,
-                status: 'Ativo',
-                birthDate: new Date().toISOString(),
-                costCenter: 'CC01-PO' as any,
-                gender: (row['Sexo'] === 'F' ? 'F' : 'M') as any,
-              }
-              newState.animais.push(newAnimal)
-              successCount++
-            }
-          })
-        }
-
-        if (dataType === '2-Histórico de Pesagem') {
-          rows.forEach((row, i) => {
-            const brinco = row['Brinco_Animal']
-            const peso = Number(row['Peso_Registrado'])
-            if (!brinco || isNaN(peso)) {
-              errors.push(`Linha ${i + 1}: Brinco ou Peso inválidos`)
-              return
-            }
-            const animal = newState.animais.find((a) => a.brinco === brinco)
-            if (!animal) {
-              errors.push(`Linha ${i + 1}: Brinco [${brinco}] não encontrado`)
-              return
-            }
-
-            const newGmd = (peso - animal.pesoAtual) / 30
-            animal.pesoAtual = peso
-            animal.gmd = newGmd > 0 ? newGmd : animal.gmd
-
-            newState.pesagens.push({
-              id: Math.random().toString(),
-              animalId: animal.id,
-              weight: peso,
-              date: row['Data_Pesagem'] || new Date().toISOString(),
-            })
-            successCount++
-          })
-        }
-
-        if (dataType === '3-Eventos Reprodutivos') {
-          rows.forEach((row, i) => {
-            const brinco = row['Brinco_Matriz']
-            if (!brinco) {
-              errors.push(`Linha ${i + 1}: Brinco_Matriz vazio`)
-              return
-            }
-            const animal = newState.animais.find((a) => a.brinco === brinco)
-            if (!animal) {
-              errors.push(`Linha ${i + 1}: Matriz [${brinco}] não encontrada`)
-              return
-            }
-
-            newState.reproducoes.push({
-              id: Math.random().toString(),
-              animalId: animal.id,
-              type: (row['Tipo_Evento'] as any) || 'IATF',
-              date: row['Data_Evento'] || new Date().toISOString(),
-              previsaoToque: new Date().toISOString(),
-              dpp: new Date().toISOString(),
-              status: row['Resultado_Toque'] === 'Prenhe' ? 'Prenhe' : 'Aguardando Toque',
-            })
-            successCount++
-          })
-        }
-
-        if (dataType === '4-Financeiro') {
-          rows.forEach((row, i) => {
-            const desc = row['Descricao_Lancamento'] || row['Descricao']
-            const val = Number(row['Valor_Total'] || row['Valor_Parcela'])
-            if (!desc || isNaN(val)) {
-              errors.push(`Linha ${i + 1}: Descricao_Lancamento ou Valor_Total inválidos`)
-              return
-            }
-
-            newState.transacoes.push({
-              id: Math.random().toString(),
-              Descricao_Lancamento: desc,
-              Valor_Total: val,
-              Tipo_Movimento: row['Tipo_Movimento'] === 'Despesa' ? 'Despesa' : 'Receita',
-              Data_Competencia: row['Data_Competencia'] || new Date().toISOString(),
-              Data_Vencimento: row['Data_Vencimento'] || new Date().toISOString(),
-              Data_Efetivacao_Real: row['Data_Efetivacao_Real'] || undefined,
-              Centro_Custo_Direcionado: row['Centro_Custo_Direcionado'] || 'CC01-Nelore PO',
-              Status_Pagamento:
-                row['Status_Pagamento'] === 'Efetivado'
-                  ? 'Efetivado'
-                  : row['Status_Pagamento'] === 'Atrasado'
-                    ? 'Atrasado'
-                    : 'Pendente',
-              Macroconta_Inttegra: row['CENTROS DE CUSTO PAI'] || '7. OUTROS CRÉDITOS/DÉBITOS',
-              Categoria_Inttegra: row['CENTROS DE CUSTO'] || 'Outros',
-              Subcategoria_Detalhe: row['Subcategoria_Detalhe'] || '',
-            })
-            successCount++
-          })
-        }
-
-        if (dataType === '5-Parceiros de Negócios') {
-          rows.forEach((row, i) => {
-            const doc = row['Nº DOCUMENTO']
-            if (!doc) {
-              errors.push(`Linha ${i + 1}: Nº DOCUMENTO obrigatório`)
-              return
-            }
-            const existing = newState.parceiros.find((p) => p.Numero_Documento === doc)
-            const categorias = row['TIPO']
-              ? row['TIPO'].split(';').map((c: string) => c.trim())
-              : []
-
-            if (existing) {
-              existing.Nome_Razao_Social = row['NOME'] || existing.Nome_Razao_Social
-              existing.Categoria_Parceiro =
-                categorias.length > 0 ? categorias : existing.Categoria_Parceiro
-              existing.Status = row['SITUAÇÃO'] === 'Inativo' ? 'Inativo' : 'Ativo'
-              existing.ID_Inttegra = row['AÇÕES'] || existing.ID_Inttegra
-              successCount++
-            } else {
-              newState.parceiros.push({
-                id: Math.random().toString(),
-                Nome_Razao_Social: row['NOME'] || 'Desconhecido',
-                Tipo_Documento: row['TIPO DE DOC'] === 'CNPJ' ? 'CNPJ' : 'CPF',
-                Numero_Documento: doc,
-                Categoria_Parceiro: categorias.length > 0 ? categorias : ['Fornecedor'],
-                Status: row['SITUAÇÃO'] === 'Inativo' ? 'Inativo' : 'Ativo',
-                ID_Inttegra: row['AÇÕES'] || '',
-              })
-              successCount++
-            }
-          })
-        }
-
-        const isSuccess = errors.length === 0
-        const status = isSuccess ? 'Concluído' : 'Com Erros'
-
-        const logId = Math.random().toString()
-        const newLog = {
-          id: logId,
-          Data_Upload: new Date().toISOString(),
-          Usuario_Responsavel: newState.currentUser?.name || 'Sistema',
-          Tipo_de_Dado: dataType,
-          Arquivo_Upload: selectedFile.name,
-          Status_Importacao: status as any,
-          Total_Linhas_Processadas: successCount,
-          Relatorio_de_Erros: errors.join(' | ') || 'Nenhum erro encontrado.',
-        }
-
-        newState.importLogs = [newLog, ...newState.importLogs]
-
-        if (status === 'Concluído') {
-          newState.auditLogs = [
-            {
-              id: Math.random().toString(),
-              date: new Date().toISOString(),
-              userName: newState.currentUser?.name || 'Sistema',
-              action: 'Create',
-              table: 'Múltiplas (Importação)',
-              recordId: 'ETL-CSV',
-              oldValue: '-',
-              newValue: `Importação em massa realizada via CSV. Total: ${successCount}`,
-            },
-            ...newState.auditLogs,
-          ]
-        }
-
-        return newState
-      })
-
-      setTimeout(() => {
-        setIsProcessing(false)
-        setSelectedFile(null)
-        setDataType('')
-        toast({
-          title: errors.length > 0 ? 'Importação finalizada com avisos' : 'Importação Concluída!',
-          description: `Processadas ${rows.length} linhas. ${errors.length} erros.`,
-          variant: errors.length > 0 ? 'destructive' : 'default',
+      const initialMap: Record<string, string> = {}
+      if (dataType && systemFields[dataType]) {
+        systemFields[dataType].forEach((f) => {
+          const match = headers.find(
+            (h) =>
+              h.toLowerCase().includes(f.key.toLowerCase()) ||
+              h.toLowerCase().includes(f.label.split(' ')[0].toLowerCase()),
+          )
+          if (match) initialMap[f.key] = match
         })
-      }, 800)
+      }
+      setMapping(initialMap)
     }
-    reader.readAsText(selectedFile)
+    reader.readAsText(file)
   }
 
-  const downloadTemplate = (type: string) => {
-    let headers = ''
-    let filename = ''
-    switch (type) {
-      case '1':
-        headers = 'Brinco,RGD,Nome_Animal,Categoria,Sexo,Peso_Atual,Lote_Atual'
-        filename = 'Template_Animais.csv'
-        break
-      case '1.1':
-        headers = 'Série/RGD,Nome do Animal,Sexo,Pai,Mãe,Peso,Brinco'
-        filename = 'Template_ABCZ.csv'
-        break
-      case '2':
-        headers = 'Brinco_Animal,Data_Pesagem,Peso_Registrado'
-        filename = 'Template_Pesagem.csv'
-        break
-      case '3':
-        headers = 'Brinco_Matriz,Data_Evento,Tipo_Evento,Touro_Utilizado,Resultado_Toque'
-        filename = 'Template_Reproducao.csv'
-        break
-      case '4':
-        headers =
-          'Data_Competencia,Data_Vencimento,Data_Efetivacao_Real,Descricao_Lancamento,Tipo_Movimento,Centro_Custo_Direcionado,Valor_Total,Status_Pagamento,CENTROS DE CUSTO PAI,CENTROS DE CUSTO,Subcategoria_Detalhe'
-        filename = 'Template_Financeiro_DRE.csv'
-        break
-      case '5':
-        headers = 'NOME,TIPO DE DOC,Nº DOCUMENTO,TIPO,SITUAÇÃO,AÇÕES'
-        filename = 'Template_Parceiros.csv'
-        break
-    }
-    const blob = new Blob([headers], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    link.click()
-    URL.revokeObjectURL(url)
+  const clearFile = () => {
+    setSelectedFile(null)
+    setCsvHeaders([])
+    setCsvRows([])
+    setMapping({})
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
+
+  const handleMappingChange = (sysKey: string, csvHeader: string) => {
+    setMapping((prev) => ({ ...prev, [sysKey]: csvHeader }))
+  }
+
+  const processImport = async () => {
+    if (!dataType || csvRows.length === 0 || !selectedFile) return
+    setIsProcessing(true)
+
+    const registros = csvRows.map((row) => {
+      const mapped: Record<string, any> = {}
+      Object.entries(mapping).forEach(([sysKey, csvHeader]) => {
+        if (csvHeader && row[csvHeader]) {
+          mapped[sysKey] = row[csvHeader]
+        }
+      })
+      return mapped
+    })
+
+    try {
+      const res = await processarImportacao(dataType, registros, selectedFile.name, strategy)
+
+      if (res.erros && res.erros.length > 0) {
+        toast({
+          title: 'Importação com Avisos',
+          description: `Inseridos: ${res.inseridos} registros. Erros: ${res.erros.length}. Verifique o relatório.`,
+          variant: 'destructive',
+        })
+      } else {
+        toast({
+          title: 'Importação Concluída!',
+          description: `Inseridos: ${res.inseridos} registros com sucesso.`,
+        })
+      }
+      clearFile()
+    } catch (err: any) {
+      toast({
+        title: 'Falha na Importação',
+        description: err.message || 'Ocorreu um erro no processamento.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleUndo = async (id: string) => {
+    setIsUndoing(id)
+    try {
+      await desfazerImportacao(id)
+      toast({ title: 'Importação desfeita com sucesso.' })
+    } catch (err: any) {
+      toast({ title: 'Falha ao desfazer', description: err.message, variant: 'destructive' })
+    } finally {
+      setIsUndoing(null)
+    }
+  }
+
+  const isReadyToImport =
+    selectedFile && dataType && Object.keys(mapping).length > 0 && !isProcessing
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-6xl mx-auto pb-10">
       <div className="flex items-center gap-3">
-        <UploadCloud className="w-8 h-8 text-indigo-700" />
+        <div className="p-3 bg-[#094016]/10 rounded-full">
+          <UploadCloud className="w-8 h-8 text-[#094016]" />
+        </div>
         <div>
-          <h2 className="text-2xl font-bold text-emerald-900 tracking-tight">
-            Central de Importação (ETL)
+          <h2 className="text-2xl font-bold text-[#094016] tracking-tight">
+            Central de Importação
           </h2>
           <p className="text-sm text-muted-foreground">
-            Migração em massa de dados com lógica Upsert e integração ABCZ.
+            Importação em massa de Animais, Parceiros e Transações com validação avançada.
           </p>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="shadow-subtle border-t-4 border-t-indigo-600">
-          <CardHeader>
-            <CardTitle>Nova Importação</CardTitle>
-            <CardDescription>Envie o arquivo CSV preenchido corretamente.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Tipo de Dado (Rotina)</label>
-              <Select value={dataType} onValueChange={(v) => setDataType(v as DataType)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o módulo de destino..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1-Cadastro de Animais">
-                    1-Cadastro de Animais (Geral)
-                  </SelectItem>
-                  <SelectItem value="1.1-Importação ABCZ (PO)">1.1-Importação ABCZ (PO)</SelectItem>
-                  <SelectItem value="2-Histórico de Pesagem">2-Histórico de Pesagem</SelectItem>
-                  <SelectItem value="3-Eventos Reprodutivos">3-Eventos Reprodutivos</SelectItem>
-                  <SelectItem value="4-Financeiro">4-Financeiro</SelectItem>
-                  <SelectItem value="5-Parceiros de Negócios">
-                    5-Parceiros de Negócios (Fornecedores/Clientes)
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      <div className="grid gap-6 md:grid-cols-12">
+        <div className="md:col-span-4 space-y-6">
+          <Card className="shadow-sm border-t-4 border-t-[#094016]">
+            <CardHeader className="pb-3">
+              <CardTitle>Configuração</CardTitle>
+              <CardDescription>Defina o que será importado.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Módulo de Destino</label>
+                <Select
+                  value={dataType}
+                  onValueChange={(v) => {
+                    setDataType(v as DataType)
+                    clearFile()
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o módulo..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="animais">Cadastro de Animais</SelectItem>
+                    <SelectItem value="parceiros">Fornecedores/Clientes</SelectItem>
+                    <SelectItem value="transacoes">Transações Financeiras</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
+              {dataType && (
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700">
+                    Estratégia de Falha
+                  </label>
+                  <Select value={strategy} onValueChange={(v) => setStrategy(v as any)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="apenas_validos">Ignorar Erros e Continuar</SelectItem>
+                      <SelectItem value="parar_falha">Parar na Primeira Falha</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {dataType && !selectedFile && (
             <div
               className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
-                dragActive ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 hover:bg-slate-50'
+                dragActive
+                  ? 'border-[#094016] bg-[#094016]/5'
+                  : 'border-slate-300 hover:bg-slate-50'
               }`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
@@ -467,142 +312,147 @@ export default function Importacao() {
                 className="hidden"
                 onChange={handleFileChange}
               />
-              <FileSpreadsheet className="w-10 h-10 text-indigo-300 mx-auto mb-3" />
-              {selectedFile ? (
-                <div className="text-indigo-700 font-semibold">{selectedFile.name}</div>
-              ) : (
-                <>
-                  <p className="text-sm font-medium text-slate-700">
-                    Arraste e solte o arquivo CSV aqui
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Ou clique para procurar no computador
-                  </p>
-                </>
-              )}
+              <FileSpreadsheet className="w-10 h-10 text-[#094016]/40 mx-auto mb-3" />
+              <p className="text-sm font-medium text-slate-700">Arraste e solte o CSV</p>
+              <p className="text-xs text-muted-foreground mt-1">Ou clique para procurar</p>
             </div>
+          )}
 
-            <Button
-              className="w-full bg-indigo-700 hover:bg-indigo-800"
-              disabled={!selectedFile || !dataType || isProcessing}
-              onClick={processImport}
-            >
-              {isProcessing ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Processando Lote...
-                </>
-              ) : (
-                'Iniciar Importação'
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+          {selectedFile && (
+            <Card className="shadow-sm bg-slate-50 border-dashed">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <FileSpreadsheet className="w-8 h-8 text-[#094016]" />
+                  <div className="truncate">
+                    <p className="text-sm font-semibold truncate">{selectedFile.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {csvRows.length} linhas detectadas
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={clearFile}
+                  className="text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
-        <Card className="shadow-subtle">
-          <CardHeader>
-            <CardTitle>Modelos de Planilha</CardTitle>
-            <CardDescription>
-              Faça o download dos templates padronizados para garantir sucesso.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button
-              variant="outline"
-              className="w-full justify-start text-slate-700"
-              onClick={() => downloadTemplate('1.1')}
-            >
-              <Download className="w-4 h-4 mr-3 text-emerald-600" />
-              Template ABCZ (Nelore PO)
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-slate-700"
-              onClick={() => downloadTemplate('1')}
-            >
-              <Download className="w-4 h-4 mr-3 text-emerald-600" />
-              Template Cadastro de Animais
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-slate-700"
-              onClick={() => downloadTemplate('2')}
-            >
-              <Download className="w-4 h-4 mr-3 text-emerald-600" />
-              Template Histórico de Pesagem
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-slate-700"
-              onClick={() => downloadTemplate('4')}
-            >
-              <Download className="w-4 h-4 mr-3 text-emerald-600" />
-              Template Financeiro DRE
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+          <Button
+            className="w-full bg-[#094016] hover:bg-[#094016]/90 h-12 text-md shadow-md"
+            disabled={!isReadyToImport}
+            onClick={processImport}
+          >
+            {isProcessing ? (
+              <>
+                <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> Processando...
+              </>
+            ) : (
+              'Iniciar Importação'
+            )}
+          </Button>
+        </div>
 
-      <Card className="shadow-subtle mt-6">
-        <CardHeader>
-          <CardTitle>Log de Importações</CardTitle>
-          <CardDescription>Histórico de operações em massa realizadas no sistema.</CardDescription>
-        </CardHeader>
-        <CardContent className="p-0 overflow-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data/Hora</TableHead>
-                <TableHead>Módulo</TableHead>
-                <TableHead>Arquivo</TableHead>
-                <TableHead className="text-center">Linhas Processadas</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Relatório</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {state.importLogs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="font-mono text-xs">
-                    {format(parseISO(log.Data_Upload), 'dd/MM/yyyy HH:mm')}
-                  </TableCell>
-                  <TableCell className="font-semibold text-slate-700">{log.Tipo_de_Dado}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {log.Arquivo_Upload}
-                  </TableCell>
-                  <TableCell className="text-center font-mono font-bold">
-                    {log.Total_Linhas_Processadas}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={log.Status_Importacao === 'Concluído' ? 'default' : 'destructive'}
-                      className={log.Status_Importacao === 'Concluído' ? 'bg-emerald-600' : ''}
+        <div className="md:col-span-8 space-y-6">
+          {selectedFile && dataType && (
+            <Card className="shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle>Mapeamento de Colunas</CardTitle>
+                <CardDescription>
+                  Associe as colunas do seu arquivo aos campos do sistema.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3">
+                  {systemFields[dataType].map((field) => (
+                    <div
+                      key={field.key}
+                      className="flex items-center gap-4 bg-slate-50 p-2 rounded-md border"
                     >
-                      {log.Status_Importacao}
-                    </Badge>
-                  </TableCell>
-                  <TableCell
-                    className="text-xs max-w-[200px] truncate"
-                    title={log.Relatorio_de_Erros}
-                  >
-                    {log.Status_Importacao === 'Com Erros' && (
-                      <AlertCircle className="w-3 h-3 text-rose-500 inline mr-1" />
-                    )}
-                    {log.Relatorio_de_Erros}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {state.importLogs.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
-                    Nenhuma importação registrada.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                      <div className="w-1/2 flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-[#094016]"></div>
+                        <span className="text-sm font-medium">{field.label}</span>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+                      <div className="w-1/2">
+                        <Select
+                          value={mapping[field.key] || ''}
+                          onValueChange={(v) =>
+                            handleMappingChange(field.key, v === 'none' ? '' : v)
+                          }
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Ignorar campo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none" className="text-slate-400 italic">
+                              Ignorar campo
+                            </SelectItem>
+                            {csvHeaders.map((h) => (
+                              <SelectItem key={h} value={h}>
+                                {h}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {selectedFile && csvRows.length > 0 && dataType && (
+            <Card className="shadow-sm overflow-hidden">
+              <CardHeader className="bg-slate-50 border-b pb-3">
+                <CardTitle className="text-sm">Pré-visualização de Dados (Mapeados)</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0 overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {systemFields[dataType]
+                        .filter((f) => mapping[f.key])
+                        .map((f) => (
+                          <TableHead key={f.key} className="text-xs whitespace-nowrap">
+                            {f.label}
+                          </TableHead>
+                        ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {csvRows.slice(0, 3).map((row, idx) => (
+                      <TableRow key={idx}>
+                        {systemFields[dataType]
+                          .filter((f) => mapping[f.key])
+                          .map((f) => (
+                            <TableCell key={f.key} className="text-xs truncate max-w-[150px]">
+                              {row[mapping[f.key]] || '-'}
+                            </TableCell>
+                          ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle>Histórico de Importações</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ImportHistoryTable history={history} onUndo={handleUndo} isUndoing={isUndoing} />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

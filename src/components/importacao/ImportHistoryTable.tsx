@@ -27,6 +27,7 @@ export function ImportHistoryTable({ history, onUndo, isUndoing }: ImportHistory
             <TableHead>Data</TableHead>
             <TableHead>Usuário</TableHead>
             <TableHead>Arquivo</TableHead>
+            <TableHead>Tipo</TableHead>
             <TableHead>Qtd</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Ação</TableHead>
@@ -57,6 +58,7 @@ export function ImportHistoryTable({ history, onUndo, isUndoing }: ImportHistory
                   </TableCell>
                   <TableCell>{h.expand?.usuario_id?.name || 'Sistema'}</TableCell>
                   <TableCell className="font-mono text-xs">{h.arquivo_nome}</TableCell>
+                  <TableCell className="capitalize">{h.tipo_de_dado || 'Animais'}</TableCell>
                   <TableCell>{h.quantidade}</TableCell>
                   <TableCell>
                     <Badge

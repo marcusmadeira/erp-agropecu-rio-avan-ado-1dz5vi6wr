@@ -21,13 +21,18 @@ routerAdd(
     }
 
     const registros_ids = histRecord.get('registros_ids') || []
+    const tipo_dado = histRecord.get('tipo_de_dado') || 'animais'
+
+    let collectionName = 'animais'
+    if (tipo_dado === 'parceiros') collectionName = 'parceiros_negocios'
+    if (tipo_dado === 'transacoes') collectionName = 'transacoes_financeiras'
 
     try {
       $app.runInTransaction((txApp) => {
-        for (const animalId of registros_ids) {
+        for (const recordId of registros_ids) {
           try {
-            const animal = txApp.findRecordById('animais', animalId)
-            txApp.delete(animal)
+            const record = txApp.findRecordById(collectionName, recordId)
+            txApp.delete(record)
           } catch (err) {}
         }
         txApp.delete(histRecord)

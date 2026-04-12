@@ -1,9 +1,14 @@
 import pb from '@/lib/pocketbase/client'
 
-export const importarAnimais = (arquivo_nome: string, registros: any[]) =>
-  pb.send('/backend/v1/importar-animais', {
+export const processarImportacao = (
+  tipo_dado: string,
+  registros: any[],
+  arquivo_nome: string,
+  estrategia: string,
+) =>
+  pb.send('/backend/v1/processar-importacao', {
     method: 'POST',
-    body: JSON.stringify({ arquivo_nome, registros }),
+    body: JSON.stringify({ tipo_dado, registros, arquivo_nome, estrategia }),
     headers: { 'Content-Type': 'application/json' },
   })
 
