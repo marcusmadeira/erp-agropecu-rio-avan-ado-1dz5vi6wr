@@ -11,32 +11,28 @@ export const getBezerros = () =>
 export const getReclassificacoes = () =>
   pb.collection('reclassificacao_descarte').getFullList({ expand: 'animal_id', sort: '-data' })
 
-export const createRegistroNascimento = async (data: any, animalData: any) => {
-  const registro = await pb.collection('registro_nascimento').create(data)
-  await pb.collection('animais').create(animalData)
-  return registro
+export const createRegistroNascimento = async (data: any, animalData?: any) => {
+  return pb.send('/backend/v1/maternidade/nascimento', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: { 'Content-Type': 'application/json' },
+  })
 }
 
 export const updateRegistroRGN = async (id: string, rgn: string) => {
-  return pb.collection('registro_nascimento').update(id, {
-    status_rgn: 'RGN Recebido',
-    rgn_abcz: rgn,
+  return pb.send(`/backend/v1/maternidade/rgn/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ rgn_abcz: rgn }),
+    headers: { 'Content-Type': 'application/json' },
   })
 }
 
 export const adicionarAoEstoque = async (registro: any) => {
-  await pb.collection('registro_nascimento').update(registro.id, { status_rgn: 'Pronto Estoque' })
-  try {
-    const animal = await pb
-      .collection('animais')
-      .getFirstListItem(`id_manejo_brinco="${registro.numero_tatuagem}"`)
-    await pb.collection('animais').update(animal.id, {
-      status: 'Ativo',
-      rgd_rgn_abcz: registro.rgn_abcz || '',
-    })
-  } catch (e) {
-    console.error('Animal not found in stock to update', e)
-  }
+  return pb.send('/backend/v1/maternidade/estoque', {
+    method: 'POST',
+    body: JSON.stringify({ registro_id: registro.id }),
+    headers: { 'Content-Type': 'application/json' },
+  })
 }
 
 export const destinarBezerro = async (animalId: string, destino: string, motivo: string) => {

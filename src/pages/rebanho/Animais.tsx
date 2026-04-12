@@ -46,11 +46,20 @@ export default function Animais() {
 
   const loadData = async () => {
     try {
-      const [aData, lData] = await Promise.all([getAnimais({ sort: '-created' }), getLotes()])
+      setLoading(true)
+      const [aData, lData] = await Promise.all([
+        getAnimais({ categoria: fCat, sexo: fSexo, status: fStatus, lote_id: fLote }),
+        getLotes(),
+      ])
       setAnimais(aData)
       setLotes(lData)
     } catch (e) {
       console.error(e)
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os animais.',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -58,34 +67,37 @@ export default function Animais() {
 
   useEffect(() => {
     loadData()
-  }, [])
-  useRealtime('animais', loadData)
+  }, [fCat, fSexo, fStatus, fLote])
+
+  useRealtime('animais', () => {
+    loadData()
+  })
 
   const handleDelete = async (id: string) => {
     if (!confirm('Deseja realmente excluir este animal?')) return
     try {
       await deleteAnimal(id)
-      toast({ title: 'Sucesso', description: 'Animal excluído.' })
+      toast({ title: 'Sucesso', description: 'Animal descartado com sucesso.' })
       loadData()
     } catch (e) {
-      toast({ title: 'Erro', description: 'Não foi possível excluir.', variant: 'destructive' })
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível descartar o animal.',
+        variant: 'destructive',
+      })
     }
   }
 
   const filtered = useMemo(() => {
     return animais.filter((a) => {
-      const matchCat = fCat === 'all' || a.categoria === fCat
-      const matchSexo = fSexo === 'all' || a.sexo === fSexo
-      const matchStatus = fStatus === 'all' || a.status === fStatus
-      const matchLote = fLote === 'all' || a.lote_atual === fLote
       const searchLower = search.toLowerCase()
       const matchSearch =
         !search ||
         a.nome?.toLowerCase().includes(searchLower) ||
         a.id_manejo_brinco?.toLowerCase().includes(searchLower)
-      return matchCat && matchSexo && matchStatus && matchLote && matchSearch
+      return matchSearch
     })
-  }, [animais, fCat, fSexo, fStatus, fLote, search])
+  }, [animais, search])
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-7xl mx-auto">

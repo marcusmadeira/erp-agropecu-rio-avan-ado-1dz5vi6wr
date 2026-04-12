@@ -65,35 +65,19 @@ export function DialogRegistroParto({
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
-      await createRegistroNascimento(
-        {
-          vaca_mae_id: values.vaca_mae_id,
-          data_nascimento: values.data_nascimento
-            ? `${values.data_nascimento}T12:00:00.000Z`
-            : null,
-          sexo: values.sexo,
-          peso_nascer: parseFloat(values.peso_nascer || '0') || null,
-          numero_tatuagem: values.numero_tatuagem,
-          status_rgn: 'Aguardando RGN',
-        },
-        {
-          id_manejo_brinco: values.numero_tatuagem,
-          nome: `Bezerro(a) ${values.numero_tatuagem}`,
-          categoria: 'Bezerro',
-          sexo: values.sexo,
-          data_nascimento: values.data_nascimento
-            ? `${values.data_nascimento}T12:00:00.000Z`
-            : null,
-          peso_atual_kg: parseFloat(values.peso_nascer || '0') || null,
-          mae_id: values.vaca_mae_id,
-          status: 'Aguardando Estoque',
-        },
-      )
+      await createRegistroNascimento({
+        vaca_mae_id: values.vaca_mae_id,
+        data_nascimento: values.data_nascimento ? `${values.data_nascimento}T12:00:00.000Z` : null,
+        sexo: values.sexo,
+        peso_nascer: parseFloat(values.peso_nascer || '0') || null,
+        numero_tatuagem: values.numero_tatuagem,
+      })
       toast({ title: 'Nascimento registrado com sucesso' })
       form.reset()
       onSuccess()
-    } catch (e) {
-      toast({ title: 'Erro ao salvar', variant: 'destructive' })
+    } catch (e: any) {
+      const msg = e.response?.message || 'Erro ao salvar nascimento'
+      toast({ title: 'Erro', description: msg, variant: 'destructive' })
     }
   }
 

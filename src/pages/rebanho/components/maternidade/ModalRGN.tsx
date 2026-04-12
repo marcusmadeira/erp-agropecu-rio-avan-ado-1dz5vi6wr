@@ -29,8 +29,9 @@ export function ModalRGN({
       await updateRegistroRGN(registro.id, rgn)
       toast({ title: 'RGN registrado' })
       onSuccess()
-    } catch (e) {
-      toast({ title: 'Erro ao registrar RGN', variant: 'destructive' })
+    } catch (e: any) {
+      const msg = e.response?.message || 'Erro ao registrar RGN'
+      toast({ title: 'Erro ao registrar RGN', description: msg, variant: 'destructive' })
     }
   }
 

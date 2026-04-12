@@ -11,23 +11,28 @@ import { AnimalReclassificacao } from '@/components/animais/AnimalReclassificaca
 import { AnimalHistory } from '@/components/animais/AnimalHistory'
 import AnimalForm from '@/pages/cadastros/AnimalForm'
 import { useRealtime } from '@/hooks/use-realtime'
+import { getRentabilidadeAnimal } from '@/services/animais'
+import { getHistoricoPesagem } from '@/services/pesagens'
 
 export default function AnimalPerfil() {
   const { id } = useParams()
   const [animal, setAnimal] = useState<any>(null)
   const [pesagens, setPesagens] = useState<any[]>([])
+  const [rentabilidade, setRentabilidade] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [formOpen, setFormOpen] = useState(false)
 
   const loadData = async () => {
     if (!id) return
     try {
-      const [aData, pData] = await Promise.all([
+      const [aData, pData, rData] = await Promise.all([
         getAnimal(id),
-        getPesagens({ filter: `animal_id = "${id}"`, sort: 'data_pesagem' }),
+        getHistoricoPesagem(id),
+        getRentabilidadeAnimal(id),
       ])
       setAnimal(aData)
       setPesagens(pData)
+      setRentabilidade(rData)
     } catch (e) {
       console.error(e)
     } finally {
@@ -97,6 +102,38 @@ export default function AnimalPerfil() {
           <TabsTrigger value="reclass">Reclassificação & Descarte</TabsTrigger>
         </TabsList>
         <TabsContent value="kpis">
+          {rentabilidade && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <p className="text-sm font-bold text-slate-500 uppercase">Custo Total</p>
+                <p className="text-2xl font-bold text-slate-800">
+                  R$ {rentabilidade.custo_total?.toFixed(2) || '0.00'}
+                </p>
+              </div>
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <p className="text-sm font-bold text-slate-500 uppercase">Receita Estimada</p>
+                <p className="text-2xl font-bold text-slate-800">
+                  R$ {rentabilidade.receita_estimada?.toFixed(2) || '0.00'}
+                </p>
+              </div>
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <p className="text-sm font-bold text-slate-500 uppercase">Lucro</p>
+                <p
+                  className={`text-2xl font-bold ${rentabilidade.lucro >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                >
+                  R$ {rentabilidade.lucro?.toFixed(2) || '0.00'}
+                </p>
+              </div>
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <p className="text-sm font-bold text-slate-500 uppercase">ROI</p>
+                <p
+                  className={`text-2xl font-bold ${rentabilidade.roi >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                >
+                  {rentabilidade.roi?.toFixed(2) || '0.00'}%
+                </p>
+              </div>
+            </div>
+          )}
           <AnimalKPIs animal={animal} pesagens={pesagens} />
         </TabsContent>
         <TabsContent value="history">

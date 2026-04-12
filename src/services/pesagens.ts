@@ -19,6 +19,12 @@ export interface PesagemDiaria {
 }
 
 export const getPesagens = async (options?: any) => {
+  if (options?.filter && options.filter.includes('animal_id =')) {
+    const match = options.filter.match(/animal_id\s*=\s*['"]([^'"]+)['"]/)
+    if (match && match[1]) {
+      return pb.send(`/backend/v1/animais/${match[1]}/pesagens`, { method: 'GET' })
+    }
+  }
   return pb.collection('pesagens_diarias').getFullList<PesagemDiaria>(options)
 }
 
@@ -27,7 +33,11 @@ export const getPesagem = async (id: string, options?: any) => {
 }
 
 export const createPesagem = async (data: Partial<PesagemDiaria>) => {
-  return pb.collection('pesagens_diarias').create<PesagemDiaria>(data)
+  return pb.send('/backend/v1/animais/pesagem', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: { 'Content-Type': 'application/json' },
+  })
 }
 
 export const updatePesagem = async (id: string, data: Partial<PesagemDiaria>) => {
@@ -36,4 +46,8 @@ export const updatePesagem = async (id: string, data: Partial<PesagemDiaria>) =>
 
 export const deletePesagem = async (id: string) => {
   return pb.collection('pesagens_diarias').delete(id)
+}
+
+export const getHistoricoPesagem = async (animalId: string) => {
+  return pb.send(`/backend/v1/animais/${animalId}/pesagens`, { method: 'GET' })
 }
