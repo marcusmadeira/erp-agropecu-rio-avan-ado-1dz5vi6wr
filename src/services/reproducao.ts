@@ -1,8 +1,32 @@
 import pb from '@/lib/pocketbase/client'
 
 export const getAnimais = () => pb.collection('animais').getFullList({ sort: 'id_manejo_brinco' })
+export const getAnimaisFemeas = () =>
+  pb.collection('animais').getFullList({ filter: 'sexo = "Fêmea"', sort: 'id_manejo_brinco' })
+export const getAnimaisTouros = () =>
+  pb
+    .collection('animais')
+    .getFullList({ filter: 'sexo = "Macho" && categoria ~ "Touro"', sort: 'id_manejo_brinco' })
+export const getLotes = () => pb.collection('lotes').getFullList({ sort: 'nome_lote' })
 
-// Planejamento
+export const getEstacoes = () =>
+  pb.collection('estacao_monta').getFullList({ sort: '-data_inicio' })
+export const saveEstacao = (id: string | null, data: any) => {
+  if (id) return pb.collection('estacao_monta').update(id, data)
+  return pb.collection('estacao_monta').create(data)
+}
+export const deleteEstacao = (id: string) => pb.collection('estacao_monta').delete(id)
+
+export const getRepasses = () =>
+  pb
+    .collection('repasse_monta_natural')
+    .getFullList({ expand: 'lote_vinculado_id,touro_repasse_id', sort: '-data_entrada' })
+export const saveRepasse = (id: string | null, data: any) => {
+  if (id) return pb.collection('repasse_monta_natural').update(id, data)
+  return pb.collection('repasse_monta_natural').create(data)
+}
+export const deleteRepasse = (id: string) => pb.collection('repasse_monta_natural').delete(id)
+
 export const getPlanejamentos = () =>
   pb
     .collection('planejamento_acasalamento')
@@ -14,7 +38,6 @@ export const savePlanejamento = (id: string | null, data: any) => {
 export const deletePlanejamento = (id: string) =>
   pb.collection('planejamento_acasalamento').delete(id)
 
-// IATF
 export const getIatfs = () =>
   pb
     .collection('manejo_iatf_curral')
@@ -25,13 +48,18 @@ export const saveIatf = (id: string | null, data: any) => {
 }
 export const deleteIatf = (id: string) => pb.collection('manejo_iatf_curral').delete(id)
 
-// Nascimentos
-export const getNascimentos = () =>
+export const getRegistrosNascimento = () =>
   pb
-    .collection('nascimentos_e_desmama')
-    .getFullList({ expand: 'matriz_mae_id', sort: '-data_nascimento' })
-export const saveNascimento = (id: string | null, data: any) => {
-  if (id) return pb.collection('nascimentos_e_desmama').update(id, data)
-  return pb.collection('nascimentos_e_desmama').create(data)
+    .collection('registro_nascimento')
+    .getFullList({ expand: 'vaca_mae_id', sort: '-data_nascimento' })
+export const saveRegistroNascimento = (id: string | null, data: any) => {
+  if (id) return pb.collection('registro_nascimento').update(id, data)
+  return pb.collection('registro_nascimento').create(data)
 }
-export const deleteNascimento = (id: string) => pb.collection('nascimentos_e_desmama').delete(id)
+export const deleteRegistroNascimento = (id: string) =>
+  pb.collection('registro_nascimento').delete(id)
+
+export const saveReclassificacao = (data: any) =>
+  pb.collection('reclassificacao_descarte').create(data)
+export const updateAnimal = (id: string, data: any) => pb.collection('animais').update(id, data)
+export const createAnimal = (data: any) => pb.collection('animais').create(data)

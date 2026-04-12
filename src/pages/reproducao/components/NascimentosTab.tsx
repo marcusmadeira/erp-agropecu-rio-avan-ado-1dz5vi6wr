@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Baby } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -18,14 +18,6 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -33,217 +25,154 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
+import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
-import { getNascimentos, saveNascimento, deleteNascimento } from '@/services/reproducao'
+import {
+  getRegistrosNascimento,
+  saveRegistroNascimento,
+  deleteRegistroNascimento,
+  createAnimal,
+  getIatfs,
+} from '@/services/reproducao'
 import { useRealtime } from '@/hooks/use-realtime'
 import { format } from 'date-fns'
-import { useAuth } from '@/hooks/use-auth'
-import { ExportButtons } from '@/components/ExportButtons'
-import { exportToPDF, exportToExcel } from '@/lib/export'
 
-const schema = z.object({
-  matriz_mae_id: z.string().min(1, 'Matriz mãe é obrigatória'),
-  data_nascimento: z.string().min(1, 'Data de nascimento é obrigatória'),
-  sexo: z.string().optional(),
-  peso_nascer: z.number().optional(),
-  status_cria: z.string().optional(),
-  rgn_provisorio_abcz: z.string().optional(),
-})
-
-export default function NascimentosTab({ animais }: { animais: any[] }) {
+export default function NascimentosTab({ femeas, animais }: { femeas: any[]; animais: any[] }) {
   const [data, setData] = useState<any[]>([])
   const [open, setOpen] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [editingId, setEditingId] = useState<string | null>(null)
   const { toast } = useToast()
-  const { user } = useAuth()
 
-  const form = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      matriz_mae_id: '',
-      data_nascimento: '',
-      sexo: '',
-      peso_nascer: undefined,
-      status_cria: '',
-      rgn_provisorio_abcz: '',
-    },
+  const [form, setForm] = useState({
+    vaca_mae_id: '',
+    data_nascimento: '',
+    sexo: '',
+    peso_nascer: '',
+    numero_tatuagem: '',
+    status_rgn: '',
+    rgn_abcz: '',
   })
 
   const loadData = async () => {
     try {
-      const items = await getNascimentos()
-      setData(items)
-    } catch (e) {
-      toast({ title: 'Erro ao carregar', variant: 'destructive' })
-    }
+      setData(await getRegistrosNascimento())
+    } catch (e) {}
   }
 
   useEffect(() => {
     loadData()
   }, [])
-  useRealtime('nascimentos_e_desmama', () => loadData())
+  useRealtime('registro_nascimento', () => loadData())
 
-  const onOpenNew = () => {
-    setEditingId(null)
-    form.reset({
-      matriz_mae_id: '',
-      data_nascimento: new Date().toISOString().split('T')[0],
-      sexo: '',
-      peso_nascer: undefined,
-      status_cria: '',
-      rgn_provisorio_abcz: '',
-    })
-    setOpen(true)
-  }
-
-  const onOpenEdit = (item: any) => {
-    setEditingId(item.id)
-    form.reset({
-      matriz_mae_id: item.matriz_mae_id || '',
-      data_nascimento: item.data_nascimento ? item.data_nascimento.split(' ')[0] : '',
-      sexo: item.sexo || '',
-      peso_nascer: item.peso_nascer || undefined,
-      status_cria: item.status_cria || '',
-      rgn_provisorio_abcz: item.rgn_provisorio_abcz || '',
-    })
-    setOpen(true)
-  }
-
-  const onSubmit = async (values: z.infer<typeof schema>) => {
+  const handleSave = async () => {
     try {
-      await saveNascimento(editingId, {
-        matriz_mae_id: values.matriz_mae_id,
-        data_nascimento: values.data_nascimento ? `${values.data_nascimento}T12:00:00.000Z` : null,
-        sexo: values.sexo && values.sexo !== 'none' ? values.sexo : null,
-        peso_nascer: values.peso_nascer || null,
-        status_cria: values.status_cria || null,
-        rgn_provisorio_abcz: values.rgn_provisorio_abcz || null,
+      // Registrar no sistema de nascimentos
+      await saveRegistroNascimento(null, {
+        vaca_mae_id: form.vaca_mae_id,
+        data_nascimento: form.data_nascimento ? `${form.data_nascimento}T12:00:00.000Z` : null,
+        sexo: form.sexo,
+        peso_nascer: form.peso_nascer ? parseFloat(form.peso_nascer) : null,
+        numero_tatuagem: form.numero_tatuagem,
+        status_rgn: form.status_rgn || 'Provisório',
+        rgn_abcz: form.rgn_abcz || null,
       })
-      toast({ title: 'Salvo com sucesso' })
+
+      // Tentar inferir o pai baseado no último IATF de sucesso
+      const iatfs = await getIatfs()
+      const lastIatf = iatfs.find(
+        (i) => i.matriz_id === form.vaca_mae_id && i.resultado_dg === 'Prenhe',
+      )
+
+      // Integrar e criar o animal no rebanho
+      await createAnimal({
+        id_manejo_brinco: form.numero_tatuagem,
+        nome: `Bezerro(a) ${form.numero_tatuagem}`,
+        categoria: 'Bezerro',
+        sexo: form.sexo,
+        data_nascimento: form.data_nascimento ? `${form.data_nascimento}T12:00:00.000Z` : null,
+        peso_atual_kg: form.peso_nascer ? parseFloat(form.peso_nascer) : null,
+        mae_id: form.vaca_mae_id,
+        pai_id: lastIatf?.touro_utilizado_id || null,
+        status: 'Ativo',
+      })
+
+      toast({
+        title: 'Nascimento registrado',
+        description: 'Animal cadastrado no rebanho com sucesso.',
+      })
       setOpen(false)
+      setForm({
+        vaca_mae_id: '',
+        data_nascimento: '',
+        sexo: '',
+        peso_nascer: '',
+        numero_tatuagem: '',
+        status_rgn: '',
+        rgn_abcz: '',
+      })
     } catch (e) {
       toast({ title: 'Erro ao salvar', variant: 'destructive' })
     }
   }
 
-  const exportColumns = [
-    { header: 'Matriz Mãe', dataKey: (r: any) => r.expand?.matriz_mae_id?.id_manejo_brinco || '-' },
-    {
-      header: 'Data Nascimento',
-      dataKey: (r: any) =>
-        r.data_nascimento
-          ? format(new Date(r.data_nascimento.replace(' ', 'T')), 'dd/MM/yyyy')
-          : '-',
-    },
-    { header: 'Sexo', dataKey: 'sexo' },
-    { header: 'Peso Nascer', dataKey: 'peso_nascer' },
-    { header: 'Status Cria', dataKey: 'status_cria' },
-    { header: 'RGN Prov.', dataKey: 'rgn_provisorio_abcz' },
-  ]
-
-  const confirmDelete = async () => {
+  const handleDelete = async () => {
     if (!deleteId) return
-    try {
-      await deleteNascimento(deleteId)
-      toast({ title: 'Deletado com sucesso' })
-    } catch (e) {
-      toast({ title: 'Erro ao deletar', variant: 'destructive' })
-    } finally {
-      setDeleteId(null)
-    }
+    await deleteRegistroNascimento(deleteId)
+    setDeleteId(null)
+    toast({ title: 'Removido com sucesso' })
   }
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-primary">Nascimentos e Desmama</h2>
-        <div className="flex items-center gap-2">
-          <ExportButtons
-            onExportPDF={() =>
-              exportToPDF({
-                title: 'Nascimentos e Desmama',
-                data,
-                columns: exportColumns,
-                userName: user?.name || '',
-              })
-            }
-            onExportExcel={() =>
-              exportToExcel({
-                title: 'Nascimentos e Desmama',
-                data,
-                columns: exportColumns,
-                userName: user?.name || '',
-              })
-            }
-          />
-          <Button
-            onClick={onOpenNew}
-            className="bg-primary hover:bg-primary/90 text-white font-bold"
-          >
-            <Plus className="w-4 h-4 mr-2" /> Novo Nascimento
-          </Button>
-        </div>
+        <h2 className="text-xl font-bold text-primary">Registro de Nascimentos</h2>
+        <Button
+          onClick={() => setOpen(true)}
+          className="bg-primary hover:bg-primary/90 text-white font-bold"
+        >
+          <Baby className="w-4 h-4 mr-2" /> Registrar Parto
+        </Button>
       </div>
 
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Matriz Mãe</TableHead>
+              <TableHead>Tatuagem/Bezerro</TableHead>
+              <TableHead>Matriz (Mãe)</TableHead>
               <TableHead>Data Nascimento</TableHead>
               <TableHead>Sexo</TableHead>
-              <TableHead>Peso Nascer</TableHead>
-              <TableHead>Status Cria</TableHead>
-              <TableHead>RGN Prov.</TableHead>
-              <TableHead className="w-[100px] text-right">Ações</TableHead>
+              <TableHead>Peso</TableHead>
+              <TableHead>RGN Status</TableHead>
+              <TableHead className="w-[80px] text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((item) => (
               <TableRow key={item.id}>
-                <TableCell className="font-bold text-primary">
-                  {item.expand?.matriz_mae_id?.id_manejo_brinco || '-'}
+                <TableCell className="font-bold text-primary">{item.numero_tatuagem}</TableCell>
+                <TableCell className="font-medium text-slate-700">
+                  {item.expand?.vaca_mae_id?.id_manejo_brinco || '-'}
                 </TableCell>
                 <TableCell>
                   {item.data_nascimento
                     ? format(new Date(item.data_nascimento.replace(' ', 'T')), 'dd/MM/yyyy')
                     : '-'}
                 </TableCell>
-                <TableCell>
-                  {item.sexo === 'Macho' ? (
-                    <span className="text-blue-600 font-bold">Macho</span>
-                  ) : item.sexo === 'Fêmea' ? (
-                    <span className="text-pink-600 font-bold">Fêmea</span>
-                  ) : (
-                    '-'
-                  )}
-                </TableCell>
+                <TableCell>{item.sexo}</TableCell>
                 <TableCell>{item.peso_nascer ? `${item.peso_nascer} kg` : '-'}</TableCell>
-                <TableCell>{item.status_cria || '-'}</TableCell>
-                <TableCell>{item.rgn_provisorio_abcz || '-'}</TableCell>
+                <TableCell>{item.status_rgn}</TableCell>
                 <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => onOpenEdit(item)}>
-                      <Pencil className="w-4 h-4 text-primary" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => setDeleteId(item.id)}>
-                      <Trash2 className="w-4 h-4 text-rose-500" />
-                    </Button>
-                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => setDeleteId(item.id)}>
+                    <Trash2 className="w-4 h-4 text-rose-500" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
             {data.length === 0 && (
               <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="text-center py-6 text-muted-foreground font-medium"
-                >
-                  Nenhum registro encontrado.
+                <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                  Nenhum nascimento registrado.
                 </TableCell>
               </TableRow>
             )}
@@ -252,150 +181,93 @@ export default function NascimentosTab({ animais }: { animais: any[] }) {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-primary">
-              {editingId ? 'Editar Nascimento' : 'Novo Nascimento'}
-            </DialogTitle>
+            <DialogTitle className="text-primary">Registrar Nascimento (Parto)</DialogTitle>
           </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="matriz_mae_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-bold">Matriz Mãe</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || undefined}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione a matriz" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {animais.map((a) => (
-                            <SelectItem key={a.id} value={a.id}>
-                              {a.id_manejo_brinco}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="data_nascimento"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-bold">Data Nascimento</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} value={field.value || ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Matriz Mãe</Label>
+              <Select
+                value={form.vaca_mae_id}
+                onValueChange={(v) => setForm({ ...form, vaca_mae_id: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a matriz" />
+                </SelectTrigger>
+                <SelectContent>
+                  {femeas.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.id_manejo_brinco}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Data de Nascimento</Label>
+                <Input
+                  type="date"
+                  value={form.data_nascimento}
+                  onChange={(e) => setForm({ ...form, data_nascimento: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="sexo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-bold">Sexo</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || undefined}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="none">Nenhum</SelectItem>
-                          <SelectItem value="Macho">Macho</SelectItem>
-                          <SelectItem value="Fêmea">Fêmea</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="peso_nascer"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-bold">Peso ao Nascer (kg)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          {...field}
-                          value={field.value || ''}
-                          onChange={(e) =>
-                            field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+              <div className="space-y-2">
+                <Label>Nº Tatuagem/Brinco Novo</Label>
+                <Input
+                  placeholder="Identificação do Bezerro"
+                  value={form.numero_tatuagem}
+                  onChange={(e) => setForm({ ...form, numero_tatuagem: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="status_cria"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-bold">Status Cria</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Ex: Saudável, Vivo"
-                          {...field}
-                          value={field.value || ''}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="rgn_provisorio_abcz"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-bold">RGN Prov. ABCZ</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ex: 12345" {...field} value={field.value || ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Sexo</Label>
+                <Select value={form.sexo} onValueChange={(v) => setForm({ ...form, sexo: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Macho">Macho</SelectItem>
+                    <SelectItem value="Fêmea">Fêmea</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Peso ao Nascer (kg)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={form.peso_nascer}
+                  onChange={(e) => setForm({ ...form, peso_nascer: e.target.value })}
                 />
               </div>
-              <DialogFooter>
-                <Button
-                  type="submit"
-                  className="bg-primary hover:bg-primary/90 text-white font-bold w-full mt-2"
-                >
-                  Salvar Registro
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
+            </div>
+            <div className="space-y-2 pt-2 border-t mt-4">
+              <p className="text-xs text-muted-foreground font-medium">
+                Ao salvar, este bezerro será automaticamente inserido no cadastro geral de Animais,
+                herdando o histórico reprodutivo da mãe.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleSave}
+              className="bg-primary hover:bg-primary/90 text-white font-bold w-full"
+            >
+              Salvar & Integrar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!deleteId} onOpenChange={(val) => !val && setDeleteId(null)}>
+      <Dialog open={!!deleteId} onOpenChange={(v) => !v && setDeleteId(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-rose-600">Confirmar Exclusão</DialogTitle>
-            <DialogDescription>
-              Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.
-            </DialogDescription>
+            <DialogDescription>Tem certeza que deseja excluir este registro?</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDeleteId(null)}>
@@ -403,8 +275,8 @@ export default function NascimentosTab({ animais }: { animais: any[] }) {
             </Button>
             <Button
               variant="destructive"
+              onClick={handleDelete}
               className="bg-rose-600 hover:bg-rose-700 font-bold"
-              onClick={confirmDelete}
             >
               Excluir
             </Button>
