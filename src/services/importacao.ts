@@ -12,6 +12,12 @@ export const processarImportacao = (
     headers: { 'Content-Type': 'application/json' },
   })
 
+export const importarAnimais = (
+  registros: any[],
+  arquivo_nome: string = 'import.csv',
+  estrategia: string = 'apenas_validos',
+) => processarImportacao('animais', registros, arquivo_nome, estrategia)
+
 export const desfazerImportacao = (id: string) =>
   pb.send(`/backend/v1/desfazer-importacao/${id}`, { method: 'POST' })
 
