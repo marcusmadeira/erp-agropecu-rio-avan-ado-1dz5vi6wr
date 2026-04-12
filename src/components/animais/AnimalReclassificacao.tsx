@@ -45,7 +45,9 @@ export function AnimalReclassificacao({
     try {
       const data = await getReclassificacoesByAnimal(animal.id)
       setHistory(data)
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const handleSubmit = async () => {
