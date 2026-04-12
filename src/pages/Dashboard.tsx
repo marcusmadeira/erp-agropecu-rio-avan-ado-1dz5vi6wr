@@ -10,8 +10,6 @@ import {
   endOfMonth,
   startOfQuarter,
   endOfQuarter,
-  startOfHalfYear,
-  endOfHalfYear,
   isWithinInterval,
   parseISO,
   addDays,
@@ -53,6 +51,14 @@ import { Label } from '@/components/ui/label'
 
 const formatCurrency = (val: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
+
+const getStartOfHalfYear = (date: Date) => {
+  return startOfMonth(new Date(date.getFullYear(), date.getMonth() < 6 ? 0 : 6, 1))
+}
+
+const getEndOfHalfYear = (date: Date) => {
+  return endOfMonth(new Date(date.getFullYear(), date.getMonth() < 6 ? 5 : 11, 1))
+}
 
 export default function Dashboard() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -290,7 +296,10 @@ export default function Dashboard() {
             variant="outline"
             size="sm"
             onClick={() =>
-              setDateRange({ from: startOfHalfYear(new Date()), to: endOfHalfYear(new Date()) })
+              setDateRange({
+                from: getStartOfHalfYear(new Date()),
+                to: getEndOfHalfYear(new Date()),
+              })
             }
           >
             Semestre
