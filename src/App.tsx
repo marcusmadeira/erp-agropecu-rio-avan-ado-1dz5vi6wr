@@ -16,47 +16,17 @@ import NotFound from './pages/NotFound'
 import Dashboard from './pages/Dashboard'
 import Desempenho from './pages/dashboard/Desempenho'
 import Auditoria from './pages/admin/Auditoria'
-import Cadastros from './pages/Cadastros'
-import Financeiro from './pages/Financeiro'
-import Relatorios from './pages/Relatorios'
-import Configuracoes from './pages/Configuracoes'
-import AssistenteIA from './pages/AssistenteIA'
-import InteligenciaArtificial from './pages/InteligenciaArtificial'
-import Inttegra from './pages/admin/Inttegra'
-import Integracoes from './pages/admin/Integracoes'
 import Importacao from './pages/admin/Importacao'
-import QADashboard from './pages/admin/QADashboard'
-import ImportarAnimais from './pages/rebanho/ImportarAnimais'
-import Pastos from './pages/estrutura/Pastos'
-import Lotes from './pages/estrutura/Lotes'
 import Animais from './pages/rebanho/Animais'
 import AnimalPerfil from './pages/rebanho/AnimalPerfil'
-import Maternidade from './pages/rebanho/Maternidade'
-import Pesagem from './pages/rebanho/Pesagem'
-import CurralDigital from './pages/rebanho/CurralDigital'
-import Reclassificacao from './pages/rebanho/Reclassificacao'
-import Apartacao from './pages/rebanho/Apartacao'
-import Reproducao from './pages/reproducao/Reproducao'
-import Estoque from './pages/suprimentos/Estoque'
-import Manejo from './pages/suprimentos/Manejo'
-import PrevisaoDemanda from './pages/suprimentos/PrevisaoDemanda'
-import FabricaRacao from './pages/suprimentos/FabricaRacao'
-import Transacoes from './pages/financeiro/Transacoes'
 import DespesasPagamentos from './pages/financeiro/DespesasPagamentos'
-import EventosComerciais from './pages/financeiro/EventosComerciais'
-import FluxoDeCaixa from './pages/financeiro/FluxoDeCaixa'
-import Parceiros from './pages/financeiro/Parceiros'
 import RecebimentoBoletos from './pages/financeiro/RecebimentoBoletos'
-import EventosVenda from './pages/vendas/Eventos'
-import EventoDetalhes from './pages/vendas/EventoDetalhes'
 import GestaoVendas from './pages/vendas/GestaoVendas'
-import VendasList from './pages/vendas/VendasList'
 import VendaForm from './pages/vendas/VendaForm'
 import VendaDetalhes from './pages/vendas/VendaDetalhes'
-import Maquinario from './pages/operacoes/Maquinario'
+import EventoDetalhes from './pages/vendas/EventoDetalhes'
 import Clima from './pages/operacoes/Clima'
 import Mercado from './pages/operacoes/Mercado'
-import Notificacoes from './pages/Notificacoes'
 import DiagnosticoInicial from './pages/estrategia/DiagnosticoInicial'
 import MetasKPIs from './pages/estrategia/MetasKPIs'
 import SimuladorCenarios from './pages/estrategia/SimuladorCenarios'
@@ -170,111 +140,23 @@ const AppRoutes = () => (
       <Route
         path="/auditoria"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <Auditoria />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/cadastros"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
-            <Cadastros />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/financeiro"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
-            <Financeiro />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/relatorios"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
-            <Relatorios />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/configuracoes"
-        element={
-          <AuthorizeRoute allowedRoles={[1]}>
-            <Configuracoes />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/qa-dashboard"
-        element={
-          <AuthorizeRoute allowedRoles={[1]}>
-            <QADashboard />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/assistente-ia"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
-            <AssistenteIA />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/inteligencia-artificial"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
-            <InteligenciaArtificial />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/inttegra"
-        element={
-          <AuthorizeRoute allowedRoles={[1]}>
-            <Inttegra />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/integracoes"
-        element={
-          <AuthorizeRoute allowedRoles={[1]}>
-            <Integracoes />
           </AuthorizeRoute>
         }
       />
       <Route
         path="/importacao"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <Importacao />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/pastos"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 3]}>
-            <Pastos />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/lotes"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 3]}>
-            <Lotes />
           </AuthorizeRoute>
         }
       />
       <Route
         path="/animais"
         element={
-          <AuthorizeRoute allowedRoles={[1, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <Animais />
           </AuthorizeRoute>
         }
@@ -282,103 +164,15 @@ const AppRoutes = () => (
       <Route
         path="/animais/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <AnimalPerfil />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/maternidade"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 3]}>
-            <Maternidade />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/pesagem"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 3]}>
-            <Pesagem />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/importar-animais"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 3]}>
-            <ImportarAnimais />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/reclassificacao"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 3]}>
-            <Reclassificacao />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/apartacao"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 3]}>
-            <Apartacao />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/reproducao"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 3]}>
-            <Reproducao />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/estoque"
-        element={
-          <AuthorizeRoute allowedRoles={[1]}>
-            <Estoque />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/previsao-demanda"
-        element={
-          <AuthorizeRoute allowedRoles={[1]}>
-            <PrevisaoDemanda />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/fabrica-racao"
-        element={
-          <AuthorizeRoute allowedRoles={[1]}>
-            <FabricaRacao />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/manejo"
-        element={
-          <AuthorizeRoute allowedRoles={[1]}>
-            <Manejo />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/transacoes"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
-            <Transacoes />
           </AuthorizeRoute>
         }
       />
       <Route
         path="/despesas"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <DespesasPagamentos />
           </AuthorizeRoute>
         }
@@ -392,49 +186,17 @@ const AppRoutes = () => (
         }
       />
       <Route
-        path="/parceiros"
+        path="/vendas"
         element={
-          <AuthorizeRoute allowedRoles={[1, 3]}>
-            <Parceiros />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/fluxo-de-caixa"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
-            <FluxoDeCaixa />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/eventos-comerciais"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
-            <EventosComerciais />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/vendas/gestao"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <GestaoVendas />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/vendas/geral"
-        element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
-            <VendasList />
           </AuthorizeRoute>
         }
       />
       <Route
         path="/vendas/nova"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <VendaForm />
           </AuthorizeRoute>
         }
@@ -442,7 +204,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/editar/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <VendaForm />
           </AuthorizeRoute>
         }
@@ -450,16 +212,8 @@ const AppRoutes = () => (
       <Route
         path="/vendas/geral/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
-            <VendaDetalhes />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/vendas/eventos"
-        element={
           <AuthorizeRoute allowedRoles={[1, 2, 3]}>
-            <EventosVenda />
+            <VendaDetalhes />
           </AuthorizeRoute>
         }
       />
@@ -472,17 +226,9 @@ const AppRoutes = () => (
         }
       />
       <Route
-        path="/maquinario"
-        element={
-          <AuthorizeRoute allowedRoles={[1]}>
-            <Maquinario />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
         path="/clima"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <Clima />
           </AuthorizeRoute>
         }
@@ -490,23 +236,15 @@ const AppRoutes = () => (
       <Route
         path="/mercado"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
-            <Mercado />
-          </AuthorizeRoute>
-        }
-      />
-      <Route
-        path="/notificacoes"
-        element={
           <AuthorizeRoute allowedRoles={[1, 2, 3]}>
-            <Notificacoes />
+            <Mercado />
           </AuthorizeRoute>
         }
       />
       <Route
         path="/diagnostico-inicial"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <DiagnosticoInicial />
           </AuthorizeRoute>
         }
@@ -514,7 +252,7 @@ const AppRoutes = () => (
       <Route
         path="/metas-kpis"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <MetasKPIs />
           </AuthorizeRoute>
         }
@@ -522,7 +260,7 @@ const AppRoutes = () => (
       <Route
         path="/simulador-cenarios"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <SimuladorCenarios />
           </AuthorizeRoute>
         }

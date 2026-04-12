@@ -21,20 +21,7 @@ import { navigationMenu } from './navigation-data'
 export function AppSidebar() {
   const location = useLocation()
   const { user } = useAuth()
-  const [unreadCount, setUnreadCount] = useState(0)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
-
-  const fetchUnreadCount = async () => {
-    if (!user) return
-    try {
-      const records = await pb.collection('notificacoes').getList(1, 1, {
-        filter: `usuario_id = "${user.id}" && lido = false`,
-      })
-      setUnreadCount(records.totalItems)
-    } catch (e) {
-      console.error('Error fetching unread notifications', e)
-    }
-  }
 
   const fetchConfig = async () => {
     try {
@@ -48,11 +35,9 @@ export function AppSidebar() {
   }
 
   useEffect(() => {
-    fetchUnreadCount()
     fetchConfig()
   }, [user])
 
-  useRealtime('notificacoes', fetchUnreadCount)
   useRealtime('configuracoes_sistema', fetchConfig)
 
   const getRoleLevel = (role: string | number | undefined) => {
@@ -119,11 +104,6 @@ export function AppSidebar() {
                             <span>{item.title}</span>
                           </Link>
                         </SidebarMenuButton>
-                        {item.badge && unreadCount > 0 && (
-                          <SidebarMenuBadge className="bg-primary text-white rounded-full px-2 py-0.5 text-xs right-2">
-                            {unreadCount}
-                          </SidebarMenuBadge>
-                        )}
                       </SidebarMenuItem>
                     )
                   })}
