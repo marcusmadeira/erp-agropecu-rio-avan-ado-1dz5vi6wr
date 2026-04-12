@@ -1,6 +1,8 @@
 import {
   LayoutDashboard,
   TrendingUp,
+  Target,
+  BarChart,
   Activity,
   Database,
   Globe,
@@ -33,6 +35,13 @@ import {
 } from 'lucide-react'
 
 export const navigationMenu = [
+  {
+    title: 'Gestão Estratégica',
+    items: [
+      { title: 'Diagnóstico Inicial', url: '/diagnostico-inicial', icon: Target, roles: [1] },
+      { title: 'Metas e KPIs', url: '/metas-kpis', icon: BarChart, roles: [1] },
+    ],
+  },
   {
     title: 'Geral',
     items: [

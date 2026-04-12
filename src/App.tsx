@@ -56,6 +56,8 @@ import VendaDetalhes from './pages/vendas/VendaDetalhes'
 import Maquinario from './pages/operacoes/Maquinario'
 import Clima from './pages/operacoes/Clima'
 import Notificacoes from './pages/Notificacoes'
+import DiagnosticoInicial from './pages/estrategia/DiagnosticoInicial'
+import MetasKPIs from './pages/estrategia/MetasKPIs'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth()
@@ -488,6 +490,22 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <Notificacoes />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/diagnostico-inicial"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <DiagnosticoInicial />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/metas-kpis"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <MetasKPIs />
           </AuthorizeRoute>
         }
       />

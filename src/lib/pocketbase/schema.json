@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-12T19:09:48.966Z",
+  "generatedAt": "2026-04-12T19:17:03.563Z",
   "collections": [
     {
       "name": "users",
@@ -2841,6 +2841,101 @@
         },
         {
           "name": "margem_lucro",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "diagnostico_inicial",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
+        "view": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
+        "create": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
+        "update": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
+        "delete": "@request.auth.id != '' && @request.auth.nivel_acesso = 1"
+      },
+      "fields": [
+        {
+          "name": "usuario_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "tamanho_ha",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "total_animais",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "arrobas_produzidas",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "custos",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "receitas",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "custo_arroba",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "lotacao",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "produtividade_ha",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "margem_lucro",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "roi",
           "type": "number",
           "required": false,
           "system": false
