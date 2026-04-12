@@ -3,8 +3,8 @@ import pb from '@/lib/pocketbase/client'
 
 interface AuthContextType {
   user: any
-  signUp: (email: string, password: string, name?: string) => Promise<{ error: any }>
-  signIn: (email: string, password: string) => Promise<{ error: any }>
+  signUp: (data: any) => Promise<{ error: any }>
+  signIn: (loginOrEmail: string, password: string) => Promise<{ error: any }>
   signOut: () => void
   loading: boolean
 }
@@ -53,17 +53,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [])
 
-  const signUp = async (email: string, password: string, name?: string) => {
+  const signUp = async (data: any) => {
     try {
-      await pb.collection('users').create({ email, password, passwordConfirm: password, name })
-      await pb.collection('users').authWithPassword(email, password)
+      await pb.send('/backend/v1/criar_usuario', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' },
+      })
       return { error: null }
     } catch (error) {
       return { error }
     }
   }
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (loginOrEmail: string, password: string) => {
     const attemptsStr = localStorage.getItem('login_attempts')
     const attempts = attemptsStr ? JSON.parse(attemptsStr) : { count: 0, lockUntil: null }
 
@@ -77,7 +80,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      await pb.collection('users').authWithPassword(email, password)
+      const res = await pb.send('/backend/v1/autenticar_usuario', {
+        method: 'POST',
+        body: JSON.stringify({ login: loginOrEmail, password }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+      pb.authStore.save(res.token, res.record)
       localStorage.removeItem('login_attempts')
       return { error: null }
     } catch (error) {

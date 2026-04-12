@@ -8,9 +8,10 @@ import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useSystemConfig } from '@/hooks/use-system-config'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 export default function Login() {
-  const [email, setEmail] = useState('')
+  const [loginOrEmail, setLoginOrEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const { signIn } = useAuth()
@@ -32,23 +33,23 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!email.trim() || !password.trim()) {
+    if (!loginOrEmail.trim() || !password.trim()) {
       toast({
         title: 'Validação',
-        description: 'Os campos de Email e Senha são obrigatórios.',
+        description: 'Os campos de Email/Login e Senha são obrigatórios.',
         variant: 'destructive',
       })
       return
     }
 
     setIsLoading(true)
-    const { error } = await signIn(email, password)
+    const { error } = await signIn(loginOrEmail, password)
     setIsLoading(false)
 
     if (error) {
       toast({
         title: 'Erro de autenticação',
-        description: 'Email ou senha inválidos.',
+        description: getErrorMessage(error) || 'Usuário ou senha inválidos.',
         variant: 'destructive',
       })
     } else {
@@ -83,15 +84,15 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2 text-left">
-              <Label htmlFor="email" className="font-bold text-slate-700">
-                Email
+              <Label htmlFor="loginOrEmail" className="font-bold text-slate-700">
+                Email ou Login
               </Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="usuario@toriba.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="loginOrEmail"
+                type="text"
+                placeholder="usuario@toriba.com ou joao.silva"
+                value={loginOrEmail}
+                onChange={(e) => setLoginOrEmail(e.target.value)}
               />
             </div>
             <div className="space-y-2 text-left">

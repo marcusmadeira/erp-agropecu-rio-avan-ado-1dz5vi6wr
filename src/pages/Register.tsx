@@ -23,9 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import pb from '@/lib/pocketbase/client'
 import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 import { useSystemConfig } from '@/hooks/use-system-config'
+import { useAuth } from '@/hooks/use-auth'
 
 const formSchema = z
   .object({
@@ -61,6 +61,7 @@ export default function Register() {
   const navigate = useNavigate()
   const { toast } = useToast()
   const { logoUrl } = useSystemConfig()
+  const { signUp } = useAuth()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -86,23 +87,17 @@ export default function Register() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true)
-    try {
-      await pb.collection('users').create({
-        name: values.name,
-        email: values.email,
-        username: values.username,
-        password: values.password,
-        passwordConfirm: values.confirmPassword,
-        phone: values.phone,
-        nivel_acesso: values.nivel_acesso,
-      })
 
-      toast({
-        title: 'Cadastro realizado!',
-        description: 'Redirecionando para as instruções...',
-      })
-      navigate('/confirmacao-email', { replace: true, state: { email: values.email } })
-    } catch (error: any) {
+    const { error } = await signUp({
+      name: values.name,
+      email: values.email,
+      username: values.username,
+      password: values.password,
+      phone: values.phone,
+      nivel_acesso: values.nivel_acesso,
+    })
+
+    if (error) {
       const fieldErrors = extractFieldErrors(error)
       if (Object.keys(fieldErrors).length > 0) {
         Object.entries(fieldErrors).forEach(([field, message]) => {
@@ -115,9 +110,16 @@ export default function Register() {
           variant: 'destructive',
         })
       }
-    } finally {
       setIsLoading(false)
+      return
     }
+
+    setIsLoading(false)
+    toast({
+      title: 'Cadastro realizado!',
+      description: 'Redirecionando para as instruções...',
+    })
+    navigate('/confirmacao-email', { replace: true, state: { email: values.email } })
   }
 
   return (

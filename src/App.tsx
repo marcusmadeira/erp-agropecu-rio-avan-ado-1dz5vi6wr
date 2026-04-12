@@ -72,7 +72,21 @@ const AuthorizeRoute = ({
   if (loading) return null
   if (!user) return <Navigate to="/login" replace />
 
-  const userRole = user.nivel_acesso || 1
+  const getRoleLevel = (role: string | number) => {
+    if (typeof role === 'number') return role
+    switch (role) {
+      case 'Gerente':
+        return 1
+      case 'Financeiro':
+        return 2
+      case 'Operacional':
+        return 3
+      default:
+        return 1
+    }
+  }
+
+  const userRole = getRoleLevel(user.nivel_acesso || 1)
   if (!allowedRoles.includes(userRole)) {
     if (userRole === 2 || userRole === 3) return <Navigate to="/desempenho" replace />
     return <Navigate to="/" replace />
