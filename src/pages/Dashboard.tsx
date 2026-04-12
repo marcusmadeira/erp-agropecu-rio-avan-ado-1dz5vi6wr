@@ -4,17 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  startOfQuarter,
-  endOfQuarter,
-  isWithinInterval,
-  parseISO,
-  addDays,
-  differenceInDays,
-} from 'date-fns'
+import { format, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, parseISO } from 'date-fns'
 import {
   CalendarIcon,
   TrendingUp,
@@ -65,32 +55,39 @@ export default function Dashboard() {
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date()),
   })
+
   const [loading, setLoading] = useState(true)
-  const [transacoes, setTransacoes] = useState<any[]>([])
-  const [parcelas, setParcelas] = useState<any[]>([])
-  const [animais, setAnimais] = useState<any[]>([])
-  const [pastos, setPastos] = useState<any[]>([])
-  const [iatfs, setIatfs] = useState<any[]>([])
+  const [resumoData, setResumoData] = useState<any>(null)
+  const [inadimplenciaData, setInadimplenciaData] = useState<any>(null)
+  const [calendarioData, setCalendarioData] = useState<any[]>([])
+  const [kpiData, setKpiData] = useState<any>(null)
   const [chartFilter, setChartFilter] = useState<'ALL' | 'FIXA' | 'VARIÁVEL'>('ALL')
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true)
       try {
-        const [tRes, pRes, aRes, paRes, iRes] = await Promise.all([
-          pb.collection('transacoes_financeiras').getFullList({ expand: 'parceiro_id' }),
-          pb.collection('parcelas_venda').getFullList({ expand: 'venda_id.cliente_id' }),
-          pb
-            .collection('animais')
-            .getFullList({ filter: "status != 'Vendido' && status != 'Morto'" }),
-          pb.collection('pastos_e_piquetes').getFullList(),
-          pb.collection('manejo_iatf_curral').getFullList(),
+        const dStart = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : ''
+        const dEnd = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : ''
+
+        let qs = ''
+        if (dStart && dEnd) {
+          qs = `?data_inicio=${dStart}&data_fim=${dEnd}`
+        } else if (dStart) {
+          qs = `?data_inicio=${dStart}`
+        }
+
+        const [rFinanceiro, rInadimplencia, rCalendario, rKpis] = await Promise.all([
+          pb.send(`/backend/v1/obter_resumo_financeiro${qs}`, { method: 'GET' }),
+          pb.send(`/backend/v1/obter_inadimplencia${qs}`, { method: 'GET' }),
+          pb.send(`/backend/v1/obter_despesas_calendario${qs}`, { method: 'GET' }),
+          pb.send(`/backend/v1/obter_kpis_saude${qs}`, { method: 'GET' }),
         ])
-        setTransacoes(tRes)
-        setParcelas(pRes)
-        setAnimais(aRes)
-        setPastos(paRes)
-        setIatfs(iRes)
+
+        setResumoData(rFinanceiro)
+        setInadimplenciaData(rInadimplencia)
+        setCalendarioData(rCalendario)
+        setKpiData(rKpis)
       } catch (e) {
         console.error(e)
       } finally {
@@ -98,87 +95,26 @@ export default function Dashboard() {
       }
     }
     loadData()
-  }, [])
-
-  const filteredTransacoes = useMemo(() => {
-    if (!dateRange?.from || !dateRange?.to) return transacoes
-    return transacoes.filter((t) => {
-      const d = parseISO(t.data_vencimento)
-      return isWithinInterval(d, { start: dateRange.from!, end: dateRange.to! })
-    })
-  }, [transacoes, dateRange])
-
-  const filteredParcelas = useMemo(() => {
-    if (!dateRange?.from || !dateRange?.to) return parcelas
-    return parcelas.filter((p) => {
-      const d = parseISO(p.data_vencimento)
-      return isWithinInterval(d, { start: dateRange.from!, end: dateRange.to! })
-    })
-  }, [parcelas, dateRange])
+  }, [dateRange])
 
   // Summary KPIs
-  const receitas = filteredTransacoes
-    .filter((t) => t.tipo_movimento === 'Receita')
-    .reduce((a, b) => a + b.valor_total, 0)
-  const despesas = filteredTransacoes
-    .filter((t) => t.tipo_movimento === 'Despesa')
-    .reduce((a, b) => a + b.valor_total, 0)
-  const saldo = receitas - despesas
-  const margem = receitas > 0 ? (saldo / receitas) * 100 : 0
+  const receitas = resumoData?.receitas || 0
+  const despesas = resumoData?.despesas || 0
+  const saldo = resumoData?.saldo || 0
+  const margem = resumoData?.margem || 0
 
   // Delinquency Panel
-  const today = new Date()
-  const in30Days = addDays(today, 30)
+  const valorEmAberto = inadimplenciaData?.valorEmAberto || 0
+  const previsao30Dias = inadimplenciaData?.previsao30Dias || 0
 
-  const parcelasEmAberto = filteredParcelas.filter(
-    (p) => p.status_parcela === 'Atrasada' || p.status_parcela === 'Pendente',
-  )
-  const valorEmAberto = parcelasEmAberto.reduce((acc, p) => acc + p.valor_parcela, 0)
+  const pieData = (inadimplenciaData?.pieData || [])
+    .filter((item: any) => item.value > 0)
+    .map((item: any) => ({
+      ...item,
+      color: item.name === 'Pago' ? '#094016' : item.name === 'Atrasado' ? '#dc2626' : '#eab308',
+    }))
 
-  const previsao30Dias = parcelas
-    .filter((p) => {
-      if (p.status_parcela === 'Paga' || p.status_parcela === 'Cancelada') return false
-      const vDate = parseISO(p.data_vencimento)
-      return vDate >= today && vDate <= in30Days
-    })
-    .reduce((acc, p) => acc + p.valor_parcela, 0)
-
-  const parcelasPagas = filteredParcelas
-    .filter((p) => p.status_parcela === 'Paga')
-    .reduce((acc, p) => acc + p.valor_parcela, 0)
-  const parcelasAtrasadas = filteredParcelas
-    .filter(
-      (p) =>
-        p.status_parcela === 'Atrasada' ||
-        (p.status_parcela === 'Pendente' && parseISO(p.data_vencimento) < today),
-    )
-    .reduce((acc, p) => acc + p.valor_parcela, 0)
-
-  const pieData = [
-    { name: 'Pagas', value: parcelasPagas, color: '#094016' },
-    { name: 'Atrasadas', value: parcelasAtrasadas, color: '#dc2626' },
-  ]
-
-  const tableData = parcelas
-    .filter(
-      (p) =>
-        p.status_parcela === 'Atrasada' ||
-        (p.status_parcela === 'Pendente' && parseISO(p.data_vencimento) < today),
-    )
-    .map((p) => {
-      const cliente = p.expand?.venda_id?.expand?.cliente_id
-      const vDate = parseISO(p.data_vencimento)
-      return {
-        id: p.id,
-        clienteNome: cliente?.nome_razao_social || 'Desconhecido',
-        clientePhone: cliente?.contato_whatsapp,
-        diasAtraso: differenceInDays(today, vDate),
-        valor: p.valor_parcela,
-        vencimento: p.data_vencimento,
-      }
-    })
-    .sort((a, b) => b.diasAtraso - a.diasAtraso)
-    .slice(0, 10)
+  const tableData = inadimplenciaData?.tableData || []
 
   const handleWhatsApp = (phone?: string) => {
     if (!phone) return
@@ -186,25 +122,19 @@ export default function Dashboard() {
   }
 
   // Health Metrics
-  const totalVariavel = filteredTransacoes
-    .filter((t) => t.tipo_movimento === 'Despesa' && t.classificacao_custo === 'VARIÁVEL')
-    .reduce((acc, t) => acc + t.valor_total, 0)
-  const totalArrobas = animais.reduce((acc, a) => acc + (a.peso_atual_kg || 0) / 15, 0)
-  const custoArroba = totalArrobas > 0 ? totalVariavel / totalArrobas : 0
-
-  const totalArea = pastos.reduce((acc, p) => acc + (p.area_hectares || 0), 0)
-  const lotacao = totalArea > 0 ? animais.length / totalArea : 0
-
-  const prenhes = iatfs.filter((i) => i.resultado_dg === 'Prenhe').length
-  const taxaPrenhez = iatfs.length > 0 ? (prenhes / iatfs.length) * 100 : 0
-
-  const desembolsoCabeca = animais.length > 0 ? despesas / animais.length : 0
+  const custoArroba = kpiData?.custoArroba || 0
+  const lotacao = kpiData?.lotacao || 0
+  const taxaPrenhez = kpiData?.taxaPrenhez || 0
+  const desembolsoCabeca = kpiData?.desembolsoCabeca || 0
+  const totalAnimais = kpiData?.totalAnimais || 0
+  const roi = kpiData?.roi || 0
 
   // Chart Data
   const chartData = useMemo(() => {
+    if (!resumoData?.transacoes) return []
     const map: Record<string, { name: string; Receitas: number; Despesas: number }> = {}
-    filteredTransacoes.forEach((t) => {
-      const d = parseISO(t.data_vencimento)
+    resumoData.transacoes.forEach((t: any) => {
+      const d = t.data_vencimento ? parseISO(t.data_vencimento) : new Date()
       const sortKey = format(d, 'yyyy-MM')
       const displayKey = format(d, 'MMM/yy')
       if (!map[sortKey]) map[sortKey] = { name: displayKey, Receitas: 0, Despesas: 0 }
@@ -219,7 +149,7 @@ export default function Dashboard() {
     return Object.keys(map)
       .sort()
       .map((k) => map[k])
-  }, [filteredTransacoes, chartFilter])
+  }, [resumoData, chartFilter])
 
   // Calendar Data
   const monthStart = dateRange?.from ? startOfMonth(dateRange.from) : startOfMonth(new Date())
@@ -232,8 +162,8 @@ export default function Dashboard() {
     for (let i = 1; i <= monthEnd.getDate(); i++) {
       const d = new Date(monthStart.getFullYear(), monthStart.getMonth(), i)
       const dateStr = format(d, 'yyyy-MM-dd')
-      const evs = transacoes.filter(
-        (t) => t.tipo_movimento === 'Despesa' && t.data_vencimento.startsWith(dateStr),
+      const evs = calendarioData.filter(
+        (t: any) => t.data_despesa && t.data_despesa.startsWith(dateStr),
       )
       days.push({
         date: i,
@@ -242,11 +172,11 @@ export default function Dashboard() {
       })
     }
     return days
-  }, [monthStart, monthEnd, transacoes])
+  }, [monthStart, monthEnd, calendarioData])
 
   const totalPeriodoCalendario = calendarDays.reduce((acc, d) => {
     if (!d) return acc
-    return acc + d.events.reduce((sum: number, ev: any) => sum + ev.valor_total, 0)
+    return acc + d.events.reduce((sum: number, ev: any) => sum + ev.valor, 0)
   }, 0)
 
   // Filters
@@ -395,7 +325,7 @@ export default function Dashboard() {
       <h3 className="text-lg font-semibold text-[#094016] mt-8 mb-2">
         Métricas Agro-Financeiras (Saúde)
       </h3>
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold text-muted-foreground">
@@ -455,10 +385,21 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-lg md:text-xl font-bold text-[#094016]">{animais.length}</div>
+            <div className="text-lg md:text-xl font-bold text-[#094016]">{totalAnimais}</div>
             <p className="text-[10px] text-muted-foreground mt-1">
               Status diferente de vendido/morto
             </p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-semibold text-muted-foreground">ROI</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg md:text-xl font-bold text-[#094016]">
+              {(roi * 100).toFixed(1)}%
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">Retorno sobre Investimento</p>
           </CardContent>
         </Card>
       </div>
@@ -530,11 +471,11 @@ export default function Dashboard() {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {pieData.map((entry, index) => (
+                    {pieData.map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                  <Tooltip formatter={(v: number) => v} />
                   <Legend verticalAlign="bottom" height={36} />
                 </PieChart>
               </ResponsiveContainer>
@@ -568,7 +509,7 @@ export default function Dashboard() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  tableData.map((row) => (
+                  tableData.map((row: any) => (
                     <TableRow key={row.id}>
                       <TableCell
                         className="font-semibold text-xs truncate max-w-[120px]"
@@ -577,7 +518,7 @@ export default function Dashboard() {
                         {row.clienteNome}
                       </TableCell>
                       <TableCell className="text-xs">
-                        {format(parseISO(row.vencimento), 'dd/MM/yyyy')}
+                        {row.vencimento ? format(parseISO(row.vencimento), 'dd/MM/yyyy') : '-'}
                       </TableCell>
                       <TableCell className="text-right text-red-600 font-bold text-xs">
                         {row.diasAtraso}d
@@ -644,9 +585,9 @@ export default function Dashboard() {
                                 ? 'bg-amber-50 text-amber-900 border-amber-200'
                                 : 'bg-slate-50 text-slate-700 border-slate-200',
                             )}
-                            title={`${ev.descricao_lancamento} - ${formatCurrency(ev.valor_total)}`}
+                            title={`${ev.descricao || ev.tipo_despesa} - ${formatCurrency(ev.valor)}`}
                           >
-                            {formatCurrency(ev.valor_total)}
+                            {formatCurrency(ev.valor)}
                           </div>
                         ))}
                       </div>
