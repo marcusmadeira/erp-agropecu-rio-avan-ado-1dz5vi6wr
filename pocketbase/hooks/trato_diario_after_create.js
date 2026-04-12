@@ -7,7 +7,7 @@ onRecordAfterCreateSuccess((e) => {
     try {
       const animais = $app.findRecordsByFilter(
         'animais',
-        "lote_atual = {:loteId} && status = 'Ativo'",
+        'lote_atual = {:loteId} || lote_atual_id = {:loteId}',
         '',
         0,
         0,

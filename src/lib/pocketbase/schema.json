@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-11T14:15:46.458Z",
+  "generatedAt": "2026-04-12T12:58:57.559Z",
   "collections": [
     {
       "name": "users",
@@ -79,6 +79,30 @@
         },
         {
           "name": "validade_codigo",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "login",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "verification_code",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "reset_code",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "reset_code_expires",
           "type": "date",
           "required": false,
           "system": false
@@ -204,6 +228,18 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "contato_whatsapp_cobranca",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "email_cobranca",
+          "type": "email",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -272,6 +308,19 @@
           "required": false,
           "system": false,
           "collectionRef": "pastos_e_piquetes"
+        },
+        {
+          "name": "piquete_atual_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "pastos_e_piquetes"
+        },
+        {
+          "name": "custo_accumulado_nutricao",
+          "type": "number",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -385,6 +434,19 @@
           "required": false,
           "system": false,
           "collectionRef": "animais"
+        },
+        {
+          "name": "lote_atual_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "lotes"
+        },
+        {
+          "name": "custo_variavel_accumulado",
+          "type": "number",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -545,6 +607,18 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "macroconta_inttegra",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "produto_vendido",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -593,6 +667,13 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "touro_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "animais"
         }
       ],
       "indexes": []
@@ -828,6 +909,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "gmd_calculado",
+          "type": "number",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -1262,6 +1349,24 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "nome_piquete",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "area_hectares",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status_ocupacao",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []
@@ -1322,6 +1427,18 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "tipo_de_dado",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "arquivo_upload",
+          "type": "file",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []
@@ -1960,6 +2077,757 @@
         {
           "name": "logo",
           "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "reclassificacao_descarte",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')"
+      },
+      "fields": [
+        {
+          "name": "data",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "animal_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "animais"
+        },
+        {
+          "name": "nova_categoria",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "novo_lote_destino_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "lotes"
+        },
+        {
+          "name": "motivo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "repasse_monta_natural",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')"
+      },
+      "fields": [
+        {
+          "name": "lote_vinculado_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "lotes"
+        },
+        {
+          "name": "touro_repasse_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "animais"
+        },
+        {
+          "name": "data_entrada",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_retirada",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "estacao_monta",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')"
+      },
+      "fields": [
+        {
+          "name": "nome",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_inicio",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_fim",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "registro_nascimento",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')"
+      },
+      "fields": [
+        {
+          "name": "vaca_mae_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "animais"
+        },
+        {
+          "name": "data_nascimento",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "sexo",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Macho", "Fêmea"]
+        },
+        {
+          "name": "peso_nascer",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "numero_tatuagem",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status_rgn",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rgn_abcz",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "despesas",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')"
+      },
+      "fields": [
+        {
+          "name": "fornecedor_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "parceiros_negocios"
+        },
+        {
+          "name": "tipo_despesa",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "descricao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "valor",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_despesa",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "centro_custo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "classificacao_custo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "comprovante_url",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "boletos_pagar",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')"
+      },
+      "fields": [
+        {
+          "name": "despesa_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "despesas"
+        },
+        {
+          "name": "fornecedor_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "parceiros_negocios"
+        },
+        {
+          "name": "valor",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_vencimento",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Pendente", "Pago", "Atrasado", "Cancelado"]
+        },
+        {
+          "name": "numero_boleto",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "data_pagamento",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "pagamentos_realizados",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')"
+      },
+      "fields": [
+        {
+          "name": "boleto_pagar_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "boletos_pagar"
+        },
+        {
+          "name": "data_pagamento",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "valor_pago",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "forma_pagamento",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "comprovante_url",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "registro_chuvas",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')"
+      },
+      "fields": [
+        {
+          "name": "data_chuva",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "quantidade_mm",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "precos_mercado",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')"
+      },
+      "fields": [
+        {
+          "name": "data_registro",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "preco_arroba",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "preco_milho",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "preco_farelo_soja",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fonte",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "regiao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "metas",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')"
+      },
+      "fields": [
+        {
+          "name": "tipo_meta",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "valor_meta",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "periodo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "data_inicio",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "data_fim",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "simulacoes_cenarios",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')"
+      },
+      "fields": [
+        {
+          "name": "tipo_operacao",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "quantidade_animais",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "peso_entrada",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "preco_compra",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "custo_acao",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "custo_mao_obra",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "custo_adicionais",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "gmd_estimado",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "peso_final",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "dias_duracao",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "custo_total",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "arrobas_produzidas",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "custo_arroba",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "preco_venda",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "receita_total",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "lucro_bruto",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "margem_lucro",
+          "type": "number",
           "required": false,
           "system": false
         },
