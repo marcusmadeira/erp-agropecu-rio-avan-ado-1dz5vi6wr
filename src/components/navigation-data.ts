@@ -40,6 +40,7 @@ export const navigationMenu = [
     items: [
       { title: 'Diagnóstico Inicial', url: '/diagnostico-inicial', icon: Target, roles: [1] },
       { title: 'Metas e KPIs', url: '/metas-kpis', icon: BarChart, roles: [1] },
+      { title: 'Simulador de Cenários', url: '/simulador-cenarios', icon: LineChart, roles: [1] },
     ],
   },
   {
