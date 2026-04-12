@@ -5,7 +5,6 @@ import EstacaoMontaTab from './components/EstacaoMontaTab'
 import PlanejamentoTab from './components/PlanejamentoTab'
 import IatfTab from './components/IatfTab'
 import SemaforoTab from './components/SemaforoTab'
-import NascimentosTab from './components/NascimentosTab'
 import { getAnimais, getAnimaisFemeas, getAnimaisTouros, getLotes } from '@/services/reproducao'
 
 export default function Reproducao() {
@@ -68,12 +67,6 @@ export default function Reproducao() {
           >
             Semáforo
           </TabsTrigger>
-          <TabsTrigger
-            value="nascimentos"
-            className="data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-md px-4"
-          >
-            Nascimentos
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-6">
@@ -90,9 +83,6 @@ export default function Reproducao() {
         </TabsContent>
         <TabsContent value="semaforo" className="mt-6">
           <SemaforoTab />
-        </TabsContent>
-        <TabsContent value="nascimentos" className="mt-6">
-          <NascimentosTab femeas={femeas} animais={animais} />
         </TabsContent>
       </Tabs>
     </div>

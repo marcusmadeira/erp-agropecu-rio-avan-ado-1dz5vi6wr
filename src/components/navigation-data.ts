@@ -52,6 +52,7 @@ export const navigationMenu = [
     title: 'Rebanho & Estrutura',
     items: [
       { title: 'Animais', url: '/animais', icon: Activity, roles: [1, 3] },
+      { title: 'Maternidade', url: '/maternidade', icon: Baby, roles: [1, 3] },
       { title: 'Lotes', url: '/lotes', icon: Box, roles: [1, 3] },
       { title: 'Pastos', url: '/pastos', icon: Map, roles: [1, 3] },
       { title: 'Pesagem', url: '/pesagem', icon: Scale, roles: [1, 3] },
