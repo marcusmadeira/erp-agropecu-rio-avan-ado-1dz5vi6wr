@@ -55,6 +55,7 @@ import VendaForm from './pages/vendas/VendaForm'
 import VendaDetalhes from './pages/vendas/VendaDetalhes'
 import Maquinario from './pages/operacoes/Maquinario'
 import Clima from './pages/operacoes/Clima'
+import Mercado from './pages/operacoes/Mercado'
 import Notificacoes from './pages/Notificacoes'
 import DiagnosticoInicial from './pages/estrategia/DiagnosticoInicial'
 import MetasKPIs from './pages/estrategia/MetasKPIs'
@@ -483,6 +484,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1]}>
             <Clima />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/mercado"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <Mercado />
           </AuthorizeRoute>
         }
       />

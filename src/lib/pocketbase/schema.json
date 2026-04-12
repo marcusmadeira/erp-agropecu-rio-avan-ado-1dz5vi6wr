@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-12T19:18:10.560Z",
+  "generatedAt": "2026-04-12T19:23:54.177Z",
   "collections": [
     {
       "name": "users",
@@ -2608,7 +2608,7 @@
           "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
-      "indexes": []
+      "indexes": ["CREATE INDEX `idx_chuvas_data` ON `registro_chuvas` (data_chuva)"]
     },
     {
       "name": "precos_mercado",
@@ -2672,7 +2672,10 @@
           "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
-      "indexes": []
+      "indexes": [
+        "CREATE INDEX `idx_mercado_data` ON `precos_mercado` (data_registro)",
+        "CREATE INDEX `idx_mercado_regiao` ON `precos_mercado` (regiao)"
+      ]
     },
     {
       "name": "metas",

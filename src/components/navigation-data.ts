@@ -110,7 +110,8 @@ export const navigationMenu = [
     title: 'Operações',
     items: [
       { title: 'Maquinário', url: '/maquinario', icon: Tractor, roles: [1] },
-      { title: 'Clima', url: '/clima', icon: CloudSun, roles: [1] },
+      { title: 'Monitorização de Clima', url: '/clima', icon: CloudSun, roles: [1] },
+      { title: 'Monitoramento de Mercado', url: '/mercado', icon: LineChart, roles: [1] },
     ],
   },
   {
