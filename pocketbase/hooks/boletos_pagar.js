@@ -24,22 +24,8 @@ routerAdd(
         const venda = txApp.findRecordById('vendas', vendaId)
         const clienteId = venda.get('cliente_id')
 
-        const transacoesCol = txApp.findCollectionByNameOrId('transacoes_financeiras')
-        const transacao = new Record(transacoesCol)
-        transacao.set('data_competencia', parcela.get('data_vencimento'))
-        transacao.set('data_vencimento', parcela.get('data_vencimento'))
-        transacao.set('data_efetivacao_real', dataPagamento)
-        transacao.set(
-          'descricao_lancamento',
-          `Recebimento Parcela ${parcela.get('numero_parcela')} - Venda ${vendaId} (${formaPagamento})`,
-        )
-        transacao.set('parceiro_id', clienteId)
-        transacao.set('tipo_movimento', 'Receita')
-        transacao.set('classificacao_custo', 'VARIÁVEL')
-        transacao.set('centro_custo', 'CC02')
-        transacao.set('valor_total', valorPago || parcela.get('valor_parcela'))
-        transacao.set('status_pagamento', 'Recebido')
-        txApp.save(transacao)
+        // A transação original foi criada durante vendas_after_create
+        // Mantemos a coerência apenas registrando a quitação nas entidades filhas e trilha de auditoria
 
         const auditoriaCol = txApp.findCollectionByNameOrId('auditoria_movimentacoes')
         const auditoria = new Record(auditoriaCol)

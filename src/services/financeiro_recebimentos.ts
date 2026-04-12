@@ -1,10 +1,7 @@
 import pb from '@/lib/pocketbase/client'
 
 export const getBoletosCompletos = async () => {
-  return pb.collection('boletos').getFullList({
-    expand: 'parcela_id,parcela_id.venda_id,parcela_id.venda_id.cliente_id',
-    sort: '-data_vencimento',
-  })
+  return pb.send('/backend/v1/boletos', { method: 'GET' })
 }
 
 export const getHistoricoCobrancas = async () => {

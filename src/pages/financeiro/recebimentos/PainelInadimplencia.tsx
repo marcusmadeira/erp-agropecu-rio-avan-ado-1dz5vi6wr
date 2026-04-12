@@ -102,32 +102,44 @@ export default function PainelInadimplencia({ boletos, externalMetrics }: any) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {atrasados.map((b: any) => {
-              const dias = differenceInDays(hoje, new Date(b.data_vencimento))
+            {(metrics.tableData || []).map((b: any) => {
               return (
                 <TableRow key={b.id}>
-                  <TableCell className="font-medium">
-                    {b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id
-                      ?.nome_razao_social || 'N/D'}
+                  <TableCell className="font-medium">{b.clienteNome || 'N/D'}</TableCell>
+                  <TableCell>{b.boleto || 'N/D'}</TableCell>
+                  <TableCell>
+                    {b.vencimento ? format(new Date(b.vencimento), 'dd/MM/yyyy') : '-'}
                   </TableCell>
-                  <TableCell>{b.numero_boleto || 'N/D'}</TableCell>
-                  <TableCell>{format(new Date(b.data_vencimento), 'dd/MM/yyyy')}</TableCell>
-                  <TableCell className="text-red-600 font-bold">{Math.max(0, dias)} dias</TableCell>
-                  <TableCell>{formatCurrency(b.valor_boleto)}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-red-600 font-bold">
+                    {Math.max(0, b.diasAtraso)} dias
+                  </TableCell>
+                  <TableCell>{formatCurrency(b.valor)}</TableCell>
+                  <TableCell className="text-right space-x-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleWhatsApp(b)}
+                      onClick={async () => {
+                        try {
+                          await import('@/lib/pocketbase/client').then((m) =>
+                            m.default.send('/backend/v1/cobranca_whatsapp', {
+                              method: 'POST',
+                              body: JSON.stringify({ boleto_id: b.id, tipo_mensagem: 'D+1' }),
+                            }),
+                          )
+                          alert('Cobrança via WhatsApp automatizada enviada com sucesso!')
+                        } catch (err: any) {
+                          alert('Erro ao enviar cobrança: ' + err.message)
+                        }
+                      }}
                       className="border-green-200 hover:bg-green-50 text-green-700"
                     >
-                      <MessageCircle className="w-4 h-4 mr-2" /> Cobrar (WhatsApp)
+                      <MessageCircle className="w-4 h-4 mr-2" /> Cobrar (Auto Bot)
                     </Button>
                   </TableCell>
                 </TableRow>
               )
             })}
-            {atrasados.length === 0 && (
+            {(!metrics.tableData || metrics.tableData.length === 0) && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   Nenhum cliente inadimplente encontrado.
