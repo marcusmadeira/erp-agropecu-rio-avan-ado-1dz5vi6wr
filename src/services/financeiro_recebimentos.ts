@@ -43,3 +43,25 @@ export const getConfiguracaoCobranca = async () => {
     return null
   }
 }
+
+export const createBoleto = async (data: any) => pb.collection('boletos').create(data)
+export const updateBoleto = async (id: string, data: any) =>
+  pb.collection('boletos').update(id, data)
+export const deleteBoleto = async (id: string) => pb.collection('boletos').delete(id)
+
+export const getParceiros = async () =>
+  pb.collection('parceiros_negocios').getFullList({ sort: 'nome_razao_social' })
+export const getVendas = async () =>
+  pb.collection('vendas').getFullList({ expand: 'cliente_id', sort: '-data_venda' })
+export const getParcelas = async () =>
+  pb
+    .collection('parcelas_venda')
+    .getFullList({ expand: 'venda_id,venda_id.cliente_id', sort: '-data_vencimento' })
+
+export const obterInadimplencia = async () => {
+  try {
+    return await pb.send('/backend/v1/obter_inadimplencia', { method: 'GET' })
+  } catch {
+    return null
+  }
+}

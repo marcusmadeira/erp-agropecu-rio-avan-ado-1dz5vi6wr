@@ -77,8 +77,8 @@ export const navigationMenu = [
       { title: 'Financeiro', url: '/financeiro', icon: DollarSign, roles: [1, 2] },
       { title: 'Transações', url: '/transacoes', icon: Landmark, roles: [1, 2] },
       {
-        title: 'Recebimento de Boletos',
-        url: '/recebimento-boletos',
+        title: 'Controle de Recebimento',
+        url: '/controle-recebimento',
         icon: DollarSign,
         roles: [1, 2, 3],
       },
