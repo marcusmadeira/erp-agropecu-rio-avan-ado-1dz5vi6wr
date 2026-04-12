@@ -23,3 +23,9 @@ export function ChartTooltip({ content, ...props }: any) {
 export function ChartTooltipContent({ ...props }: any) {
   return null
 }
+export function ChartLegend({ content, ...props }: any) {
+  return null
+}
+export function ChartLegendContent({ ...props }: any) {
+  return null
+}

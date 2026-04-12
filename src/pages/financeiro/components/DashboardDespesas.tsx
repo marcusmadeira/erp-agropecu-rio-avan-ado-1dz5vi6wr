@@ -17,7 +17,9 @@ export default function DashboardDespesas() {
     try {
       setDespesas(await getDespesas())
       setBoletos(await getBoletosPagar())
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   useEffect(() => {
