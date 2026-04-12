@@ -39,7 +39,9 @@ export default function PlanejamentoTab({ femeas, touros }: { femeas: any[]; tou
   const loadData = async () => {
     try {
       setData(await getPlanejamentos())
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   useEffect(() => {

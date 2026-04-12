@@ -22,7 +22,9 @@ export default function Reproducao() {
         setTouros(t)
         setLotes(l)
       })
-      .catch(() => {})
+      .catch((e) => {
+        console.error(e)
+      })
   }, [])
 
   return (

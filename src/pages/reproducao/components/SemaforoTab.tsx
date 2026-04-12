@@ -39,7 +39,9 @@ export default function SemaforoTab() {
           .sort((a, b) => a.days - b.days)
         setData(prenhes)
       })
-      .catch(() => {})
+      .catch((e) => {
+        console.error(e)
+      })
   }, [])
 
   return (

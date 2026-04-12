@@ -61,7 +61,9 @@ export default function EstacaoMontaTab({ touros, lotes }: { touros: any[]; lote
     try {
       setEstacoes(await getEstacoes())
       setRepasses(await getRepasses())
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   useEffect(() => {

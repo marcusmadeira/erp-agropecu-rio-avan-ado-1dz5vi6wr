@@ -10,10 +10,14 @@ export default function DashboardReproducao() {
   useEffect(() => {
     getIatfs()
       .then(setIatfs)
-      .catch(() => {})
+      .catch((e) => {
+        console.error(e)
+      })
     getRegistrosNascimento()
       .then(setNascimentos)
-      .catch(() => {})
+      .catch((e) => {
+        console.error(e)
+      })
   }, [])
 
   const totalInseminadas = iatfs.length

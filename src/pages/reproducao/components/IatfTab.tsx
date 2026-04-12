@@ -49,7 +49,9 @@ export default function IatfTab({ femeas, touros }: { femeas: any[]; touros: any
   const loadData = async () => {
     try {
       setData(await getIatfs())
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   useEffect(() => {

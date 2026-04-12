@@ -56,7 +56,9 @@ export default function NascimentosTab({ femeas, animais }: { femeas: any[]; ani
   const loadData = async () => {
     try {
       setData(await getRegistrosNascimento())
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   useEffect(() => {
