@@ -147,7 +147,7 @@ const AppRoutes = () => (
       <Route
         path="/"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <Dashboard />
           </AuthorizeRoute>
         }
