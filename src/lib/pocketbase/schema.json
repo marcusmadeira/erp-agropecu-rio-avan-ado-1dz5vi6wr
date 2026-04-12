@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-12T13:11:10.079Z",
+  "generatedAt": "2026-04-12T13:41:18.277Z",
   "collections": [
     {
       "name": "users",
@@ -356,7 +356,14 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": ["Matriz PO", "Touro PO", "Bezerro", "Novilha TIP", "Garrote TIP"]
+          "selectValues": [
+            "Matriz PO",
+            "Touro PO",
+            "Bezerro",
+            "Novilha TIP",
+            "Garrote TIP",
+            "Vaca Descarte TIP"
+          ]
         },
         {
           "name": "status",
@@ -447,6 +454,13 @@
           "type": "number",
           "required": false,
           "system": false
+        },
+        {
+          "name": "sexo",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Macho", "Fêmea"]
         }
       ],
       "indexes": [

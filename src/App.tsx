@@ -30,6 +30,7 @@ import ImportarAnimais from './pages/rebanho/ImportarAnimais'
 import Pastos from './pages/estrutura/Pastos'
 import Lotes from './pages/estrutura/Lotes'
 import Animais from './pages/rebanho/Animais'
+import AnimalPerfil from './pages/rebanho/AnimalPerfil'
 import Pesagem from './pages/rebanho/Pesagem'
 import CurralDigital from './pages/rebanho/CurralDigital'
 import Reclassificacao from './pages/rebanho/Reclassificacao'
@@ -269,6 +270,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1, 3]}>
             <Animais />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/animais/:id"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 3]}>
+            <AnimalPerfil />
           </AuthorizeRoute>
         }
       />

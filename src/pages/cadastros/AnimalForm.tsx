@@ -37,11 +37,16 @@ import { AiAssistantChat } from '@/components/AiAssistantChat'
 const schema = z
   .object({
     nome: z.string().min(1, 'Obrigatório').max(100, 'Máximo 100 caracteres'),
-    id_manejo_brinco: z.string().min(1, 'Obrigatório').max(20, 'Máximo 20 caracteres'),
+    id_manejo_brinco: z.string().max(20, 'Máximo 20 caracteres').optional().or(z.literal('')),
     rgd_rgn_abcz: z.string().max(50, 'Máximo 50 caracteres').optional().or(z.literal('')),
-    categoria: z.enum(['Matriz PO', 'Touro PO', 'Bezerro', 'Novilha TIP', 'Garrote TIP'], {
-      required_error: 'Obrigatório',
-    }),
+    categoria: z.enum(
+      ['Matriz PO', 'Touro PO', 'Bezerro', 'Novilha TIP', 'Garrote TIP', 'Vaca Descarte TIP'],
+      {
+        required_error: 'Obrigatório',
+      },
+    ),
+    sexo: z.enum(['Macho', 'Fêmea'], { required_error: 'Obrigatório' }),
+    status: z.string().min(1, 'Obrigatório'),
     data_nascimento: z
       .string()
       .min(1, 'Obrigatório')
@@ -54,6 +59,7 @@ const schema = z
       .number({ required_error: 'Obrigatório' })
       .positive('Deve ser positivo')
       .max(2000, 'Máximo 2000kg'),
+    custo_variavel_acumulado: z.coerce.number().min(0).optional(),
     pai_id: z.string().optional().or(z.literal('')),
     mae_id: z.string().optional().or(z.literal('')),
     lote_atual: z.string().min(1, 'Obrigatório'),
@@ -70,7 +76,7 @@ const schema = z
 
 type FormData = z.infer<typeof schema>
 
-export default function AnimalForm({ open, onOpenChange, item }: any) {
+export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
   const { toast } = useToast()
   const [lotes, setLotes] = useState<any[]>([])
   const [animais, setAnimais] = useState<any[]>([])
@@ -83,8 +89,11 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
       id_manejo_brinco: '',
       rgd_rgn_abcz: '',
       categoria: undefined,
+      sexo: undefined,
+      status: 'Ativo',
       data_nascimento: '',
       peso_atual_kg: '' as any,
+      custo_variavel_acumulado: 0,
       pai_id: '',
       mae_id: '',
       lote_atual: '',
@@ -111,8 +120,11 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
           ...item,
           data_nascimento: formattedDate,
           peso_atual_kg: item.peso_atual_kg || '',
+          custo_variavel_acumulado: item.custo_variavel_acumulado || 0,
           pai_id: item.pai_id || '',
           mae_id: item.mae_id || '',
+          sexo: item.sexo || undefined,
+          status: item.status || 'Ativo',
         })
       } else {
         form.reset({
@@ -120,8 +132,11 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
           id_manejo_brinco: '',
           rgd_rgn_abcz: '',
           categoria: undefined,
+          sexo: undefined,
+          status: 'Ativo',
           data_nascimento: '',
           peso_atual_kg: '' as any,
+          custo_variavel_acumulado: 0,
           pai_id: '',
           mae_id: '',
           lote_atual: '',
@@ -139,6 +154,7 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
       }
       if (!payload.pai_id) delete payload.pai_id
       if (!payload.mae_id) delete payload.mae_id
+      if (!payload.id_manejo_brinco) delete payload.id_manejo_brinco
 
       if (item) await updateAnimal(item.id, payload)
       else await createAnimal(payload)
@@ -154,6 +170,7 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
         duration: 3000,
       })
       onOpenChange(false)
+      if (onSaved) onSaved()
     } catch (e: any) {
       const errs = extractFieldErrors(e)
       if (Object.keys(errs).length > 0) {
@@ -175,7 +192,7 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
               <X className="h-4 w-4" /> Erro
             </div>
           ),
-          description: e.message || 'Erro ao salvar. Verifique se o Brinco já existe.',
+          description: e.message || 'Erro ao salvar. Verifique os dados inseridos.',
           className: 'bg-red-600 text-white border-red-700',
           duration: 3000,
         })
@@ -194,7 +211,7 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn('transition-all duration-300 max-w-lg', showAi && 'max-w-4xl')}>
+      <DialogContent className={cn('transition-all duration-300 max-w-2xl', showAi && 'max-w-5xl')}>
         <DialogHeader>
           <DialogTitle>{item ? 'Editar Animal' : 'Novo Animal'}</DialogTitle>
           <DialogDescription>Preencha os dados do animal abaixo.</DialogDescription>
@@ -204,7 +221,7 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4 max-h-[60vh] overflow-y-auto px-1"
+              className="space-y-4 max-h-[70vh] overflow-y-auto px-1 pb-2"
             >
               <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -225,7 +242,7 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
                   name="id_manejo_brinco"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Brinco *</FormLabel>
+                      <FormLabel>Brinco</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -235,7 +252,7 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="categoria"
@@ -249,19 +266,72 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {['Matriz PO', 'Touro PO', 'Bezerro', 'Novilha TIP', 'Garrote TIP'].map(
-                            (c) => (
-                              <SelectItem key={c} value={c}>
-                                {c}
-                              </SelectItem>
-                            ),
-                          )}
+                          {[
+                            'Matriz PO',
+                            'Touro PO',
+                            'Bezerro',
+                            'Novilha TIP',
+                            'Garrote TIP',
+                            'Vaca Descarte TIP',
+                          ].map((c) => (
+                            <SelectItem key={c} value={c}>
+                              {c}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="sexo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sexo *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Macho">Macho</SelectItem>
+                          <SelectItem value="Fêmea">Fêmea</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {['Ativo', 'Vendido', 'Morto', 'Descartado'].map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {s}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="data_nascimento"
@@ -275,9 +345,6 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
                     </FormItem>
                   )}
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="peso_atual_kg"
@@ -293,6 +360,22 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
                 />
                 <FormField
                   control={form.control}
+                  name="custo_variavel_acumulado"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Custo Acumulado (R$)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
                   name="rgd_rgn_abcz"
                   render={({ field }) => (
                     <FormItem>
@@ -300,6 +383,30 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
                       <FormControl>
                         <Input {...field} value={field.value || ''} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lote_atual"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lote *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {lotes.map((l) => (
+                            <SelectItem key={l.id} value={l.id}>
+                              {l.nome_lote}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -321,7 +428,7 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
                         </FormControl>
                         <SelectContent>
                           {animais
-                            .filter((a) => a.categoria === 'Touro PO')
+                            .filter((a) => a.sexo === 'Macho' || a.categoria === 'Touro PO')
                             .map((a) => (
                               <SelectItem key={a.id} value={a.id}>
                                 {a.nome || a.id_manejo_brinco}
@@ -347,7 +454,7 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
                         </FormControl>
                         <SelectContent>
                           {animais
-                            .filter((a) => a.categoria === 'Matriz PO')
+                            .filter((a) => a.sexo === 'Fêmea' || a.categoria === 'Matriz PO')
                             .map((a) => (
                               <SelectItem key={a.id} value={a.id}>
                                 {a.nome || a.id_manejo_brinco}
@@ -360,31 +467,6 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="lote_atual"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lote *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ''}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {lotes.map((l) => (
-                          <SelectItem key={l.id} value={l.id}>
-                            {l.nome_lote}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <div className="flex justify-between pt-4 pb-2">
                 <Button
@@ -411,7 +493,6 @@ export default function AnimalForm({ open, onOpenChange, item }: any) {
               </div>
             </form>
           </Form>
-
           {showAi && (
             <AiAssistantChat
               contextData={{ categoria: watchCategoria, animais }}
