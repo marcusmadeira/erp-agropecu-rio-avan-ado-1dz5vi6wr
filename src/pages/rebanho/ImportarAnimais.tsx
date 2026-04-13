@@ -10,6 +10,12 @@ import {
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   UploadCloud,
   FileText,
   XCircle,
@@ -76,16 +82,41 @@ export default function ImportarAnimais() {
     }
   }
 
-  const handleDownloadTemplate = () => {
+  const handleDownloadTemplateCSV = () => {
     const headers =
-      'id_manejo_brinco,rgd_rgn_abcz,categoria,status,peso_atual_kg,genealogia_pai,genealogia_mae,custo_variavel_acumulado,nome_lote\n'
-    const sample = 'BR-001,PO-001,Matriz PO,Ativo,450,BR-PAI,BR-MAE,0,Lote Padrão\n'
+      'id_manejo_brinco,rgd_rgn_abcz,categoria,status,peso_atual_kg,genealogia_pai,genealogia_mae,custo_variavel_acumulado,lote_atual_id,nome_lote\n'
+    const sample = 'BR-001,PO-001,Matriz PO,Ativo,450,BR-PAI,BR-MAE,0,,Lote Padrão\n'
     const blob = new Blob([headers + sample], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
     link.setAttribute('download', 'modelo_importacao_animais.csv')
     link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const handleDownloadTemplateExcel = () => {
+    const table = `<table>
+      <tr><th>id_manejo_brinco</th><th>rgd_rgn_abcz</th><th>categoria</th><th>status</th><th>peso_atual_kg</th><th>genealogia_pai</th><th>genealogia_mae</th><th>custo_variavel_acumulado</th><th>lote_atual_id</th><th>nome_lote</th></tr>
+      <tr><td>BR-001</td><td>PO-001</td><td>Matriz PO</td><td>Ativo</td><td>450</td><td>BR-PAI</td><td>BR-MAE</td><td>0</td><td></td><td>Lote Padrão</td></tr>
+    </table>`
+    const uri = 'data:application/vnd.ms-excel;base64,'
+    const template =
+      '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Template</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>{table}</body></html>'
+    const base64 = function (s: string) {
+      return window.btoa(unescape(encodeURIComponent(s)))
+    }
+    const format = function (s: string, c: any) {
+      return s.replace(/{(\w+)}/g, function (m, p) {
+        return c[p]
+      })
+    }
+    const ctx = { worksheet: 'Template', table: table }
+    const link = document.createElement('a')
+    link.href = uri + base64(format(template, ctx))
+    link.download = 'modelo_importacao_animais.xls'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -171,9 +202,9 @@ export default function ImportarAnimais() {
         errors.push('Brinco ausente')
       }
 
-      let loteId = null
+      let loteId = row.lote_atual_id ? row.lote_atual_id.toString().trim() : null
       const loteName = row.nome_lote || row.lote
-      if (loteName) {
+      if (!loteId && loteName) {
         const loteObj = lotes.find(
           (l) => l.nome_lote?.toLowerCase() === String(loteName).toLowerCase(),
         )
@@ -188,15 +219,15 @@ export default function ImportarAnimais() {
 
       return {
         id_manejo_brinco: brinco?.toString().trim() || '',
-        rgd_rgn_abcz: row.rgd_rgn_abcz || row.rgd || '',
+        rgd_rgn_abcz: (row.rgd_rgn_abcz || row.rgd || '').toString().trim(),
         categoria: row.categoria?.toString().trim() || 'Bezerro',
         status_animal: row.status?.toString().trim() || 'Ativo',
         peso_atual_kg: parseFloat(row.peso_atual_kg || row.peso) || 0,
-        genealogia_pai: row.genealogia_pai || row.pai || '',
-        genealogia_mae: row.genealogia_mae || row.mae || '',
+        genealogia_pai: (row.genealogia_pai || row.pai || '').toString().trim(),
+        genealogia_mae: (row.genealogia_mae || row.mae || '').toString().trim(),
         custo_variavel_acumulado: parseFloat(row.custo_variavel_acumulado || row.custo) || 0,
         lote_atual_id: loteId,
-        nome_lote: loteName || '',
+        nome_lote: loteName ? loteName.toString().trim() : '',
         status,
         errors,
         warnings,
@@ -266,17 +297,31 @@ export default function ImportarAnimais() {
     setIsImporting(true)
     try {
       const res = await processarImportacaoAnimais(validRows, fileOrigem)
+
+      const clientErrors = parsedRows.filter((r) => r.status === 'Error')
+      const totalErrors = res.errorCount + clientErrors.length
+      const combinedLogs = [
+        ...clientErrors.map(
+          (r, i) =>
+            `Validação Cliente: ${r.id_manejo_brinco || 'Linha ' + (i + 1)} - ${r.errors.join(', ')}`,
+        ),
+        ...res.errors,
+      ]
+
       setImportResult({
         success: res.successCount,
-        errors: res.errorCount,
-        logs: res.errors,
+        errors: totalErrors,
+        logs: combinedLogs,
       })
+
+      toast({
+        title: res.successCount > 0 ? 'Concluído' : 'Aviso',
+        description: `${res.successCount} animais importados com sucesso, ${totalErrors} com erro.`,
+        className: res.successCount > 0 ? 'bg-emerald-50 text-emerald-900 border-emerald-200' : '',
+        variant: res.successCount === 0 && totalErrors > 0 ? 'destructive' : 'default',
+      })
+
       if (res.successCount > 0) {
-        toast({
-          title: 'Sucesso',
-          description: `${res.successCount} animais importados.`,
-          className: 'bg-emerald-50 text-emerald-900 border-emerald-200',
-        })
         loadHistory()
         loadReferenceData()
       }
@@ -341,14 +386,25 @@ export default function ImportarAnimais() {
                   Formatos suportados: PDF, XLSX, XLS, CSV. Limite: 10MB.
                 </CardDescription>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadTemplate}
-                className="gap-2 text-[#094016] border-[#094016]/20"
-              >
-                <Download className="w-4 h-4" /> Baixar Modelo
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 text-[#094016] border-[#094016]/20"
+                  >
+                    <Download className="w-4 h-4" /> Baixar Modelo
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleDownloadTemplateCSV}>
+                    Baixar CSV (.csv)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDownloadTemplateExcel}>
+                    Baixar Excel (.xls)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </CardHeader>
             <CardContent>
               {!selectedFile ? (
@@ -464,7 +520,7 @@ export default function ImportarAnimais() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <ImportPreviewTable rows={parsedRows} limit={10} />
+                  <ImportPreviewTable rows={parsedRows} limit={5} />
                 </CardContent>
               </Card>
             </div>

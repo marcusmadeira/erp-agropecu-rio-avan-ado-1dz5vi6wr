@@ -15,7 +15,7 @@ routerAdd(
           {
             parts: [
               {
-                text: 'Extract animal records from this document. Return ONLY a JSON array of objects with keys: id_manejo_brinco (string), rgd_rgn_abcz (string), categoria (string), status (string), peso_atual_kg (number), genealogia_pai (string), genealogia_mae (string), custo_variavel_acumulado (number). If a field is missing, use empty string or 0. Remove leading/trailing spaces.',
+                text: 'Extract animal records from this document. Return ONLY a JSON array of objects with keys: id_manejo_brinco (string), rgd_rgn_abcz (string), categoria (string), status (string), lote_atual_id (string), peso_atual_kg (number), genealogia_pai (string), genealogia_mae (string), custo_variavel_acumulado (number). If a field is missing, use empty string or 0. Remove leading/trailing spaces.',
               },
               { inline_data: { mime_type: mimeType, data: base64 } },
             ],
@@ -54,6 +54,7 @@ routerAdd(
           rgd_rgn_abcz: 'PO-112',
           categoria: 'Touro PO',
           status: 'Ativo',
+          lote_atual_id: '',
           peso_atual_kg: 850,
           genealogia_pai: 'BR-100',
           genealogia_mae: 'BR-101',
@@ -64,6 +65,7 @@ routerAdd(
           rgd_rgn_abcz: 'PO-113',
           categoria: 'Matriz PO',
           status: 'Ativo',
+          lote_atual_id: '',
           peso_atual_kg: 590,
           genealogia_pai: '',
           genealogia_mae: '',
@@ -74,6 +76,7 @@ routerAdd(
           rgd_rgn_abcz: '',
           categoria: 'Bezerro',
           status: 'Ativo',
+          lote_atual_id: '',
           peso_atual_kg: 210,
           genealogia_pai: '',
           genealogia_mae: '',
@@ -84,6 +87,7 @@ routerAdd(
           rgd_rgn_abcz: '',
           categoria: 'Novilha TIP',
           status: 'Ativo',
+          lote_atual_id: '',
           peso_atual_kg: 340,
           genealogia_pai: '',
           genealogia_mae: '',
@@ -94,6 +98,7 @@ routerAdd(
           rgd_rgn_abcz: '',
           categoria: 'Garrote TIP',
           status: 'Vendido',
+          lote_atual_id: '',
           peso_atual_kg: 400,
           genealogia_pai: '',
           genealogia_mae: '',

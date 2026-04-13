@@ -51,7 +51,7 @@ export const navigationMenu = [
   {
     title: 'Administração',
     items: [
-      { title: 'Importação', url: '/importacao', icon: Upload, roles: [1, 2, 3] },
+      { title: 'Importação', url: '/importacao', icon: Upload, roles: [1, 3] },
       { title: 'Auditoria', url: '/auditoria', icon: ShieldCheck, roles: [1, 2, 3] },
     ],
   },
