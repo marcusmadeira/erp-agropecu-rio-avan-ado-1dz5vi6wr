@@ -52,6 +52,12 @@ export const navigationMenu = [
     title: 'Administração',
     items: [
       { title: 'Importação', url: '/importacao', icon: Upload, roles: [1, 3] },
+      {
+        title: 'Importar Fornecedores',
+        url: '/importador-fornecedores',
+        icon: Upload,
+        roles: [1, 2],
+      },
       { title: 'Auditoria', url: '/auditoria', icon: ShieldCheck, roles: [1, 2, 3] },
     ],
   },

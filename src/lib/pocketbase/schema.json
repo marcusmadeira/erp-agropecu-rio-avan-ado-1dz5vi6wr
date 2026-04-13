@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-13T18:09:48.070Z",
+  "generatedAt": "2026-04-13T18:15:18.374Z",
   "collections": [
     {
       "name": "users",
@@ -213,7 +213,11 @@
             "Funcionário",
             "Transportadora",
             "Pessoa Física",
-            "Pessoa Jurídica"
+            "Pessoa Jurídica",
+            "Ração",
+            "Medicamento",
+            "Serviço",
+            "Outro"
           ]
         },
         {
@@ -254,6 +258,12 @@
           "required": false,
           "system": false,
           "selectValues": ["Excel", "CSV", "PDF"]
+        },
+        {
+          "name": "data_importacao",
+          "type": "date",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
