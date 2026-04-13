@@ -109,7 +109,12 @@ export default function ImportarClientesTab() {
       } else {
         const reader = new FileReader()
         reader.onload = async (e) => {
-          const base64 = (e.target?.result as string).split(',')[1]
+          const result = e.target?.result as string | undefined
+          if (!result) {
+            setIsProcessing(false)
+            return
+          }
+          const base64 = result.split(',')[1]
           try {
             const res = await extrairDocumentoParceiroIA(
               base64,
