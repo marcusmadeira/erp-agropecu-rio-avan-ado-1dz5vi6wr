@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-13T18:02:29.421Z",
+  "generatedAt": "2026-04-13T18:09:48.070Z",
   "collections": [
     {
       "name": "users",
@@ -207,7 +207,14 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": ["Fornecedor", "Cliente", "Funcionário", "Transportadora"]
+          "selectValues": [
+            "Fornecedor",
+            "Cliente",
+            "Funcionário",
+            "Transportadora",
+            "Pessoa Física",
+            "Pessoa Jurídica"
+          ]
         },
         {
           "name": "status",
@@ -240,10 +247,18 @@
           "type": "email",
           "required": false,
           "system": false
+        },
+        {
+          "name": "origem_importacao",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Excel", "CSV", "PDF"]
         }
       ],
       "indexes": [
-        "CREATE INDEX `idx_parceiros_numero_documento` ON `parceiros_negocios` (numero_documento)"
+        "CREATE INDEX `idx_parceiros_numero_documento` ON `parceiros_negocios` (numero_documento)",
+        "CREATE UNIQUE INDEX `idx_parceiros_doc_unique` ON `parceiros_negocios` (numero_documento) WHERE numero_documento != ''"
       ]
     },
     {

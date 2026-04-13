@@ -7,6 +7,13 @@ export const extrairDocumentoIA = (base64: string, mimeType: string) =>
     headers: { 'Content-Type': 'application/json' },
   })
 
+export const extrairDocumentoParceiroIA = (base64: string, mimeType: string) =>
+  pb.send('/backend/v1/extrair-documento-parceiro-ia', {
+    method: 'POST',
+    body: JSON.stringify({ base64, mimeType }),
+    headers: { 'Content-Type': 'application/json' },
+  })
+
 export const processarImportacaoAnimais = (registros: any[], origem: string) =>
   pb.send('/backend/v1/processar-importacao-animais', {
     method: 'POST',

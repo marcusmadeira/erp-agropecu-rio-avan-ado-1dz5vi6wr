@@ -54,8 +54,13 @@ routerAdd(
               record.set('nome_razao_social', reg.nome_razao_social || 'Desconhecido')
               record.set('numero_documento', reg.numero_documento)
               record.set('tipo_documento', reg.tipo_documento || 'CPF')
-              record.set('categoria_parceiro', reg.categoria_parceiro || 'Fornecedor')
-              record.set('status', 'Ativo')
+              record.set('categoria_parceiro', reg.categoria_parceiro || 'Cliente')
+              record.set('status', reg.status || 'Ativo')
+              record.set('contato_whatsapp_cobranca', reg.contato_whatsapp_cobranca || '')
+              record.set('email_cobranca', reg.email_cobranca || '')
+              if (reg.origem_importacao) {
+                record.set('origem_importacao', reg.origem_importacao)
+              }
               txApp.save(record)
               inseridos.push(record.id)
             } else if (tipo_dado === 'transacoes') {
