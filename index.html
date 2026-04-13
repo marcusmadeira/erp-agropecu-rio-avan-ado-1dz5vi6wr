@@ -1,5 +1,4 @@
-<!-- HTML template for the frontend react app: https://developer.mozilla.org/en-US/docs/Web/HTML -->
-<!doctype html>
+<!-- HTML template for the frontend react app: https://developer.mozilla.org/en-US/docs/Web/HTML --><!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -10,7 +9,10 @@
     <meta property="og:image" content="/og-image.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#000080" />
-    <link rel="apple-touch-icon" href="https://img.usecurling.com/p/192/192?q=farm&color=blue" />
+    <link
+      rel="apple-touch-icon"
+      href="https://img.usecurling.com/p/192/192?q=farm&amp;color=blue"
+    />
   </head>
 
   <body>
@@ -20,13 +22,16 @@
     <!-- @skip-protected: Do not remove. App entrypoint. -->
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').then(registration => {
-            console.log('SW registered successfully:', registration.scope);
-          }).catch(error => {
-            console.log('SW registration failed:', error);
-          });
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log("SW registered successfully:", registration.scope);
+            })
+            .catch((error) => {
+              console.log("SW registration failed:", error);
+            });
         });
       }
     </script>
