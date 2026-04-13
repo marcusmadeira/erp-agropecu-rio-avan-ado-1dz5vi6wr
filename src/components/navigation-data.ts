@@ -36,14 +36,9 @@ export const navigationMenu = [
   {
     title: 'Gestão Estratégica',
     items: [
-      { title: 'Diagnóstico Inicial', url: '/diagnostico-inicial', icon: Target, roles: [1, 2, 3] },
-      { title: 'Metas e KPIs', url: '/metas-kpis', icon: BarChart, roles: [1, 2, 3] },
-      {
-        title: 'Simulador de Cenários',
-        url: '/simulador-cenarios',
-        icon: LineChart,
-        roles: [1, 2, 3],
-      },
+      { title: 'Diagnóstico', url: '/diagnostico-inicial', icon: Target, roles: [1, 2, 3] },
+      { title: 'Metas', url: '/metas-kpis', icon: BarChart, roles: [1, 2, 3] },
+      { title: 'Simulador', url: '/simulador-cenarios', icon: LineChart, roles: [1, 2, 3] },
     ],
   },
   {

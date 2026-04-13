@@ -1,5 +1,19 @@
 import pb from '@/lib/pocketbase/client'
 
+export const extrairDocumentoIA = (base64: string, mimeType: string) =>
+  pb.send('/backend/v1/extrair-documento-ia', {
+    method: 'POST',
+    body: JSON.stringify({ base64, mimeType }),
+    headers: { 'Content-Type': 'application/json' },
+  })
+
+export const processarImportacaoAnimais = (registros: any[], origem: string) =>
+  pb.send('/backend/v1/processar-importacao-animais', {
+    method: 'POST',
+    body: JSON.stringify({ registros, origem }),
+    headers: { 'Content-Type': 'application/json' },
+  })
+
 export const processarImportacao = (
   tipo_dado: string,
   registros: any[],

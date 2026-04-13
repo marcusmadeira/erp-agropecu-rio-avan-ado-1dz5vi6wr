@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-12T19:27:40.651Z",
+  "generatedAt": "2026-04-13T15:39:13.639Z",
   "collections": [
     {
       "name": "users",
@@ -461,6 +461,19 @@
           "required": false,
           "system": false,
           "selectValues": ["Macho", "Fêmea"]
+        },
+        {
+          "name": "data_importacao",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "origem_importacao",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Excel", "CSV", "PDF"]
         }
       ],
       "indexes": [

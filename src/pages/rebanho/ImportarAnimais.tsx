@@ -1,11 +1,32 @@
 import { useState, useRef, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { UploadCloud, FileText, XCircle, BrainCircuit, RefreshCw } from 'lucide-react'
+import {
+  UploadCloud,
+  FileText,
+  XCircle,
+  BrainCircuit,
+  RefreshCw,
+  Download,
+  CheckCircle2,
+  AlertTriangle,
+} from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
-import { importarAnimais, desfazerImportacao, getHistoricoImportacoes } from '@/services/importacao'
+import {
+  extrairDocumentoIA,
+  processarImportacaoAnimais,
+  desfazerImportacao,
+  getHistoricoImportacoes,
+} from '@/services/importacao'
 import { ImportPreviewTable, RowData } from '@/components/importacao/ImportPreviewTable'
 import { ImportHistoryTable } from '@/components/importacao/ImportHistoryTable'
 import { Progress } from '@/components/ui/progress'
@@ -16,6 +37,7 @@ export default function ImportarAnimais() {
 
   const [dragActive, setDragActive] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [fileOrigem, setFileOrigem] = useState<'CSV' | 'Excel' | 'PDF'>('CSV')
   const [isExtracting, setIsExtracting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -23,10 +45,13 @@ export default function ImportarAnimais() {
 
   const [history, setHistory] = useState<any[]>([])
   const [isUndoing, setIsUndoing] = useState<string | null>(null)
+  const [importResult, setImportResult] = useState<{
+    success: number
+    errors: number
+    logs: string[]
+  } | null>(null)
 
   const [lotes, setLotes] = useState<any[]>([])
-  const [animais, setAnimais] = useState<any[]>([])
-  const [adaptSummary, setAdaptSummary] = useState('')
 
   useEffect(() => {
     loadReferenceData()
@@ -35,12 +60,8 @@ export default function ImportarAnimais() {
 
   const loadReferenceData = async () => {
     try {
-      const [lRes, aRes] = await Promise.all([
-        pb.collection('lotes').getFullList(),
-        pb.collection('animais').getFullList({ fields: 'id,id_manejo_brinco' }),
-      ])
-      setLotes(lRes)
-      setAnimais(aRes)
+      const res = await pb.collection('lotes').getFullList()
+      setLotes(res)
     } catch (e) {
       console.error(e)
     }
@@ -53,6 +74,21 @@ export default function ImportarAnimais() {
     } catch (e) {
       console.error(e)
     }
+  }
+
+  const handleDownloadTemplate = () => {
+    const headers =
+      'id_manejo_brinco,rgd_rgn_abcz,categoria,status,peso_atual_kg,genealogia_pai,genealogia_mae,custo_variavel_acumulado,nome_lote\n'
+    const sample = 'BR-001,PO-001,Matriz PO,Ativo,450,BR-PAI,BR-MAE,0,Lote Padrão\n'
+    const blob = new Blob([headers + sample], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', 'modelo_importacao_animais.csv')
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   const handleDrag = (e: React.DragEvent) => {
@@ -83,23 +119,44 @@ export default function ImportarAnimais() {
       return
     }
     const ext = file.name.split('.').pop()?.toLowerCase()
-    if (!['pdf', 'xls', 'xlsx'].includes(ext || '')) {
+    let origem: 'CSV' | 'Excel' | 'PDF' = 'CSV'
+
+    if (ext === 'pdf') origem = 'PDF'
+    else if (['xls', 'xlsx'].includes(ext || '')) origem = 'Excel'
+    else if (ext === 'csv') origem = 'CSV'
+    else {
       toast({
         title: 'Formato inválido',
-        description: 'Aceitos apenas PDF ou Excel.',
+        description: 'Aceitos apenas PDF, Excel ou CSV.',
         variant: 'destructive',
       })
       return
     }
+
     setSelectedFile(file)
-    simulateAIExtraction(file)
+    setFileOrigem(origem)
+    setImportResult(null)
+    extractData(file, origem)
   }
 
   const clearSelection = () => {
     setSelectedFile(null)
     setParsedRows([])
-    setAdaptSummary('')
+    setImportResult(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const getBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => {
+        let encoded = reader.result?.toString().replace(/^data:(.*,)?/, '') || ''
+        if (encoded.length % 4 > 0) encoded += '='.repeat(4 - (encoded.length % 4))
+        resolve(encoded)
+      }
+      reader.onerror = (error) => reject(error)
+    })
   }
 
   const validateRows = (rows: any[]): RowData[] => {
@@ -108,148 +165,121 @@ export default function ImportarAnimais() {
       let errors: string[] = []
       let warnings: string[] = []
 
-      if (!row.nome) {
-        status = 'Error'
-        errors.push('Nome ausente')
-      }
-      if (!row.brinco) {
+      const brinco = row.id_manejo_brinco || row.brinco
+      if (!brinco) {
         status = 'Error'
         errors.push('Brinco ausente')
-      } else if (animais.some((a) => a.id_manejo_brinco === row.brinco)) {
-        status = 'Error'
-        errors.push('Brinco já existe')
       }
 
-      const validCats = ['Matriz PO', 'Touro PO', 'Bezerro', 'Novilha TIP', 'Garrote TIP']
-      if (!validCats.includes(row.categoria)) {
-        status = 'Error'
-        errors.push('Categoria inválida')
-      }
-
-      if (!row.data_nascimento) {
-        status = 'Error'
-        errors.push('Data Nasc. ausente')
-      }
-
-      const peso = parseFloat(row.peso)
-      if (isNaN(peso) || peso <= 0) {
-        status = 'Error'
-        errors.push('Peso inválido')
-      } else if (row.categoria === 'Bezerro' && peso > 300) {
-        status = 'Warning'
-        warnings.push('Peso anormal para Bezerro')
-      }
-
-      const loteObj = lotes.find((l) => l.nome_lote === row.lote)
-      if (!loteObj) {
-        status = 'Error'
-        errors.push('Lote não encontrado')
-      } else {
-        row.lote_id = loteObj.id
-      }
-
-      if (row.pai && !animais.some((a) => a.id_manejo_brinco === row.pai)) {
-        status = 'Warning'
-        warnings.push('Pai não cadastrado')
+      let loteId = null
+      const loteName = row.nome_lote || row.lote
+      if (loteName) {
+        const loteObj = lotes.find(
+          (l) => l.nome_lote?.toLowerCase() === String(loteName).toLowerCase(),
+        )
+        if (loteObj) loteId = loteObj.id
+        else {
+          status = 'Warning'
+          warnings.push(`Lote '${loteName}' não encontrado, ficará sem lote`)
+        }
       }
 
       if (status === 'Valid' && warnings.length > 0) status = 'Warning'
 
-      return { ...row, status, errors, warnings }
+      return {
+        id_manejo_brinco: brinco?.toString().trim() || '',
+        rgd_rgn_abcz: row.rgd_rgn_abcz || row.rgd || '',
+        categoria: row.categoria?.toString().trim() || 'Bezerro',
+        status_animal: row.status?.toString().trim() || 'Ativo',
+        peso_atual_kg: parseFloat(row.peso_atual_kg || row.peso) || 0,
+        genealogia_pai: row.genealogia_pai || row.pai || '',
+        genealogia_mae: row.genealogia_mae || row.mae || '',
+        custo_variavel_acumulado: parseFloat(row.custo_variavel_acumulado || row.custo) || 0,
+        lote_atual_id: loteId,
+        nome_lote: loteName || '',
+        status,
+        errors,
+        warnings,
+      }
     })
   }
 
-  const simulateAIExtraction = (file: File) => {
+  const extractData = async (file: File, origem: 'CSV' | 'Excel' | 'PDF') => {
     setIsExtracting(true)
-    setProgress(0)
+    setProgress(20)
 
-    const interval = setInterval(() => setProgress((p) => p + 10), 200)
+    try {
+      let extractedData: any[] = []
 
-    setTimeout(() => {
-      clearInterval(interval)
+      if (origem === 'CSV') {
+        const text = await file.text()
+        const lines = text
+          .split('\n')
+          .map((l) => l.trim())
+          .filter((l) => l)
+        if (lines.length > 1) {
+          const headers = lines[0].split(/,|;/).map((h) => h.trim().toLowerCase())
+          for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(/,|;/)
+            const row: any = {}
+            headers.forEach((h, idx) => {
+              row[h] = (values[idx] || '').trim()
+            })
+            extractedData.push(row)
+          }
+        }
+        setProgress(100)
+      } else {
+        // PDF and Excel via AI Vision
+        setProgress(50)
+        const base64 = await getBase64(file)
+        const res = await extrairDocumentoIA(base64, file.type || 'application/pdf')
+        extractedData = res.data || []
+        setProgress(100)
+      }
+
+      if (extractedData.length === 0) {
+        toast({
+          title: 'Aviso',
+          description: 'Nenhum dado válido encontrado no arquivo.',
+          variant: 'destructive',
+        })
+      } else {
+        const validated = validateRows(extractedData)
+        setParsedRows(validated)
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Erro na extração',
+        description: error.message || 'Falha ao processar arquivo.',
+        variant: 'destructive',
+      })
+    } finally {
       setIsExtracting(false)
-
-      const loteName = lotes.length > 0 ? lotes[0].nome_lote : 'Lote Padrão'
-
-      const mockData = [
-        {
-          nome: 'Nelore Alpha',
-          brinco: `BR-${Math.floor(Math.random() * 10000)}`,
-          rgd: 'PO-991',
-          categoria: 'Touro PO',
-          data_nascimento: '2020-05-10',
-          peso: 850,
-          pai: '',
-          mae: '',
-          lote: loteName,
-        },
-        {
-          nome: 'Matriz Beta',
-          brinco: `BR-${Math.floor(Math.random() * 10000)}`,
-          rgd: 'PO-992',
-          categoria: 'Matriz PO',
-          data_nascimento: '2019-08-20',
-          peso: 600,
-          pai: '',
-          mae: '',
-          lote: loteName,
-        },
-        {
-          nome: 'Bezerro Gama',
-          brinco: `BR-${Math.floor(Math.random() * 10000)}`,
-          rgd: '',
-          categoria: 'Bezerro',
-          data_nascimento: '2023-01-15',
-          peso: 350,
-          pai: '',
-          mae: '',
-          lote: loteName,
-        },
-        {
-          nome: 'Fêmea Errada',
-          brinco: `BR-${Math.floor(Math.random() * 10000)}`,
-          rgd: '',
-          categoria: 'Vaca',
-          data_nascimento: '2020-01-01',
-          peso: 500,
-          pai: '',
-          mae: '',
-          lote: 'Lote Inexistente',
-        },
-      ]
-
-      const validated = validateRows(mockData)
-      setParsedRows(validated)
-
-      const valids = validated.filter((r) => r.status !== 'Error').length
-      setAdaptSummary(
-        `ADAPT analisou o arquivo ${file.name}. Foram encontrados ${validated.length} registros, sendo ${valids} prontos para importação e ${validated.length - valids} com erros críticos. A sugestão é corrigir a categoria "Vaca" para "Matriz PO".`,
-      )
-    }, 2000)
+    }
   }
 
   const handleImport = async () => {
     const validRows = parsedRows.filter((r) => r.status !== 'Error')
-    if (validRows.length === 0) {
-      toast({
-        title: 'Erro',
-        description: 'Nenhum registro válido para importar.',
-        variant: 'destructive',
-      })
-      return
-    }
+    if (validRows.length === 0) return
 
     setIsImporting(true)
     try {
-      await importarAnimais(selectedFile?.name || 'arquivo.pdf', validRows)
-      toast({
-        title: 'Sucesso',
-        description: `${validRows.length} animais importados com sucesso.`,
-        className: 'bg-emerald-50 text-emerald-900 border-emerald-200',
+      const res = await processarImportacaoAnimais(validRows, fileOrigem)
+      setImportResult({
+        success: res.successCount,
+        errors: res.errorCount,
+        logs: res.errors,
       })
-      clearSelection()
-      loadHistory()
-      loadReferenceData()
+      if (res.successCount > 0) {
+        toast({
+          title: 'Sucesso',
+          description: `${res.successCount} animais importados.`,
+          className: 'bg-emerald-50 text-emerald-900 border-emerald-200',
+        })
+        loadHistory()
+        loadReferenceData()
+      }
     } catch (err: any) {
       toast({
         title: 'Falha na Importação',
@@ -275,19 +305,24 @@ export default function ImportarAnimais() {
     }
   }
 
-  const hasValidRows = parsedRows.some((r) => r.status !== 'Error')
+  const validCount = parsedRows.filter((r) => r.status !== 'Error').length
+  const errorCount = parsedRows.length - validCount
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-10">
-      <div className="flex items-center gap-3">
-        <BrainCircuit className="w-8 h-8 text-[#094016]" />
-        <div>
-          <h2 className="text-2xl font-bold text-[#094016] tracking-tight">
-            Importação com ADAPT AI
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Extraia dados de planilhas e PDFs com inteligência artificial.
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-[#094016] rounded-xl text-white shadow-sm">
+            <UploadCloud className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-[#094016] tracking-tight">
+              Importador de Animais
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Adicione registros em lote via CSV, Excel ou AI-PDF.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -298,10 +333,22 @@ export default function ImportarAnimais() {
         </TabsList>
 
         <TabsContent value="nova" className="space-y-6">
-          <Card className="border-t-4 border-t-[#094016]">
-            <CardHeader>
-              <CardTitle>Envio de Arquivo</CardTitle>
-              <CardDescription>Formatos suportados: PDF, XLSX, XLS. Limite: 10MB.</CardDescription>
+          <Card className="border-t-4 border-t-[#094016] shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Envio de Arquivo</CardTitle>
+                <CardDescription>
+                  Formatos suportados: PDF, XLSX, XLS, CSV. Limite: 10MB.
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadTemplate}
+                className="gap-2 text-[#094016] border-[#094016]/20"
+              >
+                <Download className="w-4 h-4" /> Baixar Modelo
+              </Button>
             </CardHeader>
             <CardContent>
               {!selectedFile ? (
@@ -316,7 +363,7 @@ export default function ImportarAnimais() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".pdf,.xls,.xlsx"
+                    accept=".pdf,.xls,.xlsx,.csv"
                     className="hidden"
                     onChange={handleFileChange}
                   />
@@ -334,13 +381,18 @@ export default function ImportarAnimais() {
                     <div className="flex items-center gap-3">
                       <FileText className="w-8 h-8 text-[#094016]" />
                       <div>
-                        <p className="font-semibold text-sm">{selectedFile.name}</p>
+                        <p className="font-semibold text-sm flex items-center gap-2">
+                          {selectedFile.name}
+                          <span className="px-2 py-0.5 rounded-full bg-slate-200 text-xs font-medium text-slate-600">
+                            {fileOrigem}
+                          </span>
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                         </p>
                       </div>
                     </div>
-                    {!isExtracting && !isImporting && (
+                    {!isExtracting && !isImporting && !importResult && (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -353,11 +405,13 @@ export default function ImportarAnimais() {
                   </div>
 
                   {isExtracting && (
-                    <div className="space-y-2">
+                    <div className="space-y-2 px-2">
                       <div className="flex justify-between text-sm">
                         <span className="font-medium text-[#094016] flex items-center gap-2">
-                          <RefreshCw className="w-4 h-4 animate-spin" /> ADAPT está analisando o
-                          arquivo...
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          {fileOrigem === 'PDF' || fileOrigem === 'Excel'
+                            ? 'Processando com Inteligência Artificial...'
+                            : 'Lendo arquivo...'}
                         </span>
                         <span>{progress}%</span>
                       </div>
@@ -369,28 +423,34 @@ export default function ImportarAnimais() {
             </CardContent>
           </Card>
 
-          {parsedRows.length > 0 && !isExtracting && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-[#094016]/5 border border-[#094016]/20 rounded-md p-4 flex gap-3">
-                <BrainCircuit className="w-6 h-6 text-[#094016] shrink-0" />
-                <div>
-                  <h4 className="text-sm font-bold text-[#094016]">Análise ADAPT</h4>
-                  <p className="text-sm text-[#094016]/80 mt-1">{adaptSummary}</p>
+          {parsedRows.length > 0 && !isExtracting && !importResult && (
+            <div className="space-y-4 animate-in fade-in duration-500">
+              {(fileOrigem === 'PDF' || fileOrigem === 'Excel') && (
+                <div className="bg-[#094016]/5 border border-[#094016]/20 rounded-md p-4 flex gap-3">
+                  <BrainCircuit className="w-6 h-6 text-[#094016] shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-bold text-[#094016]">Extração ADAPT Vision</h4>
+                    <p className="text-sm text-[#094016]/80 mt-1">
+                      A Inteligência Artificial extraiu {parsedRows.length} registros estruturados
+                      do documento não estruturado. Revise os dados antes de prosseguir.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <Card>
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-3 border-b">
                   <div className="flex justify-between items-center">
                     <div>
-                      <CardTitle className="text-lg">Pré-visualização da Importação</CardTitle>
+                      <CardTitle className="text-lg">Pré-visualização</CardTitle>
                       <CardDescription>
-                        Apenas registros com status Válido ou Aviso serão importados.
+                        {validCount} registros válidos e {errorCount} com erros. Apenas os válidos
+                        serão importados.
                       </CardDescription>
                     </div>
                     <Button
                       onClick={handleImport}
-                      disabled={!hasValidRows || isImporting}
+                      disabled={validCount === 0 || isImporting}
                       className="bg-[#094016] hover:bg-[#062b0f]"
                     >
                       {isImporting ? (
@@ -398,16 +458,65 @@ export default function ImportarAnimais() {
                           <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Importando...
                         </>
                       ) : (
-                        'Processar Arquivo'
+                        'Confirmar Importação'
                       )}
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <ImportPreviewTable rows={parsedRows} />
+                <CardContent className="pt-4">
+                  <ImportPreviewTable rows={parsedRows} limit={10} />
                 </CardContent>
               </Card>
             </div>
+          )}
+
+          {importResult && (
+            <Card className="border-t-4 border-t-emerald-500 animate-in zoom-in-95 duration-300">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-emerald-700">
+                  <CheckCircle2 className="w-6 h-6" /> Resumo da Importação
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100 text-center">
+                    <p className="text-3xl font-bold text-emerald-600">{importResult.success}</p>
+                    <p className="text-sm font-medium text-emerald-800">Animais Importados</p>
+                  </div>
+                  <div
+                    className={`p-4 rounded-lg border text-center ${importResult.errors > 0 ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-100'}`}
+                  >
+                    <p
+                      className={`text-3xl font-bold ${importResult.errors > 0 ? 'text-rose-600' : 'text-slate-600'}`}
+                    >
+                      {importResult.errors}
+                    </p>
+                    <p
+                      className={`text-sm font-medium ${importResult.errors > 0 ? 'text-rose-800' : 'text-slate-800'}`}
+                    >
+                      Com Erro
+                    </p>
+                  </div>
+                </div>
+                {importResult.logs.length > 0 && (
+                  <div className="bg-rose-50 rounded-md p-3 border border-rose-100 max-h-40 overflow-y-auto">
+                    <p className="text-xs font-semibold text-rose-800 mb-2 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" /> Logs de Erro:
+                    </p>
+                    <ul className="text-xs text-rose-700 space-y-1 list-disc pl-4">
+                      {importResult.logs.map((log, i) => (
+                        <li key={i}>{log}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </CardContent>
+              <CardFooter className="bg-slate-50 flex justify-end rounded-b-xl border-t p-4">
+                <Button onClick={clearSelection} variant="outline" className="gap-2">
+                  <RefreshCw className="w-4 h-4" /> Reimportar / Novo Arquivo
+                </Button>
+              </CardFooter>
+            </Card>
           )}
         </TabsContent>
 
