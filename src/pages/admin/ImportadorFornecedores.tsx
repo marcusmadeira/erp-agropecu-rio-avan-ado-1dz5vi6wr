@@ -121,7 +121,9 @@ export default function ImportadorFornecedores() {
         const reader = new FileReader()
         reader.onload = async (e) => {
           try {
-            const base64 = (e.target?.result as string).split(',')[1]
+            const result = e.target?.result
+            if (typeof result !== 'string') throw new Error('Falha ao ler o arquivo')
+            const base64 = result.split(',')[1]
             const res = await extrairDocumentoParceiroIA(base64, f.type)
             if (res.data && res.data.length > 0)
               await validateAndPreview(res.data, isPDF ? 'PDF' : 'Excel')
