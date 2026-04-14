@@ -198,7 +198,7 @@ const AppRoutes = () => (
       <Route
         path="/importacao"
         element={
-          <AuthorizeRoute allowedRoles={[1, 3]}>
+          <AuthorizeRoute allowedRoles={[1]}>
             <Importacao />
           </AuthorizeRoute>
         }
@@ -279,7 +279,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/geral"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <GestaoVendas />
           </AuthorizeRoute>
         }
@@ -303,7 +303,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/geral/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <VendaDetalhes />
           </AuthorizeRoute>
         }
@@ -311,7 +311,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/eventos/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <EventoDetalhes />
           </AuthorizeRoute>
         }
@@ -319,7 +319,7 @@ const AppRoutes = () => (
       <Route
         path="/clima"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <Clima />
           </AuthorizeRoute>
         }
@@ -327,7 +327,7 @@ const AppRoutes = () => (
       <Route
         path="/mercado"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <Mercado />
           </AuthorizeRoute>
         }
@@ -359,7 +359,7 @@ const AppRoutes = () => (
       <Route
         path="/estoque/dashboard"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <DashboardEstoque />
           </AuthorizeRoute>
         }
@@ -399,7 +399,7 @@ const AppRoutes = () => (
       <Route
         path="/fabrica/producao"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <ProducaoRacao />
           </AuthorizeRoute>
         }

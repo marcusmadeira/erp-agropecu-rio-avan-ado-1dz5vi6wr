@@ -44,7 +44,7 @@ export const navigationMenu = [
   {
     title: 'Comercial & Financeiro',
     items: [
-      { title: 'Vendas', url: '/vendas/geral', icon: ShoppingCart, roles: [1, 2, 3] },
+      { title: 'Vendas', url: '/vendas/geral', icon: ShoppingCart, roles: [1, 2] },
       { title: 'Recebimento', url: '/controle-recebimento', icon: Banknote, roles: [1, 2] },
       { title: 'Despesas', url: '/despesas', icon: DollarSign, roles: [1, 2] },
     ],
@@ -60,17 +60,17 @@ export const navigationMenu = [
   {
     title: 'Operações',
     items: [
-      { title: 'Clima', url: '/clima', icon: CloudSun, roles: [1, 2, 3] },
+      { title: 'Clima', url: '/clima', icon: CloudSun, roles: [1, 2] },
       { title: 'Mercado', url: '/mercado', icon: TrendingUp, roles: [1, 2] },
     ],
   },
   {
     title: 'Estoque',
     items: [
-      { title: 'Dashboard', url: '/estoque/dashboard', icon: LayoutDashboard, roles: [1, 2, 3] },
+      { title: 'Dashboard', url: '/estoque/dashboard', icon: LayoutDashboard, roles: [1, 2] },
       { title: 'Cadastro Manual', url: '/estoque/cadastro-manual', icon: PackagePlus, roles: [1] },
       { title: 'Receitas de Ração', url: '/receitas-racao', icon: ClipboardList, roles: [1] },
-      { title: 'Produção de Ração', url: '/fabrica/producao', icon: Factory, roles: [1, 2] },
+      { title: 'Produção de Ração', url: '/fabrica/producao', icon: Factory, roles: [1, 2, 3] },
       {
         title: 'Saída de Ração',
         url: '/estoque/saida-racao',
