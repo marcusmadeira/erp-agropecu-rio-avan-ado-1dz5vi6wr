@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Info } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
@@ -82,6 +83,13 @@ export default function Login() {
           <CardDescription>Acesse sua conta para continuar</CardDescription>
         </CardHeader>
         <CardContent>
+          <Alert className="mb-6 border-brand/30 bg-brand/5">
+            <Info className="h-4 w-4 !text-brand" />
+            <AlertTitle className="font-bold text-brand">Acesso Rápido</AlertTitle>
+            <AlertDescription className="text-brand/90">
+              Usuário de teste criado com sucesso! Email: admin@toriba.com | Senha: admin123
+            </AlertDescription>
+          </Alert>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2 text-left">
               <Label htmlFor="loginOrEmail" className="font-bold text-slate-700">
