@@ -35,7 +35,7 @@ export const navigationMenu = [
   {
     title: 'Comercial & Financeiro',
     items: [
-      { title: 'Vendas', url: '/vendas', icon: ShoppingCart, roles: [1, 2] },
+      { title: 'Vendas', url: '/vendas/geral', icon: ShoppingCart, roles: [1, 2] },
       { title: 'Recebimento', url: '/controle-recebimento', icon: Banknote, roles: [1, 2] },
       { title: 'Despesas', url: '/despesas', icon: DollarSign, roles: [1, 2] },
     ],

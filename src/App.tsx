@@ -195,8 +195,9 @@ const AppRoutes = () => (
           </AuthorizeRoute>
         }
       />
+      <Route path="/vendas" element={<Navigate to="/vendas/geral" replace />} />
       <Route
-        path="/vendas"
+        path="/vendas/geral"
         element={
           <AuthorizeRoute allowedRoles={[1, 2]}>
             <GestaoVendas />
