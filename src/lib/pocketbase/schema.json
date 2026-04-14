@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-14T10:42:04.191Z",
+  "generatedAt": "2026-04-14T12:06:07.155Z",
   "collections": [
     {
       "name": "users",
@@ -526,6 +526,19 @@
           "required": false,
           "system": false,
           "selectValues": ["Excel", "CSV", "PDF"]
+        },
+        {
+          "name": "arrobas_atuais",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rebanho_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "rebanhos"
         }
       ],
       "indexes": [
@@ -880,6 +893,13 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "caneca_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "canecas_semen"
         }
       ],
       "indexes": ["CREATE INDEX idx_iatf_matriz ON manejo_iatf_curral (matriz_id)"]
@@ -1008,6 +1028,12 @@
         },
         {
           "name": "gmd_calculado",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "arrobas",
           "type": "number",
           "required": false,
           "system": false
@@ -3284,6 +3310,264 @@
         "CREATE INDEX idx_racao_formulada_receita ON racao_formulada (receita_id)",
         "CREATE INDEX idx_racao_formulada_data ON racao_formulada (data_producao)"
       ]
+    },
+    {
+      "name": "rebanhos",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "nome",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "centro_custo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "apartacao_dinamica",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "animal_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "animais"
+        },
+        {
+          "name": "data_apartacao",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "lote_anterior_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "lotes"
+        },
+        {
+          "name": "lote_novo_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "lotes"
+        },
+        {
+          "name": "motivo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "inventario_pecuario_geral",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "data_inventario",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rebanho_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "rebanhos"
+        },
+        {
+          "name": "total_cabecas",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "estoque_peso_fazenda",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "data_calculo",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "total_cabecas",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "total_peso_kg",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "total_arrobas",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "valor_total_rebanho",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "canecas_semen",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "numero_caneca",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "doses_atuais",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
     }
   ]
 }

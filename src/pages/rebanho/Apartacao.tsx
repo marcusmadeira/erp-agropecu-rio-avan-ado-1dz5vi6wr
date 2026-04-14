@@ -1,6 +1,5 @@
-import { useState } from 'react'
-import useAppStore from '@/stores/useAppStore'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -19,115 +18,82 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { ArrowRightLeft, CheckSquare } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import pb from '@/lib/pocketbase/client'
 
 export default function Apartacao() {
-  const { state, dispatch } = useAppStore()
   const { toast } = useToast()
-
+  const [lotes, setLotes] = useState<any[]>([])
+  const [animais, setAnimais] = useState<any[]>([])
   const [sourceLoteId, setSourceLoteId] = useState('')
   const [destLoteId, setDestLoteId] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [motivo, setMotivo] = useState('')
 
-  const sourceAnimais = state.animais.filter(
-    (a) => a.loteId === sourceLoteId && a.status === 'Ativo',
-  )
+  useEffect(() => {
+    pb.collection('lotes').getFullList().then(setLotes)
+    pb.collection('animais')
+      .getFullList({ filter: 'status="Ativo"', expand: 'lote_atual_id' })
+      .then(setAnimais)
+  }, [])
+
+  const sourceAnimais = animais.filter((a) => a.lote_atual_id === sourceLoteId)
 
   const toggleAll = () => {
-    if (selectedIds.length === sourceAnimais.length) {
-      setSelectedIds([])
-    } else {
-      setSelectedIds(sourceAnimais.map((a) => a.id))
-    }
+    if (selectedIds.length === sourceAnimais.length) setSelectedIds([])
+    else setSelectedIds(sourceAnimais.map((a) => a.id))
   }
 
   const toggleAnimal = (id: string) => {
-    if (selectedIds.includes(id)) {
-      setSelectedIds((prev) => prev.filter((x) => x !== id))
-    } else {
-      setSelectedIds((prev) => [...prev, id])
-    }
+    if (selectedIds.includes(id)) setSelectedIds((prev) => prev.filter((x) => x !== id))
+    else setSelectedIds((prev) => [...prev, id])
   }
 
-  const handleTransfer = () => {
-    if (!sourceLoteId || !destLoteId) {
-      toast({
-        title: 'Aviso',
-        description: 'Selecione o Lote de Origem e Destino.',
-        variant: 'destructive',
-      })
-      return
+  const handleTransfer = async () => {
+    if (!sourceLoteId || !destLoteId || selectedIds.length === 0) return
+    try {
+      await Promise.all(
+        selectedIds.map((id) => pb.collection('animais').update(id, { lote_atual_id: destLoteId })),
+      )
+      await Promise.all(
+        selectedIds.map((id) =>
+          pb.collection('apartacao_dinamica').create({
+            animal_id: id,
+            data_apartacao: new Date().toISOString(),
+            lote_anterior_id: sourceLoteId,
+            lote_novo_id: destLoteId,
+            motivo,
+          }),
+        ),
+      )
+      toast({ title: 'Apartação Concluída!' })
+      const updated = await pb
+        .collection('animais')
+        .getFullList({ filter: 'status="Ativo"', expand: 'lote_atual_id' })
+      setAnimais(updated)
+      setSelectedIds([])
+      setMotivo('')
+    } catch {
+      toast({ title: 'Erro', variant: 'destructive' })
     }
-    if (sourceLoteId === destLoteId) {
-      toast({
-        title: 'Aviso',
-        description: 'O Lote de Origem e Destino não podem ser o mesmo.',
-        variant: 'destructive',
-      })
-      return
-    }
-    if (selectedIds.length === 0) {
-      toast({
-        title: 'Aviso',
-        description: 'Selecione pelo menos um animal para transferir.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    const destLote = state.lotes.find((l) => l.id === destLoteId)
-    if (!destLote) return
-
-    dispatch((s) => ({
-      ...s,
-      animais: s.animais.map((a) =>
-        selectedIds.includes(a.id)
-          ? { ...a, loteId: destLoteId, costCenter: destLote.costCenter }
-          : a,
-      ),
-      auditLogs: [
-        {
-          id: Math.random().toString(),
-          date: new Date().toISOString(),
-          userName: s.currentUser?.name || 'Sistema',
-          action: 'Update',
-          table: 'Animais',
-          recordId: `Múltiplos (${selectedIds.length})`,
-          oldValue: `Lote: ${state.lotes.find((l) => l.id === sourceLoteId)?.name}`,
-          newValue: `Lote: ${destLote.name} / CC: ${destLote.costCenter}`,
-        },
-        ...s.auditLogs,
-      ],
-    }))
-
-    toast({
-      title: 'Apartação Concluída!',
-      description: `${selectedIds.length} animais transferidos para ${destLote.name}.`,
-    })
-    setSelectedIds([])
-    setSourceLoteId('')
-    setDestLoteId('')
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-6xl mx-auto p-4 md:p-6 pb-20">
       <div className="flex items-center gap-3">
-        <ArrowRightLeft className="w-8 h-8 text-emerald-900" />
+        <ArrowRightLeft className="w-8 h-8 text-[#094016]" />
         <div>
-          <h2 className="text-2xl font-bold text-emerald-900">
-            Apartação (Transferência em Massa)
-          </h2>
+          <h2 className="text-2xl font-bold text-[#094016]">Apartação Dinâmica</h2>
           <p className="text-sm text-muted-foreground">
-            Mova animais entre lotes e atualize centros de custo automaticamente.
+            Mova animais entre lotes de forma simplificada.
           </p>
         </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="shadow-subtle border-t-4 border-t-amber-500">
+        <Card className="shadow-sm border-t-4 border-t-amber-500">
           <CardHeader>
-            <CardTitle>Origem</CardTitle>
-            <CardDescription>Selecione o Lote atual dos animais.</CardDescription>
+            <CardTitle>Lote de Origem</CardTitle>
           </CardHeader>
           <CardContent>
             <Select
@@ -138,33 +104,31 @@ export default function Apartacao() {
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o Lote de Origem" />
+                <SelectValue placeholder="Selecione o Lote" />
               </SelectTrigger>
               <SelectContent>
-                {state.lotes.map((l) => (
+                {lotes.map((l) => (
                   <SelectItem key={l.id} value={l.id}>
-                    {l.name} ({l.costCenter})
+                    {l.nome_lote}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </CardContent>
         </Card>
-
-        <Card className="shadow-subtle border-t-4 border-t-emerald-600">
+        <Card className="shadow-sm border-t-4 border-t-[#094016]">
           <CardHeader>
-            <CardTitle>Destino</CardTitle>
-            <CardDescription>Lote de destino que receberá os animais.</CardDescription>
+            <CardTitle>Lote de Destino</CardTitle>
           </CardHeader>
           <CardContent>
             <Select value={destLoteId} onValueChange={setDestLoteId}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o Lote de Destino" />
+                <SelectValue placeholder="Selecione o Lote" />
               </SelectTrigger>
               <SelectContent>
-                {state.lotes.map((l) => (
+                {lotes.map((l) => (
                   <SelectItem key={l.id} value={l.id}>
-                    {l.name} ({l.costCenter})
+                    {l.nome_lote}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -174,35 +138,35 @@ export default function Apartacao() {
       </div>
 
       {sourceLoteId && (
-        <Card className="shadow-subtle mt-4">
-          <CardHeader className="flex flex-row items-center justify-between pb-4">
-            <div>
-              <CardTitle>Animais no Lote de Origem</CardTitle>
-              <CardDescription>
-                {sourceAnimais.length} animais disponíveis. Selecionados: {selectedIds.length}
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
+        <Card className="shadow-sm">
+          <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <CardTitle>Animais no Lote de Origem</CardTitle>
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+              <Input
+                placeholder="Motivo (opcional)..."
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+                className="w-full sm:w-[200px]"
+              />
               <Button variant="outline" onClick={toggleAll}>
                 <CheckSquare className="w-4 h-4 mr-2" /> Selecionar Todos
               </Button>
               <Button
                 onClick={handleTransfer}
                 disabled={selectedIds.length === 0 || !destLoteId}
-                className="bg-emerald-800"
+                className="bg-[#094016] text-white hover:bg-[#094016]/90"
               >
-                Transferir Selecionados
+                Transferir
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-0 overflow-auto max-h-[500px]">
+          <CardContent className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[50px]"></TableHead>
                   <TableHead>Brinco</TableHead>
                   <TableHead>Categoria</TableHead>
-                  <TableHead>Centro de Custo (Origem)</TableHead>
                   <TableHead className="text-right">Peso Atual</TableHead>
                 </TableRow>
               </TableHeader>
@@ -218,22 +182,19 @@ export default function Apartacao() {
                         type="checkbox"
                         checked={selectedIds.includes(a.id)}
                         onChange={() => toggleAnimal(a.id)}
-                        className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-600 cursor-pointer"
+                        className="cursor-pointer"
                         onClick={(e) => e.stopPropagation()}
                       />
                     </TableCell>
-                    <TableCell className="font-bold">{a.brinco}</TableCell>
+                    <TableCell className="font-bold">{a.id_manejo_brinco}</TableCell>
                     <TableCell>{a.categoria}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{a.costCenter}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-mono">{a.pesoAtual} kg</TableCell>
+                    <TableCell className="text-right">{a.peso_atual_kg} kg</TableCell>
                   </TableRow>
                 ))}
                 {sourceAnimais.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                      Nenhum animal ativo neste lote.
+                    <TableCell colSpan={4} className="text-center py-4">
+                      Lote vazio.
                     </TableCell>
                   </TableRow>
                 )}

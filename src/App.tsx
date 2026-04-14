@@ -29,6 +29,11 @@ import EventoDetalhes from './pages/vendas/EventoDetalhes'
 import Clima from './pages/operacoes/Clima'
 import Mercado from './pages/operacoes/Mercado'
 import DiagnosticoInicial from './pages/estrategia/DiagnosticoInicial'
+import Apartacao from './pages/rebanho/Apartacao'
+import Inventario from './pages/rebanho/Inventario'
+import EstoqueRebanho from './pages/rebanho/EstoqueRebanho'
+import Pesagem from './pages/rebanho/Pesagem'
+import Reproducao from './pages/reproducao/Reproducao'
 import MetasKPIs from './pages/estrategia/MetasKPIs'
 import SimuladorCenarios from './pages/estrategia/SimuladorCenarios'
 import DashboardEstoque from './pages/estoque/DashboardEstoque'
@@ -184,6 +189,46 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1, 2]}>
             <DespesasPagamentos />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/apartacao"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+            <Apartacao />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/inventario"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+            <Inventario />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/estoque-rebanho"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2]}>
+            <EstoqueRebanho />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/pesagem"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+            <Pesagem />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/reproducao"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+            <Reproducao />
           </AuthorizeRoute>
         }
       />
