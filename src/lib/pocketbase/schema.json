@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-14T13:21:34.192Z",
+  "generatedAt": "2026-04-14T13:53:30.238Z",
   "collections": [
     {
       "name": "users",
@@ -291,11 +291,42 @@
           "required": false,
           "system": false,
           "selectValues": ["Pessoa_Fisica", "Pessoa_Juridica"]
+        },
+        {
+          "name": "rg",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "data_nascimento",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "endereco_envio",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "nota_serasa",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "permitir_venda_prazo",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
         "CREATE INDEX `idx_parceiros_numero_documento` ON `parceiros_negocios` (numero_documento)",
-        "CREATE UNIQUE INDEX `idx_parceiros_doc_unique` ON `parceiros_negocios` (numero_documento) WHERE numero_documento != ''"
+        "CREATE UNIQUE INDEX `idx_parceiros_doc_unique` ON `parceiros_negocios` (numero_documento) WHERE numero_documento != ''",
+        "CREATE INDEX `idx_parceiros_nota_serasa` ON `parceiros_negocios` (nota_serasa)"
       ]
     },
     {

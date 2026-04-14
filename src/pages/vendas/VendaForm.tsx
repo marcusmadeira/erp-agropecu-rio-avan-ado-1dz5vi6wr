@@ -217,6 +217,15 @@ export default function VendaForm() {
     }
 
     if (formData.forma_pagamento === 'Parcelado') {
+      const selectedClient = clientes.find((c) => c.id === formData.cliente_id)
+      if (selectedClient && (!selectedClient.numero_documento || !selectedClient.rg)) {
+        toast({
+          title: 'Venda a prazo bloqueada: Cliente sem CPF ou RG cadastrado.',
+          variant: 'destructive',
+        })
+        return
+      }
+
       const sumParcelas = parcelas.reduce((acc, p) => acc + Number(p.valor), 0)
       if (Math.abs(sumParcelas - total) > 0.1) {
         toast({
