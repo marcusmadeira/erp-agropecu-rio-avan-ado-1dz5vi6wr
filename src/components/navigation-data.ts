@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   FileText,
   PackagePlus,
+  ClipboardList,
 } from 'lucide-react'
 
 import { Users } from 'lucide-react'
@@ -56,6 +57,7 @@ export const navigationMenu = [
     title: 'Estoque',
     items: [
       { title: 'Cadastro Manual', url: '/estoque/cadastro-manual', icon: PackagePlus, roles: [1] },
+      { title: 'Receitas de Ração', url: '/receitas-racao', icon: ClipboardList, roles: [1] },
     ],
   },
   {

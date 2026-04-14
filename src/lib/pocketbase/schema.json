@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-14T01:06:38.102Z",
+  "generatedAt": "2026-04-14T01:09:41.599Z",
   "collections": [
     {
       "name": "users",
@@ -1266,6 +1266,34 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "categoria_animal",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "Bezerro Desmama",
+            "Recria Macho",
+            "Recria Fêmea",
+            "Touros para Vendas",
+            "Matrizes",
+            "Novilhas",
+            "Outras"
+          ]
+        },
+        {
+          "name": "ingredientes",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "usuario_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
         }
       ],
       "indexes": []

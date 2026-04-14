@@ -32,6 +32,8 @@ import DiagnosticoInicial from './pages/estrategia/DiagnosticoInicial'
 import MetasKPIs from './pages/estrategia/MetasKPIs'
 import SimuladorCenarios from './pages/estrategia/SimuladorCenarios'
 import CadastroManual from './pages/estoque/CadastroManual'
+import ReceitasRacao from './pages/estoque/ReceitasRacao'
+import ReceitaForm from './pages/estoque/ReceitaForm'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth()
@@ -275,6 +277,30 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1]}>
             <CadastroManual />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/receitas-racao"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <ReceitasRacao />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/receitas-racao/nova"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <ReceitaForm />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/receitas-racao/editar/:id"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <ReceitaForm />
           </AuthorizeRoute>
         }
       />
