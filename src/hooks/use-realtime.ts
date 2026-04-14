@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import pb from '@/lib/pocketbase/client'
 import type { RecordSubscription } from 'pocketbase'
+import { useAuth } from '@/hooks/use-auth'
 
 /**
  * Hook for real-time subscriptions to a PocketBase collection.
@@ -15,9 +16,11 @@ export function useRealtime(
 ) {
   const callbackRef = useRef(callback)
   callbackRef.current = callback
+  const { user } = useAuth()
 
   useEffect(() => {
-    if (!enabled) return
+    // Only attempt to subscribe if enabled AND user is authenticated
+    if (!enabled || !user) return
 
     let unsubscribeFn: (() => Promise<void>) | undefined
     let cancelled = false
@@ -33,6 +36,9 @@ export function useRealtime(
           unsubscribeFn = fn
         }
       })
+      .catch((err) => {
+        console.warn(`Failed to subscribe to real-time events for ${collectionName}:`, err)
+      })
 
     return () => {
       cancelled = true
@@ -40,5 +46,5 @@ export function useRealtime(
         unsubscribeFn().catch(() => {})
       }
     }
-  }, [collectionName, enabled])
+  }, [collectionName, enabled, user])
 }
