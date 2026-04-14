@@ -13,20 +13,20 @@ routerAdd('POST', '/backend/v1/autenticar_usuario', (e) => {
     $app
       .db()
       .newQuery(
-        'SELECT id FROM users WHERE LOWER(email) = LOWER({:identity}) OR LOWER(login) = LOWER({:identity}) LIMIT 1',
+        'SELECT id FROM users WHERE LOWER(email) = LOWER({:identity}) OR LOWER(login) = LOWER({:identity}) OR LOWER(username) = LOWER({:identity}) LIMIT 1',
       )
       .bind({ identity })
       .one(result)
     userId = result.id
   } catch (_) {
-    throw e.badRequestError('Email não encontrado')
+    throw e.badRequestError('Usuário não encontrado')
   }
 
   let user
   try {
     user = $app.findRecordById('users', userId)
   } catch (_) {
-    throw e.badRequestError('Email não encontrado')
+    throw e.badRequestError('Usuário não encontrado')
   }
 
   if (!user.validatePassword(password)) {

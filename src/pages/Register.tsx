@@ -117,9 +117,9 @@ export default function Register() {
     setIsLoading(false)
     toast({
       title: 'Cadastro realizado!',
-      description: 'Redirecionando para as instruções...',
+      description: 'Bem-vindo ao sistema.',
     })
-    navigate('/confirmacao-email', { replace: true, state: { email: values.email } })
+    navigate('/', { replace: true })
   }
 
   return (

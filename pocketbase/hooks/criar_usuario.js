@@ -31,7 +31,7 @@ routerAdd('POST', '/backend/v1/criar_usuario', (e) => {
     record.set('phone', body.phone)
   }
 
-  record.setVerified(false)
+  record.setVerified(true)
   $app.save(record)
 
   return e.json(200, record)

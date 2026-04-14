@@ -11,7 +11,6 @@ import { BackgroundSync } from './components/BackgroundSync'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
-import EmailConfirmation from './pages/EmailConfirmation'
 import NotFound from './pages/NotFound'
 import Dashboard from './pages/Dashboard'
 import Desempenho from './pages/dashboard/Desempenho'
@@ -104,14 +103,6 @@ const AppRoutes = () => (
       element={
         <PublicRoute>
           <ForgotPassword />
-        </PublicRoute>
-      }
-    />
-    <Route
-      path="/confirmacao-email"
-      element={
-        <PublicRoute>
-          <EmailConfirmation />
         </PublicRoute>
       }
     />
