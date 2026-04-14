@@ -101,6 +101,9 @@ export default function Login() {
                 placeholder="usuario@toriba.com ou joao.silva"
                 value={loginOrEmail}
                 onChange={(e) => setLoginOrEmail(e.target.value)}
+                autoCapitalize="none"
+                autoComplete="username"
+                autoCorrect="off"
               />
             </div>
             <div className="space-y-2 text-left">
@@ -115,6 +118,7 @@ export default function Login() {
                 placeholder="***"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
               />
               <div className="text-right">
                 <Link
