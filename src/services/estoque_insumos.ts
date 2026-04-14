@@ -8,6 +8,7 @@ export interface EstoqueInsumo {
   custo_medio_unitario?: number
   estoque_minimo_critico?: number
   consumo_medio_diario?: number
+  categoria?: string
   created?: string
   updated?: string
 }

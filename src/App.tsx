@@ -31,6 +31,7 @@ import Mercado from './pages/operacoes/Mercado'
 import DiagnosticoInicial from './pages/estrategia/DiagnosticoInicial'
 import MetasKPIs from './pages/estrategia/MetasKPIs'
 import SimuladorCenarios from './pages/estrategia/SimuladorCenarios'
+import CadastroManual from './pages/estoque/CadastroManual'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth()
@@ -269,11 +270,18 @@ const AppRoutes = () => (
           </AuthorizeRoute>
         }
       />
+      <Route
+        path="/estoque/cadastro-manual"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <CadastroManual />
+          </AuthorizeRoute>
+        }
+      />
     </Route>
     <Route path="*" element={<NotFound />} />
   </Routes>
 )
-
 const App = () => (
   <AuthProvider>
     <AppProvider>

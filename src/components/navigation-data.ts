@@ -12,6 +12,7 @@ import {
   Upload,
   ShieldCheck,
   FileText,
+  PackagePlus,
 } from 'lucide-react'
 
 import { Users } from 'lucide-react'
@@ -49,6 +50,12 @@ export const navigationMenu = [
     items: [
       { title: 'Clima', url: '/clima', icon: CloudSun, roles: [1, 2, 3] },
       { title: 'Mercado', url: '/mercado', icon: TrendingUp, roles: [1, 2] },
+    ],
+  },
+  {
+    title: 'Estoque',
+    items: [
+      { title: 'Cadastro Manual', url: '/estoque/cadastro-manual', icon: PackagePlus, roles: [1] },
     ],
   },
   {

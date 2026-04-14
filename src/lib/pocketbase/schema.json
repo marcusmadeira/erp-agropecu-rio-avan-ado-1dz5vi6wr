@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-14T01:03:12.506Z",
+  "generatedAt": "2026-04-14T01:06:38.102Z",
   "collections": [
     {
       "name": "users",
@@ -580,6 +580,23 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "categoria",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "Minerais",
+            "Aditivos",
+            "Sal",
+            "Grãos",
+            "Farelos",
+            "Bagaço de Cana",
+            "Casquinha de Soja",
+            "DDG",
+            "Outros"
+          ]
         }
       ],
       "indexes": ["CREATE INDEX idx_estoque_insumos_produto ON estoque_insumos (produto)"]
