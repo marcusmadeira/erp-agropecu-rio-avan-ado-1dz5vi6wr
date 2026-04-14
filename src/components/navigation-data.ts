@@ -14,6 +14,7 @@ import {
   FileText,
   PackagePlus,
   ClipboardList,
+  Factory,
 } from 'lucide-react'
 
 import { Users } from 'lucide-react'
@@ -58,6 +59,7 @@ export const navigationMenu = [
     items: [
       { title: 'Cadastro Manual', url: '/estoque/cadastro-manual', icon: PackagePlus, roles: [1] },
       { title: 'Receitas de Ração', url: '/receitas-racao', icon: ClipboardList, roles: [1] },
+      { title: 'Produção de Ração', url: '/fabrica/producao', icon: Factory, roles: [1, 2] },
     ],
   },
   {

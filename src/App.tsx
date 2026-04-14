@@ -34,6 +34,7 @@ import SimuladorCenarios from './pages/estrategia/SimuladorCenarios'
 import CadastroManual from './pages/estoque/CadastroManual'
 import ReceitasRacao from './pages/estoque/ReceitasRacao'
 import ReceitaForm from './pages/estoque/ReceitaForm'
+import ProducaoRacao from './pages/estoque/ProducaoRacao'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth()
@@ -301,6 +302,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1]}>
             <ReceitaForm />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/fabrica/producao"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2]}>
+            <ProducaoRacao />
           </AuthorizeRoute>
         }
       />
