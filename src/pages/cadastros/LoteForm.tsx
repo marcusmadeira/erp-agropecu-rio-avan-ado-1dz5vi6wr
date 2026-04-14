@@ -37,6 +37,7 @@ const schema = z.object({
   centro_custo: z.enum(['CC01-Nelore PO', 'CC02-Comercial TIP'], { required_error: 'Obrigatório' }),
   piquete_atual_id: z.string().optional(),
   formulacao_id: z.string().optional(),
+  quantidade_racao_diaria: z.coerce.number().min(0, 'Deve ser maior ou igual a zero').optional(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -53,6 +54,7 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
       centro_custo: undefined,
       piquete_atual_id: '',
       formulacao_id: '',
+      quantidade_racao_diaria: 0,
     },
   })
 
@@ -77,6 +79,7 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
           centro_custo: item.centro_custo as any,
           piquete_atual_id: item.piquete_atual_id || '',
           formulacao_id: item.formulacao_id || '',
+          quantidade_racao_diaria: item.quantidade_racao_diaria || 0,
         })
       } else {
         form.reset({
@@ -84,6 +87,7 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
           centro_custo: undefined,
           piquete_atual_id: '',
           formulacao_id: '',
+          quantidade_racao_diaria: 0,
         })
       }
     }
@@ -227,6 +231,20 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="quantidade_racao_diaria"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantidade de Ração Diária (kg/cabeça)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.1" placeholder="Ex: 5.5" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
