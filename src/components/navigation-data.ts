@@ -20,6 +20,7 @@ import {
   Factory,
   ArrowRightLeft,
   Users,
+  Thermometer,
 } from 'lucide-react'
 
 export const navigationMenu = [
@@ -37,6 +38,12 @@ export const navigationMenu = [
       { title: 'Animais', url: '/animais', icon: Activity, roles: [1, 2, 3] },
       { title: 'Apartação Dinâmica', url: '/apartacao', icon: ArrowRightLeft, roles: [1, 2, 3] },
       { title: 'Reprodução & Monta', url: '/reproducao', icon: HeartPulse, roles: [1, 2, 3] },
+      {
+        title: 'Estoque de Sêmen',
+        url: '/reproducao#estoque',
+        icon: Thermometer,
+        roles: [1, 2, 3],
+      },
       { title: 'Pesagem', url: '/pesagem', icon: Scale, roles: [1, 2, 3] },
       { title: 'Inventário Geral', url: '/inventario', icon: ClipboardList, roles: [1, 2, 3] },
       { title: 'Estoque e Valor', url: '/estoque-rebanho', icon: DollarSign, roles: [1, 2] },

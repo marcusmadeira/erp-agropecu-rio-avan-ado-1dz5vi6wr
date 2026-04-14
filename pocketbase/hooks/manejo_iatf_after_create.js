@@ -2,14 +2,16 @@ onRecordAfterCreateSuccess((e) => {
   const touroId = e.record.get('touro_utilizado_id')
   if (touroId) {
     try {
-      const estoques = $app.findRecordsByFilter(
-        'estoque_semen',
-        'touro_id = {:touroId}',
-        '-created',
-        1,
-        0,
-        { touroId: touroId },
-      )
+      let filter = 'touro_id = {:touroId}'
+      let params = { touroId: touroId }
+
+      const canecaId = e.record.get('caneca_id')
+      if (canecaId) {
+        filter += ' && caneca_id = {:canecaId}'
+        params.canecaId = canecaId
+      }
+
+      const estoques = $app.findRecordsByFilter('estoque_semen', filter, '-created', 1, 0, params)
       if (estoques.length > 0) {
         const estoque = estoques[0]
         const disp = estoque.get('doses_palhetas_disponiveis') || 0

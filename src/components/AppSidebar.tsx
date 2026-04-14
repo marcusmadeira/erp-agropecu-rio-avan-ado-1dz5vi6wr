@@ -77,9 +77,17 @@ export function AppSidebar() {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {visibleItems.map((item) => {
+                    const [itemPath, itemHash] = item.url.split('#')
                     const isActive =
-                      location.pathname === item.url || location.pathname.startsWith(`${item.url}/`)
-                    const isExactlyActive = item.url === '/' ? location.pathname === '/' : isActive
+                      location.pathname === itemPath || location.pathname.startsWith(`${itemPath}/`)
+
+                    let isExactlyActive = item.url === '/' ? location.pathname === '/' : isActive
+
+                    if (itemHash) {
+                      isExactlyActive = isActive && location.hash === `#${itemHash}`
+                    } else if (itemPath === '/reproducao' && location.hash) {
+                      isExactlyActive = false
+                    }
 
                     return (
                       <SidebarMenuItem key={item.title}>

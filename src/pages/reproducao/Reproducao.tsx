@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import DashboardReproducao from './components/DashboardReproducao'
 import EstacaoMontaTab from './components/EstacaoMontaTab'
 import PlanejamentoTab from './components/PlanejamentoTab'
 import IatfTab from './components/IatfTab'
 import SemaforoTab from './components/SemaforoTab'
+import EstoqueSemenTab from './components/EstoqueSemenTab'
 import { getAnimais, getAnimaisFemeas, getAnimaisTouros, getLotes } from '@/services/reproducao'
 
 export default function Reproducao() {
@@ -12,6 +14,13 @@ export default function Reproducao() {
   const [femeas, setFemeas] = useState<any[]>([])
   const [touros, setTouros] = useState<any[]>([])
   const [lotes, setLotes] = useState<any[]>([])
+
+  const location = useLocation()
+  const [activeTab, setActiveTab] = useState('dashboard')
+
+  useEffect(() => {
+    setActiveTab(location.hash === '#estoque' ? 'estoque' : 'dashboard')
+  }, [location.hash])
 
   useEffect(() => {
     Promise.all([getAnimais(), getAnimaisFemeas(), getAnimaisTouros(), getLotes()])
@@ -35,7 +44,14 @@ export default function Reproducao() {
         </p>
       </div>
 
-      <Tabs defaultValue="dashboard" className="w-full">
+      <Tabs
+        value={activeTab}
+        onValueChange={(val) => {
+          setActiveTab(val)
+          window.history.pushState(null, '', `#${val}`)
+        }}
+        className="w-full"
+      >
         <TabsList className="bg-slate-200/50 p-1 rounded-lg flex flex-wrap h-auto gap-1">
           <TabsTrigger
             value="dashboard"
@@ -67,6 +83,12 @@ export default function Reproducao() {
           >
             Semáforo
           </TabsTrigger>
+          <TabsTrigger
+            value="estoque"
+            className="data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-md px-4"
+          >
+            Estoque de Sêmen
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-6">
@@ -83,6 +105,9 @@ export default function Reproducao() {
         </TabsContent>
         <TabsContent value="semaforo" className="mt-6">
           <SemaforoTab />
+        </TabsContent>
+        <TabsContent value="estoque" className="mt-6">
+          <EstoqueSemenTab touros={touros} />
         </TabsContent>
       </Tabs>
     </div>

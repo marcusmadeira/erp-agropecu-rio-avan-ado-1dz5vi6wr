@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-14T17:38:49.880Z",
+  "generatedAt": "2026-04-14T17:54:44.607Z",
   "collections": [
     {
       "name": "users",
@@ -813,6 +813,37 @@
           "required": false,
           "system": false,
           "collectionRef": "animais"
+        },
+        {
+          "name": "rgd",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "genealogia_pai",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "genealogia_mae",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "avaliacao_pmgz",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "caneca_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "canecas_semen"
         }
       ],
       "indexes": []
