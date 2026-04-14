@@ -24,13 +24,13 @@ routerAdd(
       params.status = status
     }
     if (lote_id && lote_id !== 'all') {
-      filter += ' && lote_atual = {:lote_id}'
+      filter += ' && lote_atual_id = {:lote_id}'
       params.lote_id = lote_id
     }
 
     const records = $app.findRecordsByFilter('animais', filter, '-created', 1000, 0, params)
 
-    $apis.enrichRecords(e, records, 'lote_atual', 'pai_id', 'mae_id')
+    $apis.enrichRecords(e, records, 'lote_atual_id', 'pai_id', 'mae_id')
     return e.json(200, records)
   },
   $apis.requireAuth(),

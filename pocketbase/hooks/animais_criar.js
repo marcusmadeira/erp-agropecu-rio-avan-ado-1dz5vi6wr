@@ -18,7 +18,7 @@ routerAdd(
     })
 
     $app.save(record)
-    $apis.enrichRecord(e, record, 'lote_atual', 'pai_id', 'mae_id')
+    $apis.enrichRecord(e, record, 'lote_atual_id', 'pai_id', 'mae_id')
     return e.json(200, record)
   },
   $apis.requireAuth(),

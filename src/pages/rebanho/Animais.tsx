@@ -239,7 +239,7 @@ export default function Animais() {
                       <TableCell>{a.nome || '-'}</TableCell>
                       <TableCell>{a.categoria}</TableCell>
                       <TableCell>{a.sexo || '-'}</TableCell>
-                      <TableCell>{a.expand?.lote_atual?.nome_lote || '-'}</TableCell>
+                      <TableCell>{a.expand?.lote_atual_id?.nome_lote || '-'}</TableCell>
                       <TableCell className="text-right font-medium text-[#094016]">
                         {a.peso_atual_kg}
                       </TableCell>
@@ -267,6 +267,11 @@ export default function Animais() {
                             title="Editar"
                           >
                             <Edit className="w-4 h-4 text-amber-600" />
+                          </Button>
+                          <Button variant="ghost" size="icon" asChild title="Apartação">
+                            <Link to="/apartacao">
+                              <ArrowRightLeft className="w-4 h-4 text-purple-600" />
+                            </Link>
                           </Button>
                           {canDelete && (
                             <Button
