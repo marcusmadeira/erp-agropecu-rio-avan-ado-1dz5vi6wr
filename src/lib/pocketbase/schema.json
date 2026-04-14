@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-14T17:54:44.607Z",
+  "generatedAt": "2026-04-14T18:09:14.058Z",
   "collections": [
     {
       "name": "users",
@@ -393,12 +393,6 @@
           "collectionRef": "pastos_e_piquetes"
         },
         {
-          "name": "custo_accumulado_nutricao",
-          "type": "number",
-          "required": false,
-          "system": false
-        },
-        {
           "name": "formulacao_id",
           "type": "relation",
           "required": false,
@@ -530,12 +524,6 @@
           "required": false,
           "system": false,
           "collectionRef": "lotes"
-        },
-        {
-          "name": "custo_variavel_accumulado",
-          "type": "number",
-          "required": false,
-          "system": false
         },
         {
           "name": "sexo",
@@ -2597,78 +2585,6 @@
         },
         {
           "name": "status",
-          "type": "text",
-          "required": false,
-          "system": false
-        },
-        {
-          "name": "created",
-          "type": "autodate",
-          "required": false,
-          "system": false,
-          "autodateTriggers": ["onCreate"]
-        },
-        {
-          "name": "updated",
-          "type": "autodate",
-          "required": false,
-          "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
-        }
-      ],
-      "indexes": []
-    },
-    {
-      "name": "registro_nascimento",
-      "type": "base",
-      "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
-      },
-      "fields": [
-        {
-          "name": "vaca_mae_id",
-          "type": "relation",
-          "required": true,
-          "system": false,
-          "collectionRef": "animais"
-        },
-        {
-          "name": "data_nascimento",
-          "type": "date",
-          "required": true,
-          "system": false
-        },
-        {
-          "name": "sexo",
-          "type": "select",
-          "required": false,
-          "system": false,
-          "selectValues": ["Macho", "Fêmea"]
-        },
-        {
-          "name": "peso_nascer",
-          "type": "number",
-          "required": false,
-          "system": false
-        },
-        {
-          "name": "numero_tatuagem",
-          "type": "text",
-          "required": false,
-          "system": false
-        },
-        {
-          "name": "status_rgn",
-          "type": "text",
-          "required": false,
-          "system": false
-        },
-        {
-          "name": "rgn_abcz",
           "type": "text",
           "required": false,
           "system": false

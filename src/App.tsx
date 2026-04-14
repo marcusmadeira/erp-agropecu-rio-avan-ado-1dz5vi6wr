@@ -4,8 +4,9 @@ import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppProvider } from '@/stores/useAppStore'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
+import { useToast } from '@/hooks/use-toast'
 
-import { Component, ErrorInfo, ReactNode } from 'react'
+import { Component, ErrorInfo, ReactNode, useEffect } from 'react'
 import Layout from './components/Layout'
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -85,6 +86,25 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>
 }
 
+function RestrictedAccess({ userRole }: { userRole: string }) {
+  const { toast } = useToast()
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      toast({
+        title: 'Acesso Restrito',
+        description: 'Você não tem permissão para acessar este módulo.',
+        variant: 'destructive',
+      })
+    }, 50)
+    return () => clearTimeout(timer)
+  }, [toast])
+
+  if (userRole === 'Operacional') return <Navigate to="/animais" replace />
+  if (userRole === 'Financeiro') return <Navigate to="/desempenho" replace />
+  return <Navigate to="/" replace />
+}
+
 const AuthorizeRoute = ({
   children,
   allowedRoles,
@@ -99,9 +119,7 @@ const AuthorizeRoute = ({
   const userRole = user.role === 'Admin' ? 'Admin' : user.nivel_acesso
 
   if (!allowedRoles.includes(userRole) && userRole !== 'Admin') {
-    if (userRole === 'Operacional') return <Navigate to="/animais" replace />
-    if (userRole === 'Financeiro') return <Navigate to="/desempenho" replace />
-    return <Navigate to="/" replace />
+    return <RestrictedAccess userRole={userRole || ''} />
   }
 
   return <ErrorBoundary>{children}</ErrorBoundary>

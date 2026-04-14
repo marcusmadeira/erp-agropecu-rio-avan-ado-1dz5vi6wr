@@ -103,10 +103,10 @@ export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
   useEffect(() => {
     if (open) {
       getLotes()
-        .then(setLotes)
+        .then((res: any) => setLotes(Array.isArray(res) ? res : res?.items || []))
         .catch(() => {})
       getAnimais()
-        .then(setAnimais)
+        .then((res: any) => setAnimais(Array.isArray(res) ? res : res?.items || []))
         .catch(() => {})
     }
   }, [open])
