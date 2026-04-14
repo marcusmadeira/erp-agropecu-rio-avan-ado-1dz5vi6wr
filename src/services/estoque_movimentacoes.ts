@@ -19,7 +19,7 @@ export interface EstoqueMovimentacao {
 export const getEstoqueMovimentacoes = (filter?: string) =>
   pb.collection('estoque_movimentacoes').getFullList<EstoqueMovimentacao>({
     filter,
-    expand: 'produto_id,usuario_id',
+    expand: 'produto_id,usuario_id,racao_id',
     sort: '-data,-created',
   })
 

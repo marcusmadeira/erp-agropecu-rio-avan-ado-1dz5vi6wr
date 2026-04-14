@@ -41,10 +41,17 @@ const defaultInputs: SimInputs = {
 export function SimuladorTab() {
   const [inputs, setInputs] = useState<SimInputs>(defaultInputs)
   const [loading, setLoading] = useState(false)
+  const [formulacoes, setFormulacoes] = useState<any[]>([])
+  const [selectedFormulacao, setSelectedFormulacao] = useState<string>('none')
+  const [consumoEstimado, setConsumoEstimado] = useState<string>('10')
   const { toast } = useToast()
   const res = calcularCenario(inputs)
 
   useEffect(() => {
+    import('@/lib/pocketbase/client').then(({ default: pb }) => {
+      pb.collection('formulacoes_racao').getFullList().then(setFormulacoes).catch(console.error)
+    })
+
     getPrecosMercado().then((p) => {
       if (p && p.preco_arroba) {
         setInputs((prev) => ({
@@ -58,6 +65,20 @@ export function SimuladorTab() {
 
   const handleChange = (field: keyof SimInputs, val: string | number) => {
     setInputs((prev) => ({ ...prev, [field]: typeof val === 'string' ? Number(val) || 0 : val }))
+  }
+
+  const atualizarCustoRacao = (formId: string, consumo: string) => {
+    if (formId === 'none') return
+    const f = formulacoes.find((x) => x.id === formId)
+    if (f && f.custo_kg_produzido) {
+      const c = Number(consumo) || 0
+      handleChange('custo_acao', Number((f.custo_kg_produzido * c).toFixed(2)))
+    }
+  }
+
+  const handleFormulacaoChange = (v: string) => {
+    setSelectedFormulacao(v)
+    atualizarCustoRacao(v, consumoEstimado)
   }
 
   const handleSave = async () => {
@@ -127,14 +148,46 @@ export function SimuladorTab() {
                 onChange={(e) => handleChange('preco_compra', e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Custo Ração/dia</Label>
-              <Input
-                type="number"
-                value={inputs.custo_acao || ''}
-                onChange={(e) => handleChange('custo_acao', e.target.value)}
-              />
+
+            <div className="col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border border-emerald-100 p-4 rounded-md bg-emerald-50/30">
+              <div className="space-y-2">
+                <Label>Ração Base (Opcional)</Label>
+                <Select value={selectedFormulacao} onValueChange={handleFormulacaoChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhuma</SelectItem>
+                    {formulacoes.map((f) => (
+                      <SelectItem key={f.id} value={f.id}>
+                        {f.nome_formulacao} (R$ {f.custo_kg_produzido?.toFixed(2) || '0.00'}/kg)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Consumo (kg/dia)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={consumoEstimado}
+                  onChange={(e) => {
+                    setConsumoEstimado(e.target.value)
+                    atualizarCustoRacao(selectedFormulacao, e.target.value)
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Custo Ração/dia</Label>
+                <Input
+                  type="number"
+                  value={inputs.custo_acao || ''}
+                  onChange={(e) => handleChange('custo_acao', e.target.value)}
+                />
+              </div>
             </div>
+
             <div className="space-y-2">
               <Label>Mão de Obra/dia</Label>
               <Input

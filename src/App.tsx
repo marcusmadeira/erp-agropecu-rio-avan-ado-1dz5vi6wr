@@ -31,6 +31,7 @@ import Mercado from './pages/operacoes/Mercado'
 import DiagnosticoInicial from './pages/estrategia/DiagnosticoInicial'
 import MetasKPIs from './pages/estrategia/MetasKPIs'
 import SimuladorCenarios from './pages/estrategia/SimuladorCenarios'
+import DashboardEstoque from './pages/estoque/DashboardEstoque'
 import CadastroManual from './pages/estoque/CadastroManual'
 import ReceitasRacao from './pages/estoque/ReceitasRacao'
 import ReceitaForm from './pages/estoque/ReceitaForm'
@@ -271,6 +272,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1, 2]}>
             <SimuladorCenarios />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/estoque/dashboard"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+            <DashboardEstoque />
           </AuthorizeRoute>
         }
       />

@@ -58,6 +58,7 @@ export const navigationMenu = [
   {
     title: 'Estoque',
     items: [
+      { title: 'Dashboard', url: '/estoque/dashboard', icon: LayoutDashboard, roles: [1, 2, 3] },
       { title: 'Cadastro Manual', url: '/estoque/cadastro-manual', icon: PackagePlus, roles: [1] },
       { title: 'Receitas de Ração', url: '/receitas-racao', icon: ClipboardList, roles: [1] },
       { title: 'Produção de Ração', url: '/fabrica/producao', icon: Factory, roles: [1, 2] },
