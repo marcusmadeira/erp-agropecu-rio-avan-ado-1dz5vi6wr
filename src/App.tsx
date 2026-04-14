@@ -35,6 +35,7 @@ import CadastroManual from './pages/estoque/CadastroManual'
 import ReceitasRacao from './pages/estoque/ReceitasRacao'
 import ReceitaForm from './pages/estoque/ReceitaForm'
 import ProducaoRacao from './pages/estoque/ProducaoRacao'
+import SaidaRacao from './pages/estoque/SaidaRacao'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth()
@@ -310,6 +311,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1, 2]}>
             <ProducaoRacao />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/estoque/saida-racao"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+            <SaidaRacao />
           </AuthorizeRoute>
         }
       />
