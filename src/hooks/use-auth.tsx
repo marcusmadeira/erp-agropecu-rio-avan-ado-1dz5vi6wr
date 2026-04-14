@@ -67,18 +67,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const signIn = async (loginOrEmail: string, password: string) => {
-    const attemptsStr = localStorage.getItem('login_attempts')
-    const attempts = attemptsStr ? JSON.parse(attemptsStr) : { count: 0, lockUntil: null }
-
-    if (attempts.lockUntil && new Date().getTime() < attempts.lockUntil) {
-      const remainingMinutes = Math.ceil((attempts.lockUntil - new Date().getTime()) / 60000)
-      return {
-        error: new Error(
-          `Muitas tentativas falhas. Acesso bloqueado por segurança. Tente novamente em ${remainingMinutes} minutos.`,
-        ),
-      }
-    }
-
     try {
       const res = await pb.send('/backend/v1/autenticar_usuario', {
         method: 'POST',
@@ -86,14 +74,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         headers: { 'Content-Type': 'application/json' },
       })
       pb.authStore.save(res.token, res.record)
-      localStorage.removeItem('login_attempts')
       return { error: null }
     } catch (error) {
-      attempts.count += 1
-      if (attempts.count >= 5) {
-        attempts.lockUntil = new Date().getTime() + 15 * 60 * 1000 // 15 minutes block
-      }
-      localStorage.setItem('login_attempts', JSON.stringify(attempts))
       return { error }
     }
   }
