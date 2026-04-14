@@ -3,7 +3,6 @@ import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppProvider } from '@/stores/useAppStore'
-import useAppStore from '@/stores/useAppStore'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
 
 import { Component, ErrorInfo, ReactNode } from 'react'
@@ -91,23 +90,17 @@ const AuthorizeRoute = ({
   allowedRoles,
 }: {
   children: React.ReactNode
-  allowedRoles: number[]
+  allowedRoles: string[]
 }) => {
   const { user, loading } = useAuth()
   if (loading) return null
   if (!user) return <Navigate to="/login" replace />
 
-  const getRoleLevel = (u: any) => {
-    if (!u) return 3
-    if (u.role === 'Admin' || u.nivel_acesso === 'Gerente') return 1
-    if (u.nivel_acesso === 'Financeiro') return 2
-    return 3
-  }
+  const userRole = user.role === 'Admin' ? 'Admin' : user.nivel_acesso
 
-  const userRole = getRoleLevel(user)
-  if (!allowedRoles.includes(userRole)) {
-    if (userRole === 3) return <Navigate to="/animais" replace />
-    if (userRole === 2) return <Navigate to="/desempenho" replace />
+  if (!allowedRoles.includes(userRole) && userRole !== 'Admin') {
+    if (userRole === 'Operacional') return <Navigate to="/animais" replace />
+    if (userRole === 'Financeiro') return <Navigate to="/desempenho" replace />
     return <Navigate to="/" replace />
   }
 
@@ -151,7 +144,7 @@ const AppRoutes = () => (
       <Route
         path="/"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <Dashboard />
           </AuthorizeRoute>
         }
@@ -159,7 +152,7 @@ const AppRoutes = () => (
       <Route
         path="/desempenho"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <Desempenho />
           </AuthorizeRoute>
         }
@@ -167,7 +160,7 @@ const AppRoutes = () => (
       <Route
         path="/auditoria"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={['Gerente']}>
             <Auditoria />
           </AuthorizeRoute>
         }
@@ -175,7 +168,7 @@ const AppRoutes = () => (
       <Route
         path="/usuarios/novo"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={['Gerente']}>
             <RegisterUser />
           </AuthorizeRoute>
         }
@@ -183,7 +176,7 @@ const AppRoutes = () => (
       <Route
         path="/importador-fornecedores"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <ImportadorFornecedores />
           </AuthorizeRoute>
         }
@@ -191,7 +184,7 @@ const AppRoutes = () => (
       <Route
         path="/importador-notas"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={['Gerente']}>
             <ImportadorNotasFiscais />
           </AuthorizeRoute>
         }
@@ -199,7 +192,7 @@ const AppRoutes = () => (
       <Route
         path="/importacao"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={['Gerente']}>
             <Importacao />
           </AuthorizeRoute>
         }
@@ -207,7 +200,7 @@ const AppRoutes = () => (
       <Route
         path="/animais"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro', 'Operacional']}>
             <Animais />
           </AuthorizeRoute>
         }
@@ -215,7 +208,7 @@ const AppRoutes = () => (
       <Route
         path="/animais/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro', 'Operacional']}>
             <AnimalPerfil />
           </AuthorizeRoute>
         }
@@ -223,7 +216,7 @@ const AppRoutes = () => (
       <Route
         path="/despesas"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <DespesasPagamentos />
           </AuthorizeRoute>
         }
@@ -231,7 +224,7 @@ const AppRoutes = () => (
       <Route
         path="/lotes"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro', 'Operacional']}>
             <GestaoLotes />
           </AuthorizeRoute>
         }
@@ -239,7 +232,7 @@ const AppRoutes = () => (
       <Route
         path="/apartacao"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro', 'Operacional']}>
             <Apartacao />
           </AuthorizeRoute>
         }
@@ -247,7 +240,7 @@ const AppRoutes = () => (
       <Route
         path="/inventario"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro', 'Operacional']}>
             <Inventario />
           </AuthorizeRoute>
         }
@@ -255,7 +248,7 @@ const AppRoutes = () => (
       <Route
         path="/estoque-rebanho"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <EstoqueRebanho />
           </AuthorizeRoute>
         }
@@ -263,7 +256,7 @@ const AppRoutes = () => (
       <Route
         path="/pesagem"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro', 'Operacional']}>
             <Pesagem />
           </AuthorizeRoute>
         }
@@ -271,7 +264,7 @@ const AppRoutes = () => (
       <Route
         path="/reproducao"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro', 'Operacional']}>
             <Reproducao />
           </AuthorizeRoute>
         }
@@ -279,7 +272,7 @@ const AppRoutes = () => (
       <Route
         path="/controle-recebimento"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <RecebimentoBoletos />
           </AuthorizeRoute>
         }
@@ -288,7 +281,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/geral"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <GestaoVendas />
           </AuthorizeRoute>
         }
@@ -296,7 +289,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/nova"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <VendaForm />
           </AuthorizeRoute>
         }
@@ -304,7 +297,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/editar/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <VendaForm />
           </AuthorizeRoute>
         }
@@ -312,7 +305,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/geral/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <VendaDetalhes />
           </AuthorizeRoute>
         }
@@ -320,7 +313,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/eventos/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <EventoDetalhes />
           </AuthorizeRoute>
         }
@@ -328,7 +321,7 @@ const AppRoutes = () => (
       <Route
         path="/clima"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <Clima />
           </AuthorizeRoute>
         }
@@ -336,7 +329,7 @@ const AppRoutes = () => (
       <Route
         path="/mercado"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <Mercado />
           </AuthorizeRoute>
         }
@@ -344,7 +337,7 @@ const AppRoutes = () => (
       <Route
         path="/diagnostico-inicial"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <DiagnosticoInicial />
           </AuthorizeRoute>
         }
@@ -352,7 +345,7 @@ const AppRoutes = () => (
       <Route
         path="/metas-kpis"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <MetasKPIs />
           </AuthorizeRoute>
         }
@@ -360,7 +353,7 @@ const AppRoutes = () => (
       <Route
         path="/simulador-cenarios"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <SimuladorCenarios />
           </AuthorizeRoute>
         }
@@ -368,7 +361,7 @@ const AppRoutes = () => (
       <Route
         path="/estoque/dashboard"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro']}>
             <DashboardEstoque />
           </AuthorizeRoute>
         }
@@ -376,7 +369,7 @@ const AppRoutes = () => (
       <Route
         path="/estoque/cadastro-manual"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={['Gerente']}>
             <CadastroManual />
           </AuthorizeRoute>
         }
@@ -384,7 +377,7 @@ const AppRoutes = () => (
       <Route
         path="/receitas-racao"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={['Gerente']}>
             <ReceitasRacao />
           </AuthorizeRoute>
         }
@@ -392,7 +385,7 @@ const AppRoutes = () => (
       <Route
         path="/receitas-racao/nova"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={['Gerente']}>
             <ReceitaForm />
           </AuthorizeRoute>
         }
@@ -400,7 +393,7 @@ const AppRoutes = () => (
       <Route
         path="/receitas-racao/editar/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1]}>
+          <AuthorizeRoute allowedRoles={['Gerente']}>
             <ReceitaForm />
           </AuthorizeRoute>
         }
@@ -408,7 +401,7 @@ const AppRoutes = () => (
       <Route
         path="/fabrica/producao"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro', 'Operacional']}>
             <ProducaoRacao />
           </AuthorizeRoute>
         }
@@ -416,7 +409,7 @@ const AppRoutes = () => (
       <Route
         path="/estoque/saida-racao"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro', 'Operacional']}>
             <SaidaRacao />
           </AuthorizeRoute>
         }

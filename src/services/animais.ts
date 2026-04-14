@@ -11,7 +11,7 @@ export const getAnimais = (options?: any) => {
 }
 
 export const getAnimal = (id: string, options?: any) =>
-  pb.collection('animais').getOne(id, { expand: 'lote_atual,pai_id,mae_id', ...options })
+  pb.collection('animais').getOne(id, { expand: 'lote_atual_id,pai_id,mae_id', ...options })
 
 export const createAnimal = (data: any) =>
   pb.send('/backend/v1/animais/criar', {

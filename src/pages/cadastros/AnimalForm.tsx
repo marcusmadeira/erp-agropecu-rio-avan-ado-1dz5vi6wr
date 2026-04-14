@@ -62,7 +62,7 @@ const schema = z
     custo_variavel_acumulado: z.coerce.number().min(0).optional(),
     pai_id: z.string().optional().or(z.literal('')),
     mae_id: z.string().optional().or(z.literal('')),
-    lote_atual: z.string().min(1, 'Obrigatório'),
+    lote_atual_id: z.string().min(1, 'Obrigatório'),
   })
   .superRefine((data, ctx) => {
     if (data.pai_id && data.mae_id && data.pai_id === data.mae_id) {
@@ -96,7 +96,7 @@ export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
       custo_variavel_acumulado: 0,
       pai_id: '',
       mae_id: '',
-      lote_atual: '',
+      lote_atual_id: '',
     },
   })
 
@@ -125,6 +125,7 @@ export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
           mae_id: item.mae_id || '',
           sexo: item.sexo || undefined,
           status: item.status || 'Ativo',
+          lote_atual_id: item.lote_atual_id || '',
         })
       } else {
         form.reset({
@@ -139,7 +140,7 @@ export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
           custo_variavel_acumulado: 0,
           pai_id: '',
           mae_id: '',
-          lote_atual: '',
+          lote_atual_id: '',
         })
       }
       setShowAi(false)
@@ -389,7 +390,7 @@ export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
                 />
                 <FormField
                   control={form.control}
-                  name="lote_atual"
+                  name="lote_atual_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Lote *</FormLabel>

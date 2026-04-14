@@ -9,7 +9,7 @@ import { getFormulacoes } from '@/services/formulacoes_racao'
 import { registrarSaidaRacao, getHistoricoSaidaRacao } from '@/services/saida_racao'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useToast } from '@/components/ui/use-toast'
-import { getErrorMessage } from '@/lib/pocketbase/errors'
+import { getErrorMessage, extractFieldErrors } from '@/lib/pocketbase/errors'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -89,11 +89,21 @@ export default function SaidaRacao() {
       toast({ title: 'Sucesso', description: 'Saída de ração registrada com sucesso!' })
       form.reset({ ...data, quantidade_kg: 0 })
     } catch (err) {
-      toast({
-        title: 'Erro ao registrar saída',
-        description: getErrorMessage(err),
-        variant: 'destructive',
-      })
+      const errs = extractFieldErrors(err)
+      if (Object.keys(errs).length > 0) {
+        Object.keys(errs).forEach((k) => form.setError(k as any, { message: errs[k] }))
+        toast({
+          title: 'Atenção',
+          description: 'Verifique os campos destacados.',
+          variant: 'destructive',
+        })
+      } else {
+        toast({
+          title: 'Erro ao registrar saída',
+          description: getErrorMessage(err),
+          variant: 'destructive',
+        })
+      }
     } finally {
       setSubmitting(false)
     }

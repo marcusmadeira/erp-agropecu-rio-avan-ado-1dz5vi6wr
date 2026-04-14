@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-14T14:34:37.432Z",
+  "generatedAt": "2026-04-14T14:59:34.392Z",
   "collections": [
     {
       "name": "users",
@@ -178,11 +178,11 @@
       "name": "parceiros_negocios",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -333,11 +333,11 @@
       "name": "lotes",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -386,13 +386,6 @@
           "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
-          "name": "piquete_id",
-          "type": "relation",
-          "required": false,
-          "system": false,
-          "collectionRef": "pastos_e_piquetes"
-        },
-        {
           "name": "piquete_atual_id",
           "type": "relation",
           "required": false,
@@ -428,11 +421,11 @@
       "name": "animais",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -466,13 +459,6 @@
           "type": "text",
           "required": false,
           "system": false
-        },
-        {
-          "name": "lote_atual",
-          "type": "relation",
-          "required": false,
-          "system": false,
-          "collectionRef": "lotes"
         },
         {
           "name": "peso_atual_kg",
@@ -594,11 +580,11 @@
       "name": "estoque_insumos",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -675,11 +661,11 @@
       "name": "transacoes_financeiras",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -782,11 +768,11 @@
       "name": "estoque_semen",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -835,11 +821,11 @@
       "name": "planejamento_acasalamento",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -884,11 +870,11 @@
       "name": "manejo_iatf_curral",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -952,11 +938,11 @@
       "name": "nascimentos_e_desmama",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -1018,11 +1004,11 @@
       "name": "pesagens_diarias",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 3)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -1091,11 +1077,11 @@
       "name": "auditoria_movimentacoes",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
-        "view": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
-        "create": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
-        "update": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
-        "delete": "@request.auth.id != '' && @request.auth.nivel_acesso = 1"
+        "list": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'",
+        "view": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'",
+        "create": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'",
+        "update": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'",
+        "delete": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'"
       },
       "fields": [
         {
@@ -1200,11 +1186,11 @@
       "name": "logs_sistema",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
-        "view": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
-        "create": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
-        "update": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
-        "delete": "@request.auth.id != '' && @request.auth.nivel_acesso = 1"
+        "list": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'",
+        "view": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'",
+        "create": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'",
+        "update": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'",
+        "delete": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'"
       },
       "fields": [
         {
@@ -1319,9 +1305,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')"
       },
       "fields": [
         {
@@ -1387,9 +1373,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')"
       },
       "fields": [
         {
@@ -1438,9 +1424,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)"
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -1491,9 +1477,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)"
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -1689,11 +1675,11 @@
       "name": "eventos_venda",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')"
       },
       "fields": [
         {
@@ -1773,11 +1759,11 @@
       "name": "custos_evento",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')"
       },
       "fields": [
         {
@@ -1826,11 +1812,11 @@
       "name": "vendas",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')"
       },
       "fields": [
         {
@@ -1930,11 +1916,11 @@
       "name": "itens_venda",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')"
       },
       "fields": [
         {
@@ -2019,11 +2005,11 @@
       "name": "parcelas_venda",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')"
       },
       "fields": [
         {
@@ -2112,11 +2098,11 @@
       "name": "boletos",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2 || @request.auth.nivel_acesso = 3)",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 1 || @request.auth.nivel_acesso = 2)"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')"
       },
       "fields": [
         {
@@ -2441,9 +2427,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')"
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -2501,9 +2487,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')"
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -2555,9 +2541,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')"
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -2607,9 +2593,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')"
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -2677,11 +2663,11 @@
       "name": "despesas",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')"
       },
       "fields": [
         {
@@ -2754,11 +2740,11 @@
       "name": "boletos_pagar",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')"
       },
       "fields": [
         {
@@ -2827,11 +2813,11 @@
       "name": "pagamentos_realizados",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')"
       },
       "fields": [
         {
@@ -2894,9 +2880,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '3')"
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
       },
       "fields": [
         {
@@ -2940,9 +2926,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = '1' || @request.auth.nivel_acesso = '2')"
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro')"
       },
       "fields": [
         {
@@ -3007,9 +2993,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')"
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Gerente')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Gerente')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Gerente')"
       },
       "fields": [
         {
@@ -3065,9 +3051,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')"
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Gerente')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Gerente')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Gerente')"
       },
       "fields": [
         {
@@ -3193,11 +3179,11 @@
       "name": "diagnostico_inicial",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
-        "view": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
-        "create": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
-        "update": "@request.auth.id != '' && @request.auth.nivel_acesso = 1",
-        "delete": "@request.auth.id != '' && @request.auth.nivel_acesso = 1"
+        "list": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'",
+        "view": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'",
+        "create": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'",
+        "update": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'",
+        "delete": "@request.auth.id != '' && @request.auth.nivel_acesso = 'Gerente'"
       },
       "fields": [
         {
@@ -3288,11 +3274,11 @@
       "name": "estoque_movimentacoes",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')",
-        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = '1')"
+        "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Gerente')",
+        "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Gerente')",
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Gerente')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Gerente')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Gerente')"
       },
       "fields": [
         {
