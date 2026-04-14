@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -26,13 +26,12 @@ import {
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 import { ShieldCheck, Search, Eye, Activity, ChevronLeft, ChevronRight } from 'lucide-react'
-import { format, parseISO } from 'date-fns'
+import { format, parseISO, subDays } from 'date-fns'
 import { getAuditoriasPaginated, AuditoriaMovimentacao } from '@/services/auditoria'
 import pb from '@/lib/pocketbase/client'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts'
 import { useRealtime } from '@/hooks/use-realtime'
-import { useAuth } from '@/hooks/use-auth'
 
 const JsonDisplay = ({ dataStr }: { dataStr?: string }) => {
   if (!dataStr) return <span className="text-muted-foreground italic">Vazio</span>
@@ -49,7 +48,6 @@ const JsonDisplay = ({ dataStr }: { dataStr?: string }) => {
 }
 
 export default function Auditoria() {
-  const { user } = useAuth()
   const { toast } = useToast()
 
   const [page, setPage] = useState(1)
@@ -63,47 +61,25 @@ export default function Auditoria() {
   const [chartData, setChartData] = useState<any[]>([])
 
   const [searchTerm, setSearchTerm] = useState('')
-  const [userId, setUserId] = useState('all')
+  const [userEmail, setUserEmail] = useState('')
   const [actionType, setActionType] = useState('all')
   const [tableName, setTableName] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-
-  const [users, setUsers] = useState<any[]>([])
-
-  const systemTables = [
-    'users',
-    'conversas_ia',
-    'parceiros_negocios',
-    'lotes',
-    'animais',
-    'estoque_insumos',
-    'transacoes_financeiras',
-    'estoque_semen',
-    'planejamento_acasalamento',
-    'manejo_iatf_curral',
-    'nascimentos_e_desmama',
-    'pesagens_diarias',
-    'auditoria_movimentacoes',
-    'logs_sistema',
-    'notificacoes',
-  ]
-
-  useEffect(() => {
-    pb.collection('users').getFullList({ sort: 'name' }).then(setUsers).catch(console.error)
-  }, [])
 
   const loadData = async () => {
     setLoading(true)
     try {
       const filterArr = []
 
-      if (userId !== 'all') filterArr.push(`usuario_id = '${userId}'`)
+      if (userEmail) filterArr.push(`user_email ~ '${userEmail}'`)
       if (actionType !== 'all') filterArr.push(`tipo_acao = '${actionType}'`)
       if (tableName !== 'all') filterArr.push(`tabela_afetada = '${tableName}'`)
+      if (statusFilter !== 'all') filterArr.push(`status = '${statusFilter}'`)
 
       if (searchTerm) {
-        filterArr.push(`(registro_id ~ '${searchTerm}' || tabela_afetada ~ '${searchTerm}')`)
+        filterArr.push(`(registro_id ~ '${searchTerm}' || description ~ '${searchTerm}')`)
       }
 
       if (dateFrom) filterArr.push(`created >= '${dateFrom} 00:00:00.000Z'`)
@@ -111,38 +87,31 @@ export default function Auditoria() {
 
       const filterStr = filterArr.join(' && ')
 
-      const result = await getAuditoriasPaginated(page, perPage, {
-        filter: filterStr,
-      })
+      const result = await getAuditoriasPaginated(page, perPage, { filter: filterStr })
+      setData({ items: result.items, totalItems: result.totalItems, totalPages: result.totalPages })
 
-      setData({
-        items: result.items,
-        totalItems: result.totalItems,
-        totalPages: result.totalPages,
-      })
-
+      // 30 days activity chart
+      const thirtyDaysAgo = subDays(new Date(), 30).toISOString()
       const chartResult = await pb.collection('auditoria_movimentacoes').getFullList({
-        filter: filterStr,
-        expand: 'usuario_id',
-        sort: '-created',
-        limit: 1000,
+        filter: `created >= '${thirtyDaysAgo}'`,
+        sort: 'created',
+        fields: 'created',
       })
 
-      const grouped = chartResult.reduce((acc: any, curr: any) => {
-        const uName =
-          curr.expand?.usuario_id?.name || curr.expand?.usuario_id?.email || curr.usuario_id
-        acc[uName] = (acc[uName] || 0) + 1
+      const groupedByDate = chartResult.reduce((acc: any, curr: any) => {
+        const d = curr.created.split(' ')[0]
+        acc[d] = (acc[d] || 0) + 1
         return acc
       }, {})
 
-      const cData = Object.keys(grouped)
-        .map((k) => ({ name: k, actions: grouped[k] }))
-        .sort((a, b) => b.actions - a.actions)
+      const cData = Object.keys(groupedByDate)
+        .sort()
+        .map((d) => ({ date: d.substring(5, 10), events: groupedByDate[d] }))
       setChartData(cData)
     } catch (error: any) {
       toast({
         title: 'Erro',
-        description: 'Não foi possível carregar as auditorias.',
+        description: 'Não foi possível carregar auditorias.',
         variant: 'destructive',
       })
     } finally {
@@ -152,28 +121,21 @@ export default function Auditoria() {
 
   useEffect(() => {
     loadData()
-  }, [page, userId, actionType, tableName, searchTerm, dateFrom, dateTo])
-
+  }, [page, userEmail, actionType, tableName, statusFilter, searchTerm, dateFrom, dateTo])
   useRealtime('auditoria_movimentacoes', () => {
     loadData()
   })
 
-  if (user?.nivel_acesso !== 1) {
-    return (
-      <div className="flex items-center justify-center h-full text-center">
-        <div>
-          <ShieldCheck className="w-16 h-16 text-rose-300 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-slate-800">Acesso Restrito</h2>
-          <p className="text-muted-foreground">
-            Esta área é restrita a administradores do sistema.
-          </p>
-        </div>
-      </div>
-    )
+  const getActionColor = (action: string) => {
+    if (action === 'CREATE' || action === 'Criação') return 'bg-emerald-100 text-emerald-800'
+    if (action === 'UPDATE' || action === 'Edição') return 'bg-amber-100 text-amber-800'
+    if (action === 'DELETE' || action === 'Exclusão') return 'bg-rose-100 text-rose-800'
+    if (action === 'LOGIN' || action === 'LOGOUT') return 'bg-blue-100 text-blue-800'
+    return 'bg-slate-100 text-slate-800'
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center bg-slate-900 text-white p-6 rounded-xl shadow-lg">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-slate-800 rounded-lg border border-slate-700">
@@ -182,7 +144,7 @@ export default function Auditoria() {
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Auditoria do Sistema</h2>
             <p className="text-slate-400 font-medium text-sm mt-1">
-              Monitoramento e rastreabilidade de ações no ERP
+              Visibilidade total das ações e acessos no ERP
             </p>
           </div>
         </div>
@@ -193,37 +155,26 @@ export default function Auditoria() {
           <Card className="border-t-4 border-t-slate-800 shadow-md">
             <CardHeader className="pb-3 border-b bg-slate-50/50">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Search className="w-5 h-5 text-slate-500" />
-                Filtros Avançados
+                <Search className="w-5 h-5 text-slate-500" /> Filtros Avançados
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
               <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-600">Usuário</label>
-                  <Select
-                    value={userId}
-                    onValueChange={(v) => {
-                      setUserId(v)
+                  <label className="text-xs font-semibold text-slate-600">Usuário (Email)</label>
+                  <Input
+                    placeholder="usuario@exemplo..."
+                    value={userEmail}
+                    onChange={(e) => {
+                      setUserEmail(e.target.value)
                       setPage(1)
                     }}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Todos os usuários" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os usuários</SelectItem>
-                      {users.map((u) => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.name || u.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    className="h-9"
+                  />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-600">Tipo de Ação</label>
+                  <label className="text-xs font-semibold text-slate-600">Ação</label>
                   <Select
                     value={actionType}
                     onValueChange={(v) => {
@@ -232,36 +183,35 @@ export default function Auditoria() {
                     }}
                   >
                     <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Todas as ações" />
+                      <SelectValue placeholder="Todas" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todas as ações</SelectItem>
-                      <SelectItem value="Criação">Criação</SelectItem>
-                      <SelectItem value="Edição">Edição</SelectItem>
-                      <SelectItem value="Exclusão">Exclusão</SelectItem>
+                      <SelectItem value="CREATE">CREATE</SelectItem>
+                      <SelectItem value="UPDATE">UPDATE</SelectItem>
+                      <SelectItem value="DELETE">DELETE</SelectItem>
+                      <SelectItem value="LOGIN">LOGIN</SelectItem>
+                      <SelectItem value="LOGOUT">LOGOUT</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-600">Tabela Afetada</label>
+                  <label className="text-xs font-semibold text-slate-600">Status</label>
                   <Select
-                    value={tableName}
+                    value={statusFilter}
                     onValueChange={(v) => {
-                      setTableName(v)
+                      setStatusFilter(v)
                       setPage(1)
                     }}
                   >
                     <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Todas as tabelas" />
+                      <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todas as tabelas</SelectItem>
-                      {systemTables.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="SUCCESS">Sucesso</SelectItem>
+                      <SelectItem value="FAILED">Falha</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -275,10 +225,9 @@ export default function Auditoria() {
                       setDateFrom(e.target.value)
                       setPage(1)
                     }}
-                    className="h-9 text-sm"
+                    className="h-9"
                   />
                 </div>
-
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-600">Data Final</label>
                   <Input
@@ -288,7 +237,7 @@ export default function Auditoria() {
                       setDateTo(e.target.value)
                       setPage(1)
                     }}
-                    className="h-9 text-sm"
+                    className="h-9"
                   />
                 </div>
               </div>
@@ -297,7 +246,7 @@ export default function Auditoria() {
                   <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
                   <Input
                     className="pl-9 h-9"
-                    placeholder="Buscar por ID de registro..."
+                    placeholder="Buscar por ID ou descrição..."
                     value={searchTerm}
                     onChange={(e) => {
                       setSearchTerm(e.target.value)
@@ -308,9 +257,10 @@ export default function Auditoria() {
                 <Button
                   variant="ghost"
                   onClick={() => {
-                    setUserId('all')
+                    setUserEmail('')
                     setActionType('all')
                     setTableName('all')
+                    setStatusFilter('all')
                     setDateFrom('')
                     setDateTo('')
                     setSearchTerm('')
@@ -332,8 +282,7 @@ export default function Auditoria() {
                     <TableHead className="font-semibold text-slate-700">Data/Hora</TableHead>
                     <TableHead className="font-semibold text-slate-700">Usuário</TableHead>
                     <TableHead className="font-semibold text-slate-700">Ação</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Tabela</TableHead>
-                    <TableHead className="font-semibold text-slate-700">ID Registro</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Tabela/Status</TableHead>
                     <TableHead className="text-right font-semibold text-slate-700">
                       Detalhes
                     </TableHead>
@@ -342,118 +291,118 @@ export default function Auditoria() {
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        Carregando registros...
+                      <TableCell colSpan={5} className="text-center py-8">
+                        Carregando...
                       </TableCell>
                     </TableRow>
                   ) : data.items.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        Nenhum registro de auditoria encontrado.
+                      <TableCell colSpan={5} className="text-center py-8">
+                        Nenhum log encontrado.
                       </TableCell>
                     </TableRow>
                   ) : (
                     data.items.map((log) => (
-                      <TableRow key={log.id} className="hover:bg-slate-50/50 transition-colors">
+                      <TableRow key={log.id}>
                         <TableCell className="font-mono text-xs whitespace-nowrap text-slate-500">
-                          {format(parseISO(log.created), 'dd/MM/yyyy HH:mm:ss')}
+                          {format(parseISO(log.created), 'dd/MM/yy HH:mm:ss')}
                         </TableCell>
-                        <TableCell className="font-medium text-sm text-slate-900">
-                          {log.expand?.usuario_id?.name ||
-                            log.expand?.usuario_id?.email ||
-                            'Sistema'}
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-sm text-slate-900">
+                              {log.user_email || log.expand?.usuario_id?.email || 'Sistema'}
+                            </span>
+                            <span className="text-[10px] text-slate-500 uppercase">
+                              {log.user_role || 'Auto'}
+                            </span>
+                          </div>
                         </TableCell>
                         <TableCell>
                           <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${
-                              log.tipo_acao === 'Criação'
-                                ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                                : log.tipo_acao === 'Edição'
-                                  ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                                  : 'bg-rose-100 text-rose-800 border border-rose-200'
-                            }`}
+                            className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold ${getActionColor(log.tipo_acao)}`}
                           >
                             {log.tipo_acao}
                           </span>
                         </TableCell>
-                        <TableCell className="font-mono text-xs text-slate-600">
-                          {log.tabela_afetada}
-                        </TableCell>
-                        <TableCell className="font-mono text-xs text-slate-500">
-                          {log.registro_id}
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-mono text-xs">{log.tabela_afetada}</span>
+                            <span
+                              className={`text-[10px] font-bold ${log.status === 'SUCCESS' ? 'text-emerald-600' : log.status === 'FAILED' ? 'text-rose-600' : 'text-slate-500'}`}
+                            >
+                              {log.status || 'N/A'}
+                            </span>
+                          </div>
                         </TableCell>
                         <TableCell className="text-right">
                           <Dialog>
                             <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 text-xs border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-sm"
-                              >
-                                <Eye className="w-3.5 h-3.5 mr-1.5" /> Ver Detalhes
+                              <Button variant="outline" size="sm" className="h-7 text-xs shadow-sm">
+                                <Eye className="w-3.5 h-3.5 mr-1.5" /> Ver
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col bg-slate-50 p-0 border-slate-200">
+                            <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col bg-slate-50 p-0">
                               <DialogHeader className="p-6 pb-4 bg-white border-b">
-                                <DialogTitle className="text-xl flex items-center gap-2 text-slate-900">
-                                  <ShieldCheck className="w-6 h-6 text-blue-600" /> Comparação de
-                                  Modificação
+                                <DialogTitle className="text-xl flex items-center gap-2">
+                                  <ShieldCheck className="w-6 h-6 text-blue-600" /> Detalhes do Log
                                 </DialogTitle>
-                                <div className="flex flex-wrap gap-4 mt-3 text-sm text-slate-600">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm bg-slate-100 p-4 rounded-lg">
                                   <div>
-                                    <strong className="text-slate-900">Ação:</strong>{' '}
+                                    <strong className="block text-slate-500 text-xs uppercase mb-1">
+                                      Usuário
+                                    </strong>{' '}
+                                    {log.user_email || log.expand?.usuario_id?.email || 'N/A'}
+                                  </div>
+                                  <div>
+                                    <strong className="block text-slate-500 text-xs uppercase mb-1">
+                                      Endereço IP
+                                    </strong>{' '}
+                                    {log.ip_address || 'N/A'}
+                                  </div>
+                                  <div>
+                                    <strong className="block text-slate-500 text-xs uppercase mb-1">
+                                      Ação
+                                    </strong>{' '}
                                     {log.tipo_acao}
                                   </div>
                                   <div>
-                                    <strong className="text-slate-900">Tabela:</strong>{' '}
-                                    <span className="font-mono bg-slate-100 px-1 rounded">
-                                      {log.tabela_afetada}
-                                    </span>
+                                    <strong className="block text-slate-500 text-xs uppercase mb-1">
+                                      Status
+                                    </strong>{' '}
+                                    {log.status || 'N/A'}
                                   </div>
-                                  <div>
-                                    <strong className="text-slate-900">Registro:</strong>{' '}
-                                    <span className="font-mono bg-slate-100 px-1 rounded">
-                                      {log.registro_id}
-                                    </span>
+                                  <div className="col-span-2">
+                                    <strong className="block text-slate-500 text-xs uppercase mb-1">
+                                      Descrição
+                                    </strong>{' '}
+                                    {log.description || 'N/A'}
                                   </div>
-                                  <div>
-                                    <strong className="text-slate-900">Usuário:</strong>{' '}
-                                    {log.expand?.usuario_id?.name ||
-                                      log.expand?.usuario_id?.email ||
-                                      'Sistema'}
+                                  <div className="col-span-2">
+                                    <strong className="block text-slate-500 text-xs uppercase mb-1">
+                                      ID Afetado
+                                    </strong>{' '}
+                                    {log.registro_id || 'N/A'}
                                   </div>
                                 </div>
                               </DialogHeader>
-                              <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
-                                {log.tipo_acao === 'Criação' ? (
-                                  <div>
-                                    <h4 className="font-semibold text-sm mb-3 text-emerald-800 flex items-center gap-2">
-                                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>{' '}
-                                      Dados Criados
-                                    </h4>
-                                    <JsonDisplay dataStr={log.dados_novos} />
-                                  </div>
-                                ) : log.tipo_acao === 'Exclusão' ? (
-                                  <div>
-                                    <h4 className="font-semibold text-sm mb-3 text-rose-800 flex items-center gap-2">
-                                      <span className="w-2 h-2 rounded-full bg-rose-500"></span>{' '}
-                                      Dados Excluídos
-                                    </h4>
-                                    <JsonDisplay dataStr={log.dados_anteriores} />
+                              <div className="flex-1 overflow-y-auto p-6">
+                                {log.tipo_acao === 'LOGIN' || log.tipo_acao === 'LOGOUT' ? (
+                                  <div className="text-center py-8 text-slate-500">
+                                    Log de sessão. Não há alterações de dados atreladas.
                                   </div>
                                 ) : (
                                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     <div>
-                                      <h4 className="font-semibold text-sm mb-3 text-rose-800 flex items-center gap-2 border-b border-rose-200 pb-2">
+                                      <h4 className="font-semibold text-sm mb-3 text-rose-800 flex items-center gap-2 border-b pb-2">
                                         <span className="w-2 h-2 rounded-full bg-rose-500"></span>{' '}
-                                        Dados Anteriores
+                                        Valores Anteriores
                                       </h4>
                                       <JsonDisplay dataStr={log.dados_anteriores} />
                                     </div>
                                     <div>
-                                      <h4 className="font-semibold text-sm mb-3 text-blue-800 flex items-center gap-2 border-b border-blue-200 pb-2">
+                                      <h4 className="font-semibold text-sm mb-3 text-blue-800 flex items-center gap-2 border-b pb-2">
                                         <span className="w-2 h-2 rounded-full bg-blue-500"></span>{' '}
-                                        Dados Novos
+                                        Valores Novos
                                       </h4>
                                       <JsonDisplay dataStr={log.dados_novos} />
                                     </div>
@@ -470,30 +419,25 @@ export default function Auditoria() {
               </Table>
             </CardContent>
             <div className="flex items-center justify-between px-6 py-3 border-t bg-slate-50/50">
-              <p className="text-sm text-slate-500 font-medium">
-                Página <span className="text-slate-900 font-semibold">{page}</span> de{' '}
-                <span className="text-slate-900 font-semibold">{Math.max(1, data.totalPages)}</span>
-                <span className="mx-2 text-slate-300">|</span>
-                Total de {data.totalItems} registros
+              <p className="text-sm text-slate-500">
+                Página {page} de {Math.max(1, data.totalPages)} | Total: {data.totalItems}
               </p>
               <div className="flex space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1 || loading}
-                  className="shadow-sm"
+                  disabled={page === 1}
                 >
-                  <ChevronLeft className="w-4 h-4 mr-1" /> Anterior
+                  <ChevronLeft className="w-4 h-4" />
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
-                  disabled={page >= data.totalPages || loading}
-                  className="shadow-sm"
+                  disabled={page >= data.totalPages}
                 >
-                  Próxima <ChevronRight className="w-4 h-4 ml-1" />
+                  <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -503,66 +447,39 @@ export default function Auditoria() {
         <div className="lg:col-span-1 space-y-6">
           <Card className="shadow-md border-t-4 border-t-[#1e3a8a]">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2 text-slate-900">
-                <Activity className="w-5 h-5 text-[#1e3a8a]" />
-                Atividade por Usuário
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Activity className="w-5 h-5 text-[#1e3a8a]" /> Atividade (30 Dias)
               </CardTitle>
-              <CardDescription>Volume de ações (últimos 1000 registros)</CardDescription>
             </CardHeader>
             <CardContent>
               {chartData.length === 0 ? (
                 <div className="h-[250px] flex items-center justify-center text-sm text-slate-500 bg-slate-50 rounded-lg border border-dashed">
-                  Sem dados para exibir.
+                  Sem dados recentes
                 </div>
               ) : (
-                <div className="h-[300px] w-full mt-4">
+                <div className="h-[250px] w-full mt-4">
                   <ChartContainer
-                    config={{ actions: { label: 'Ações' } }}
+                    config={{ events: { label: 'Eventos', color: '#1e3a8a' } }}
                     className="h-full w-full"
                   >
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={chartData}
-                        margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                        <XAxis
-                          dataKey="name"
-                          tickLine={false}
-                          axisLine={false}
-                          tick={{ fontSize: 11, fill: '#64748b' }}
-                          tickFormatter={(value) => value.split(' ')[0]}
-                        />
-                        <YAxis
-                          tickLine={false}
-                          axisLine={false}
-                          tick={{ fontSize: 11, fill: '#64748b' }}
-                        />
+                      <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar
-                          dataKey="actions"
-                          fill="#1e3a8a"
-                          radius={[4, 4, 0, 0]}
-                          maxBarSize={40}
+                        <Line
+                          type="monotone"
+                          dataKey="events"
+                          stroke="var(--color-events)"
+                          strokeWidth={2}
+                          dot={false}
                         />
-                      </BarChart>
+                      </LineChart>
                     </ResponsiveContainer>
                   </ChartContainer>
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-md bg-slate-900 text-white border-0">
-            <CardContent className="p-6">
-              <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-blue-400" /> Integridade de Dados
-              </h3>
-              <p className="text-sm text-slate-300 leading-relaxed">
-                Todos os registros de auditoria são imutáveis e armazenados com segurança pela
-                infraestrutura do sistema. Nenhuma modificação pode ser feita nos logs gerados,
-                garantindo total conformidade e rastreabilidade para a Gestão Pecuária 360º.
-              </p>
             </CardContent>
           </Card>
         </div>

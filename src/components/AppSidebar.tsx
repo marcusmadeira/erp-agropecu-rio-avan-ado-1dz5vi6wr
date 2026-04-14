@@ -40,21 +40,14 @@ export function AppSidebar() {
 
   useRealtime('configuracoes_sistema', fetchConfig)
 
-  const getRoleLevel = (role: string | number | undefined) => {
-    if (typeof role === 'number') return role
-    switch (role) {
-      case 'Gerente':
-        return 1
-      case 'Financeiro':
-        return 2
-      case 'Operacional':
-        return 3
-      default:
-        return 1
-    }
+  const getRoleLevel = (u: any) => {
+    if (!u) return 3
+    if (u.role === 'Admin' || u.nivel_acesso === 'Gerente') return 1
+    if (u.nivel_acesso === 'Financeiro') return 2
+    return 3
   }
 
-  const userRole = getRoleLevel(user?.nivel_acesso)
+  const userRole = getRoleLevel(user)
 
   return (
     <Sidebar>

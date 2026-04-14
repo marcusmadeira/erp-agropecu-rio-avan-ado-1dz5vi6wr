@@ -98,7 +98,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const signOut = () => {
+  const signOut = async () => {
+    if (pb.authStore.isValid) {
+      try {
+        await pb.send('/backend/v1/audit/logout', { method: 'POST' })
+      } catch (e) {
+        console.error('Logout audit error', e)
+      }
+    }
     pb.authStore.clear()
   }
 

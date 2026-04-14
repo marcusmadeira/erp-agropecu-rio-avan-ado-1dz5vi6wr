@@ -9,7 +9,7 @@ import { AuthProvider, useAuth } from '@/hooks/use-auth'
 import Layout from './components/Layout'
 import { BackgroundSync } from './components/BackgroundSync'
 import Login from './pages/Login'
-import Register from './pages/Register'
+import RegisterUser from './pages/admin/RegisterUser'
 import ForgotPassword from './pages/ForgotPassword'
 import NotFound from './pages/NotFound'
 import Dashboard from './pages/Dashboard'
@@ -49,23 +49,17 @@ const AuthorizeRoute = ({
   if (loading) return null
   if (!user) return <Navigate to="/login" replace />
 
-  const getRoleLevel = (role: string | number) => {
-    if (typeof role === 'number') return role
-    switch (role) {
-      case 'Gerente':
-        return 1
-      case 'Financeiro':
-        return 2
-      case 'Operacional':
-        return 3
-      default:
-        return 1
-    }
+  const getRoleLevel = (u: any) => {
+    if (!u) return 3
+    if (u.role === 'Admin' || u.nivel_acesso === 'Gerente') return 1
+    if (u.nivel_acesso === 'Financeiro') return 2
+    return 3
   }
 
-  const userRole = getRoleLevel(user.nivel_acesso || 1)
+  const userRole = getRoleLevel(user)
   if (!allowedRoles.includes(userRole)) {
-    if (userRole === 2 || userRole === 3) return <Navigate to="/desempenho" replace />
+    if (userRole === 3) return <Navigate to="/animais" replace />
+    if (userRole === 2) return <Navigate to="/desempenho" replace />
     return <Navigate to="/" replace />
   }
 
@@ -89,14 +83,7 @@ const AppRoutes = () => (
         </PublicRoute>
       }
     />
-    <Route
-      path="/register"
-      element={
-        <PublicRoute>
-          <Register />
-        </PublicRoute>
-      }
-    />
+
     <Route path="/forgot-password" element={<Navigate to="/recuperar-senha" replace />} />
     <Route
       path="/recuperar-senha"
@@ -116,7 +103,7 @@ const AppRoutes = () => (
       <Route
         path="/"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <Dashboard />
           </AuthorizeRoute>
         }
@@ -124,7 +111,7 @@ const AppRoutes = () => (
       <Route
         path="/desempenho"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <Desempenho />
           </AuthorizeRoute>
         }
@@ -132,8 +119,16 @@ const AppRoutes = () => (
       <Route
         path="/auditoria"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1]}>
             <Auditoria />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/usuarios/novo"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <RegisterUser />
           </AuthorizeRoute>
         }
       />
@@ -172,7 +167,7 @@ const AppRoutes = () => (
       <Route
         path="/despesas"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <DespesasPagamentos />
           </AuthorizeRoute>
         }
@@ -180,7 +175,7 @@ const AppRoutes = () => (
       <Route
         path="/controle-recebimento"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <RecebimentoBoletos />
           </AuthorizeRoute>
         }
@@ -188,7 +183,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <GestaoVendas />
           </AuthorizeRoute>
         }
@@ -196,7 +191,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/nova"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <VendaForm />
           </AuthorizeRoute>
         }
@@ -204,7 +199,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/editar/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <VendaForm />
           </AuthorizeRoute>
         }
@@ -212,7 +207,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/geral/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <VendaDetalhes />
           </AuthorizeRoute>
         }
@@ -220,7 +215,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/eventos/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <EventoDetalhes />
           </AuthorizeRoute>
         }
@@ -244,7 +239,7 @@ const AppRoutes = () => (
       <Route
         path="/diagnostico-inicial"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <DiagnosticoInicial />
           </AuthorizeRoute>
         }
@@ -252,7 +247,7 @@ const AppRoutes = () => (
       <Route
         path="/metas-kpis"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <MetasKPIs />
           </AuthorizeRoute>
         }
@@ -260,7 +255,7 @@ const AppRoutes = () => (
       <Route
         path="/simulador-cenarios"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+          <AuthorizeRoute allowedRoles={[1, 2]}>
             <SimuladorCenarios />
           </AuthorizeRoute>
         }

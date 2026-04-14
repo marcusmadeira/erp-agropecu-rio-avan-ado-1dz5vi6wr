@@ -3,11 +3,16 @@ import pb from '@/lib/pocketbase/client'
 export interface AuditoriaMovimentacao {
   id: string
   usuario_id: string
-  tipo_acao: 'Criação' | 'Edição' | 'Exclusão'
+  tipo_acao: string
   tabela_afetada: string
   registro_id: string
   dados_anteriores?: string
   dados_novos?: string
+  user_email?: string
+  user_role?: string
+  description?: string
+  ip_address?: string
+  status?: string
   created: string
   updated: string
   expand?: {

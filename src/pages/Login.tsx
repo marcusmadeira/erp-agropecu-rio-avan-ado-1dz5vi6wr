@@ -132,16 +132,6 @@ export default function Login() {
               )}
             </Button>
           </form>
-
-          <div className="mt-6 text-center text-sm border-t pt-4 border-slate-100">
-            <span className="text-slate-500 font-medium">Não tem uma conta? </span>
-            <Link
-              to="/register"
-              className="font-bold text-brand hover:text-brand/80 transition-colors"
-            >
-              Cadastrar-se
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>

@@ -8,35 +8,37 @@ routerAdd('POST', '/backend/v1/auth/reset-password', (e) => {
     throw new BadRequestError('Email, código e nova senha são obrigatórios.')
   }
 
+  if (newPassword.length < 8) {
+    throw new BadRequestError('A nova senha deve ter no mínimo 8 caracteres')
+  }
+
+  let user
   try {
-    const user = $app.findAuthRecordByEmail('users', email)
+    user = $app.findAuthRecordByEmail('users', email)
+  } catch (_) {
+    throw new BadRequestError('Código inválido ou expirado')
+  }
 
-    const storedCode = user.get('codigo_verificacao')
-    const validadeStr = user.get('validade_codigo')
+  const savedCode = user.getString('reset_code')
+  const expiresStr = user.getString('reset_code_expires')
 
-    if (!storedCode || storedCode !== code) {
+  if (!savedCode || savedCode !== code) {
+    throw new BadRequestError('Código inválido ou expirado')
+  }
+
+  if (expiresStr) {
+    const expiresAt = new Date(expiresStr)
+    if (expiresAt < new Date()) {
       throw new BadRequestError('Código inválido ou expirado')
     }
-
-    if (validadeStr) {
-      const validade = new Date(validadeStr)
-      if (validade < new Date()) {
-        throw new BadRequestError('Código inválido ou expirado')
-      }
-    }
-
-    user.setPassword(newPassword)
-    user.set('codigo_verificacao', '')
-    user.set('validade_codigo', '')
-    $app.saveNoValidate(user)
-
-    return e.json(200, {
-      message: 'Senha redefinida com sucesso! Faça login com suas novas credenciais',
-    })
-  } catch (err) {
-    if (err.message === 'sql: no rows in result set') {
-      throw new NotFoundError('Usuário não encontrado.')
-    }
-    throw err
   }
+
+  user.setPassword(newPassword)
+  user.set('reset_code', '')
+  user.set('reset_code_expires', '')
+  $app.saveNoValidate(user)
+
+  return e.json(200, {
+    message: 'Senha redefinida com sucesso! Faça login com suas novas credenciais',
+  })
 })

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-14T00:24:20.952Z",
+  "generatedAt": "2026-04-14T00:44:16.623Z",
   "collections": [
     {
       "name": "users",
@@ -106,6 +106,20 @@
           "type": "date",
           "required": false,
           "system": false
+        },
+        {
+          "name": "role",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Admin", "Operacional"]
+        },
+        {
+          "name": "status_usuario",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Ativo", "Inativo"]
         }
       ],
       "indexes": [
@@ -996,7 +1010,17 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["Criação", "Edição", "Exclusão"]
+          "selectValues": [
+            "Criação",
+            "Edição",
+            "Exclusão",
+            "CREATE",
+            "READ",
+            "UPDATE",
+            "DELETE",
+            "LOGIN",
+            "LOGOUT"
+          ]
         },
         {
           "name": "tabela_afetada",
@@ -1035,6 +1059,37 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "user_email",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "user_role",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ip_address",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["SUCCESS", "FAILED"]
         }
       ],
       "indexes": [
