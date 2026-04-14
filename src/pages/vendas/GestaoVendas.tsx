@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import TabEventos from './components/TabEventos'
 import TabVendas from './components/TabVendas'
@@ -6,6 +7,48 @@ import TabOperacoes from './components/TabOperacoes'
 import TabClientesCRM from './components/TabClientesCRM'
 
 export default function GestaoVendas() {
+  useEffect(() => {
+    // Intercept fetch to prevent html-to-image from crashing on missing Vite CSS assets
+    const originalFetch = window.fetch
+    window.fetch = async (...args) => {
+      let requestUrl = ''
+      if (typeof args[0] === 'string') {
+        requestUrl = args[0]
+      } else if (args[0] instanceof Request) {
+        requestUrl = args[0].url
+      } else if (args[0] instanceof URL) {
+        requestUrl = args[0].toString()
+      } else if (args[0] && typeof (args[0] as any).toString === 'function') {
+        requestUrl = (args[0] as any).toString()
+      }
+
+      try {
+        const response = await originalFetch(...args)
+        if (!response.ok && requestUrl.includes('/assets/') && requestUrl.endsWith('.css')) {
+          return new Response('', {
+            status: 200,
+            statusText: 'OK',
+            headers: new Headers({ 'Content-Type': 'text/css' }),
+          })
+        }
+        return response
+      } catch (error) {
+        if (requestUrl.includes('/assets/') && requestUrl.endsWith('.css')) {
+          return new Response('', {
+            status: 200,
+            statusText: 'OK',
+            headers: new Headers({ 'Content-Type': 'text/css' }),
+          })
+        }
+        throw error
+      }
+    }
+
+    return () => {
+      window.fetch = originalFetch
+    }
+  }, [])
+
   return (
     <div className="p-6 bg-white min-h-screen text-black">
       <div className="mb-6">

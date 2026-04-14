@@ -6,7 +6,42 @@ import { AppProvider } from '@/stores/useAppStore'
 import useAppStore from '@/stores/useAppStore'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
 
+import { Component, ErrorInfo, ReactNode } from 'react'
 import Layout from './components/Layout'
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError(_: Error) {
+    return { hasError: true }
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('ErrorBoundary caught an error', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 bg-white min-h-screen text-black flex flex-col items-center justify-center">
+          <h2 className="text-2xl font-bold text-emerald-900 mb-4">Ocorreu um erro inesperado.</h2>
+          <p className="text-gray-600 mb-6">Tente recarregar a página ou contate o suporte.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-emerald-800 text-white px-4 py-2 rounded-md hover:bg-emerald-900 transition-colors"
+          >
+            Recarregar Página
+          </button>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
 import { BackgroundSync } from './components/BackgroundSync'
 import Login from './pages/Login'
 import RegisterUser from './pages/admin/RegisterUser'
@@ -75,7 +110,7 @@ const AuthorizeRoute = ({
     return <Navigate to="/" replace />
   }
 
-  return <>{children}</>
+  return <ErrorBoundary>{children}</ErrorBoundary>
 }
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
