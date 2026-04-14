@@ -17,6 +17,7 @@ import Desempenho from './pages/dashboard/Desempenho'
 import Auditoria from './pages/admin/Auditoria'
 import Importacao from './pages/rebanho/ImportarAnimais'
 import ImportadorFornecedores from './pages/admin/ImportadorFornecedores'
+import ImportadorNotasFiscais from './pages/admin/ImportadorNotasFiscais'
 import Animais from './pages/rebanho/Animais'
 import AnimalPerfil from './pages/rebanho/AnimalPerfil'
 import DespesasPagamentos from './pages/financeiro/DespesasPagamentos'
@@ -137,6 +138,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1, 2]}>
             <ImportadorFornecedores />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/importador-notas"
+        element={
+          <AuthorizeRoute allowedRoles={[1]}>
+            <ImportadorNotasFiscais />
           </AuthorizeRoute>
         }
       />

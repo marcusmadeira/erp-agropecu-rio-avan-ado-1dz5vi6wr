@@ -11,6 +11,7 @@ import {
   CloudSun,
   Upload,
   ShieldCheck,
+  FileText,
 } from 'lucide-react'
 
 import { Users } from 'lucide-react'
@@ -58,6 +59,12 @@ export const navigationMenu = [
         title: 'Importar Fornecedores',
         url: '/importador-fornecedores',
         icon: Upload,
+        roles: [1],
+      },
+      {
+        title: 'Importar Notas (OCR)',
+        url: '/importador-notas',
+        icon: FileText,
         roles: [1],
       },
       { title: 'Auditoria', url: '/auditoria', icon: ShieldCheck, roles: [1] },
