@@ -18,9 +18,9 @@ import {
   PackageMinus,
   ClipboardList,
   Factory,
+  ArrowRightLeft,
+  Users,
 } from 'lucide-react'
-
-import { Users } from 'lucide-react'
 
 export const navigationMenu = [
   {
