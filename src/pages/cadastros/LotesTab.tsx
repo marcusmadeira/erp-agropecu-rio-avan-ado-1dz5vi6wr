@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Plus, Pencil, Trash2, Search } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search, PackagePlus } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import LoteForm from './LoteForm'
 import { useAuth } from '@/hooks/use-auth'
@@ -26,7 +26,7 @@ export default function LotesTab() {
 
   const { toast } = useToast()
   const { user } = useAuth()
-  const canEdit = user?.nivel_acesso === 1 || user?.nivel_acesso === 3
+  const canEdit = user?.nivel_acesso === 1 || user?.nivel_acesso === 3 || user?.role === 'Admin'
 
   const loadData = async () => {
     try {
@@ -40,6 +40,7 @@ export default function LotesTab() {
   useEffect(() => {
     loadData()
   }, [])
+
   useRealtime('lotes', () => {
     loadData()
   })
@@ -70,14 +71,33 @@ export default function LotesTab() {
   const exportColumns = [
     { header: 'Nome do Lote', dataKey: 'nome_lote' },
     { header: 'Centro de Custo', dataKey: 'centro_custo' },
+    { header: 'Piquete Atual', dataKey: 'piquete_atual' },
+    { header: 'Nutrição Padrão', dataKey: 'nutricao_padrao' },
     { header: 'Qtd. Cabeças', dataKey: 'quantidade_cabecas' },
-    { header: 'Peso Médio (kg)', dataKey: 'peso_medio_lote' },
   ]
 
+  const mappedExportData = filtered.map((f) => ({
+    ...f,
+    piquete_atual: f.expand?.piquete_atual_id?.nome || '-',
+    nutricao_padrao: f.expand?.formulacao_id?.nome_formulacao || '-',
+  }))
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="relative w-72">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto animate-fade-in-up">
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-primary/10 rounded-lg">
+          <PackagePlus className="h-6 w-6 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Gestão de Lotes</h1>
+          <p className="text-muted-foreground text-sm">
+            Gerencie os lotes, nutrição e piquetes do seu rebanho.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="relative w-full sm:w-80">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar lote..."
@@ -86,12 +106,12 @@ export default function LotesTab() {
             className="pl-8"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
           <ExportButtons
             onExportPDF={() =>
               exportToPDF({
-                title: 'Lotes',
-                data: filtered,
+                title: 'Gestão de Lotes',
+                data: mappedExportData,
                 columns: exportColumns,
                 userName: user?.name || '',
               })
@@ -99,28 +119,29 @@ export default function LotesTab() {
             onExportExcel={() =>
               exportToExcel({
                 title: 'Lotes',
-                data: filtered,
+                data: mappedExportData,
                 columns: exportColumns,
                 userName: user?.name || '',
               })
             }
           />
           {canEdit && (
-            <Button onClick={openNew}>
-              <Plus className="w-4 h-4 mr-2" /> Novo Registro
+            <Button onClick={openNew} className="bg-primary hover:bg-primary/90 text-white">
+              <Plus className="w-4 h-4 mr-2" /> Novo Lote
             </Button>
           )}
         </div>
       </div>
 
-      <div className="border rounded-md">
+      <div className="border rounded-md bg-white shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-slate-50">
               <TableHead>Nome do Lote</TableHead>
               <TableHead>Centro de Custo</TableHead>
-              <TableHead>Qtd. Cabeças</TableHead>
-              <TableHead>Peso Médio (kg)</TableHead>
+              <TableHead>Piquete Atual</TableHead>
+              <TableHead>Nutrição Padrão</TableHead>
+              <TableHead className="text-center">Qtd. Cabeças</TableHead>
               {canEdit && <TableHead className="w-[100px]"></TableHead>}
             </TableRow>
           </TableHeader>
@@ -128,27 +149,34 @@ export default function LotesTab() {
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={canEdit ? 5 : 4}
+                  colSpan={canEdit ? 6 : 5}
                   className="text-center text-muted-foreground py-8"
                 >
-                  Nenhum registro encontrado
+                  Nenhum lote cadastrado ou encontrado
                 </TableCell>
               </TableRow>
             ) : (
               filtered.map((item) => (
-                <TableRow key={item.id}>
+                <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors">
                   <TableCell className="font-medium text-slate-800">{item.nome_lote}</TableCell>
                   <TableCell>{item.centro_custo || '-'}</TableCell>
-                  <TableCell>{item.quantidade_cabecas ?? '-'}</TableCell>
-                  <TableCell>{item.peso_medio_lote ?? '-'}</TableCell>
+                  <TableCell className="text-slate-600">
+                    {item.expand?.piquete_atual_id?.nome || '-'}
+                  </TableCell>
+                  <TableCell className="text-slate-600">
+                    {item.expand?.formulacao_id?.nome_formulacao || '-'}
+                  </TableCell>
+                  <TableCell className="text-center font-semibold text-slate-700">
+                    {item.quantidade_cabecas ?? '0'}
+                  </TableCell>
                   {canEdit && (
                     <TableCell>
                       <div className="flex items-center gap-2 justify-end">
                         <Button variant="ghost" size="icon" onClick={() => openEdit(item)}>
-                          <Pencil className="w-4 h-4" />
+                          <Pencil className="w-4 h-4 text-slate-600 hover:text-primary" />
                         </Button>
                         <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
-                          <Trash2 className="w-4 h-4 text-red-500" />
+                          <Trash2 className="w-4 h-4 text-red-500 hover:text-red-600" />
                         </Button>
                       </div>
                     </TableCell>

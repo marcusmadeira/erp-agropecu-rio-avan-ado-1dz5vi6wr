@@ -151,7 +151,6 @@ export default function SaidaRacao() {
                 <Select
                   onValueChange={(val) => form.setValue('formulacao_id', val)}
                   value={form.watch('formulacao_id')}
-                  disabled={!!lotes.find((l) => l.id === selectedLoteId)?.formulacao_id}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a ração..." />

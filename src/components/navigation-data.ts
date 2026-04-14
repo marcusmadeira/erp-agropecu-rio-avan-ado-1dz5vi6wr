@@ -31,8 +31,9 @@ export const navigationMenu = [
     ],
   },
   {
-    title: 'Rebanho',
+    title: 'Gestão de Rebanho',
     items: [
+      { title: 'Gestão de Lotes', url: '/lotes', icon: PackagePlus, roles: [1, 2, 3] },
       { title: 'Animais', url: '/animais', icon: Activity, roles: [1, 2, 3] },
       { title: 'Apartação Dinâmica', url: '/apartacao', icon: ArrowRightLeft, roles: [1, 2, 3] },
       { title: 'Reprodução & Monta', url: '/reproducao', icon: HeartPulse, roles: [1, 2, 3] },

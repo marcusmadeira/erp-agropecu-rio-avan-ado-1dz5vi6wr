@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createLote, updateLote } from '@/services/lotes'
-import { getPastos } from '@/services/pastos'
+import pb from '@/lib/pocketbase/client'
 import {
   Dialog,
   DialogContent,
@@ -35,11 +35,8 @@ import { Loader2, Check, X, AlertTriangle } from 'lucide-react'
 const schema = z.object({
   nome_lote: z.string().min(1, 'Nome do lote é obrigatório').max(100, 'Máximo 100 caracteres'),
   centro_custo: z.enum(['CC01-Nelore PO', 'CC02-Comercial TIP'], { required_error: 'Obrigatório' }),
-  piquete_id: z.string().min(1, 'Piquete é obrigatório'),
-  quantidade_cabecas: z.coerce
-    .number({ required_error: 'Obrigatório' })
-    .positive('Deve ser positivo'),
-  peso_medio_lote: z.coerce.number({ required_error: 'Obrigatório' }).positive('Deve ser positivo'),
+  piquete_atual_id: z.string().optional(),
+  formulacao_id: z.string().optional(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -47,22 +44,27 @@ type FormData = z.infer<typeof schema>
 export default function LoteForm({ open, onOpenChange, item }: any) {
   const { toast } = useToast()
   const [pastos, setPastos] = useState<any[]>([])
+  const [formulacoes, setFormulacoes] = useState<any[]>([])
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       nome_lote: '',
       centro_custo: undefined,
-      piquete_id: '',
-      quantidade_cabecas: '' as any,
-      peso_medio_lote: '' as any,
+      piquete_atual_id: '',
+      formulacao_id: '',
     },
   })
 
   useEffect(() => {
     if (open) {
-      getPastos()
+      pb.collection('pastos_e_piquetes')
+        .getFullList()
         .then(setPastos)
+        .catch(() => {})
+      pb.collection('formulacoes_racao')
+        .getFullList()
+        .then(setFormulacoes)
         .catch(() => {})
     }
   }, [open])
@@ -71,18 +73,17 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
     if (open) {
       if (item) {
         form.reset({
-          ...item,
-          quantidade_cabecas: item.quantidade_cabecas || '',
-          peso_medio_lote: item.peso_medio_lote || '',
-          piquete_id: item.piquete_id || '',
+          nome_lote: item.nome_lote || '',
+          centro_custo: item.centro_custo as any,
+          piquete_atual_id: item.piquete_atual_id || '',
+          formulacao_id: item.formulacao_id || '',
         })
       } else {
         form.reset({
           nome_lote: '',
           centro_custo: undefined,
-          piquete_id: '',
-          quantidade_cabecas: '' as any,
-          peso_medio_lote: '' as any,
+          piquete_atual_id: '',
+          formulacao_id: '',
         })
       }
     }
@@ -138,7 +139,9 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{item ? 'Editar Lote' : 'Novo Lote'}</DialogTitle>
-          <DialogDescription>Acompanhe os lotes do seu rebanho e seus custos.</DialogDescription>
+          <DialogDescription>
+            Defina as informações básicas e a nutrição padrão do lote.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -149,45 +152,46 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
                 <FormItem>
                   <FormLabel>Nome do Lote *</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Ex: Lote Recria 01" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="centro_custo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Centro de Custo *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ''}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o centro de custo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="CC01-Nelore PO">CC01 - Nelore PO</SelectItem>
+                      <SelectItem value="CC02-Comercial TIP">CC02 - Comercial TIP</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 gap-4">
               <FormField
                 control={form.control}
-                name="centro_custo"
+                name="piquete_atual_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Centro de Custo *</FormLabel>
+                    <FormLabel>Piquete Atual</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || ''}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="CC01-Nelore PO">CC01-PO</SelectItem>
-                        <SelectItem value="CC02-Comercial TIP">CC02-TIP</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="piquete_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Piquete *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ''}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
+                          <SelectValue placeholder="Nenhum piquete vinculado" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -202,49 +206,62 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="formulacao_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nutrição Padrão (Ração)</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Nenhuma ração vinculada" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {formulacoes.map((f) => (
+                          <SelectItem key={f.id} value={f.id}>
+                            {f.nome_formulacao}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="quantidade_cabecas"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Qtd. Cabeças *</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="peso_medio_lote"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Peso Médio (kg) *</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
+              <FormItem>
+                <FormLabel className="text-slate-600">Quantidade de Cabeças no Lote</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    value={item?.quantidade_cabecas || 0}
+                    disabled
+                    className="font-semibold text-lg text-slate-800 bg-white"
+                  />
+                </FormControl>
+                <p className="text-xs text-slate-500 mt-1">
+                  Este valor é calculado automaticamente quando animais são movidos (Apartação).
+                </p>
+              </FormItem>
             </div>
 
             <div className="flex justify-end pt-4">
               <Button
                 type="submit"
                 disabled={form.formState.isSubmitting}
-                className="bg-[#094016] hover:bg-[#094016]/90 text-white min-w-[120px]"
+                className="bg-primary hover:bg-primary/90 text-white min-w-[120px]"
               >
                 {form.formState.isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando
                   </>
                 ) : (
-                  'Salvar'
+                  'Salvar Lote'
                 )}
               </Button>
             </div>

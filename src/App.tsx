@@ -64,6 +64,7 @@ import EventoDetalhes from './pages/vendas/EventoDetalhes'
 import Clima from './pages/operacoes/Clima'
 import Mercado from './pages/operacoes/Mercado'
 import DiagnosticoInicial from './pages/estrategia/DiagnosticoInicial'
+import GestaoLotes from './pages/cadastros/LotesTab'
 import Apartacao from './pages/rebanho/Apartacao'
 import Inventario from './pages/rebanho/Inventario'
 import EstoqueRebanho from './pages/rebanho/EstoqueRebanho'
@@ -224,6 +225,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={[1, 2]}>
             <DespesasPagamentos />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/lotes"
+        element={
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
+            <GestaoLotes />
           </AuthorizeRoute>
         }
       />
