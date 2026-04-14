@@ -48,9 +48,12 @@ export default function Login() {
     setIsLoading(false)
 
     if (error) {
+      const isAuthError = error?.status === 400 || error?.status === 401
       toast({
         title: 'Erro de autenticação',
-        description: getErrorMessage(error) || 'Usuário ou senha inválidos.',
+        description: isAuthError
+          ? 'Credenciais inválidas.'
+          : getErrorMessage(error) || 'Usuário ou senha inválidos.',
         variant: 'destructive',
       })
     } else {
