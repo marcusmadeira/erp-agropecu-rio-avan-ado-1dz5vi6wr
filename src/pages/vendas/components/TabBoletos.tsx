@@ -13,11 +13,13 @@ import { Plus, Mail, MessageCircle } from 'lucide-react'
 import { format, differenceInDays } from 'date-fns'
 import { useToast } from '@/hooks/use-toast'
 import { ModalNovoBoleto } from './ModalNovoBoleto'
+import { ModalRecebimento } from './ModalRecebimento'
 
 export default function TabBoletos() {
   const [boletos, setBoletos] = useState<any[]>([])
   const [filtroStatus, setFiltroStatus] = useState('Todos')
   const [openModal, setOpenModal] = useState(false)
+  const [openRecebimento, setOpenRecebimento] = useState<any>(null)
   const { toast } = useToast()
 
   const load = async () => getBoletosExpanded().then(setBoletos).catch(console.error)
@@ -134,6 +136,17 @@ export default function TabBoletos() {
                     >
                       <MessageCircle className="h-4 w-4" />
                     </Button>
+                    {b.status_boleto !== 'Pago' && b.status_boleto !== 'Cancelado' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setOpenRecebimento(b)}
+                        title="Baixar Pagamento"
+                        className="bg-emerald-50 border-emerald-200 text-emerald-800 font-semibold"
+                      >
+                        Receber
+                      </Button>
+                    )}
                   </td>
                 </tr>
               )
@@ -149,6 +162,16 @@ export default function TabBoletos() {
         </table>
       </div>
       <ModalNovoBoleto open={openModal} onOpenChange={setOpenModal} onSuccess={load} />
+      {openRecebimento && (
+        <ModalRecebimento
+          open={!!openRecebimento}
+          onOpenChange={(val: boolean) => {
+            if (!val) setOpenRecebimento(null)
+          }}
+          boleto={openRecebimento}
+          onSuccess={load}
+        />
+      )}
     </div>
   )
 }

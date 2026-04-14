@@ -16,33 +16,54 @@ export default function GestaoVendas() {
       <Tabs defaultValue="eventos" className="w-full">
         <TabsList className="bg-gray-100 p-1 rounded-md mb-6 w-full sm:w-auto inline-flex shadow-sm">
           <TabsTrigger
-            value="eventos"
-            className="data-[state=active]:bg-emerald-800 data-[state=active]:text-white font-medium px-8 py-2 text-gray-700 transition-colors"
+            value="dashboard"
+            className="data-[state=active]:bg-emerald-800 data-[state=active]:text-white font-medium px-6 py-2 text-gray-700 transition-colors"
           >
-            Eventos
+            Dashboard
+          </TabsTrigger>
+          <TabsTrigger
+            value="eventos"
+            className="data-[state=active]:bg-emerald-800 data-[state=active]:text-white font-medium px-6 py-2 text-gray-700 transition-colors"
+          >
+            Eventos & Lotes
           </TabsTrigger>
           <TabsTrigger
             value="vendas"
-            className="data-[state=active]:bg-emerald-800 data-[state=active]:text-white font-medium px-8 py-2 text-gray-700 transition-colors"
+            className="data-[state=active]:bg-emerald-800 data-[state=active]:text-white font-medium px-6 py-2 text-gray-700 transition-colors"
           >
-            Vendas
+            Operações de Venda
           </TabsTrigger>
           <TabsTrigger
             value="boletos"
-            className="data-[state=active]:bg-emerald-800 data-[state=active]:text-white font-medium px-8 py-2 text-gray-700 transition-colors"
+            className="data-[state=active]:bg-emerald-800 data-[state=active]:text-white font-medium px-6 py-2 text-gray-700 transition-colors"
           >
-            Boletos
+            Cobranças & Recebimentos
+          </TabsTrigger>
+          <TabsTrigger
+            value="clientes"
+            className="data-[state=active]:bg-emerald-800 data-[state=active]:text-white font-medium px-6 py-2 text-gray-700 transition-colors"
+          >
+            Clientes CRM
           </TabsTrigger>
         </TabsList>
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 min-h-[500px]">
+          <TabsContent value="dashboard" className="mt-0">
+            <TabVendas />
+          </TabsContent>
           <TabsContent value="eventos" className="mt-0">
             <TabEventos />
           </TabsContent>
           <TabsContent value="vendas" className="mt-0">
-            <TabVendas />
+            <div className="flex justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-800">Operações de Venda</h2>
+            </div>
+            <TabOperacoes />
           </TabsContent>
           <TabsContent value="boletos" className="mt-0">
             <TabBoletos />
+          </TabsContent>
+          <TabsContent value="clientes" className="mt-0">
+            <TabClientesCRM />
           </TabsContent>
         </div>
       </Tabs>

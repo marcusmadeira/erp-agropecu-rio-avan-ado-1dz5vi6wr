@@ -17,35 +17,27 @@ export const getVendaCompleta = async (id: string) => {
 }
 
 export const createVenda = async (venda: any, itens: any[], parcelas: any[]) => {
-  const valor_total_venda = itens.reduce(
-    (acc, item) => acc + (Number(item.valor_unitario) - Number(item.desconto_aplicado || 0)),
-    0,
-  )
-
-  const record = await pb.collection('vendas').create({
-    ...venda,
-    quantidade_animais: itens.length,
-    numero_parcelas: parcelas.length || 1,
-    valor_total_venda,
-  })
-
-  try {
-    for (const item of itens) {
-      await pb.collection('itens_venda').create({
-        venda_id: record.id,
-        animal_id: item.animal_id,
-        valor_unitario: Number(item.valor_unitario),
-        desconto_aplicado: Number(item.desconto_aplicado || 0),
-      })
-      await pb.collection('animais').update(item.animal_id, { status: 'Vendido' })
-    }
-    // Criação de parcelas e transações agora é feita automaticamente pelo edge function 'vendas_after_create'
-  } catch (err) {
-    console.error('Failed to create items', err)
-    throw err
+  const payload = {
+    venda: {
+      ...venda,
+      valor_total_venda: itens.reduce(
+        (acc, item) =>
+          acc +
+          (Number(item.valor_total || item.valor_unitario) - Number(item.desconto_aplicado || 0)),
+        0,
+      ),
+      quantidade_animais: itens.reduce((acc, item) => acc + Number(item.quantidade || 1), 0),
+      numero_parcelas: parcelas.length || 1,
+    },
+    itens,
+    parcelas,
   }
-
-  return record
+  const res = await pb.send('/backend/v1/vendas/registrar', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json' },
+  })
+  return { id: res.id }
 }
 
 export const updateVenda = async (id: string, venda: any, itens: any[], parcelas: any[]) => {
@@ -67,13 +59,23 @@ export const updateVenda = async (id: string, venda: any, itens: any[], parcelas
     }
 
     for (const item of itens) {
-      await pb.collection('itens_venda').create({
+      const payload: any = {
         venda_id: record.id,
-        animal_id: item.animal_id,
-        valor_unitario: Number(item.valor_unitario),
+        tipo_item: item.tipo_item || 'Animal',
+        quantidade: item.quantidade || 1,
+        valor_unitario: Number(item.valor_unitario || 0),
+        valor_total: Number(item.valor_total || item.valor_unitario || 0),
         desconto_aplicado: Number(item.desconto_aplicado || 0),
-      })
-      await pb.collection('animais').update(item.animal_id, { status: 'Vendido' })
+      }
+      if (item.tipo_item === 'Lote') {
+        payload.lote_id = item.lote_id
+      } else {
+        payload.animal_id = item.animal_id
+      }
+      await pb.collection('itens_venda').create(payload)
+      if (item.tipo_item === 'Animal' && item.animal_id) {
+        await pb.collection('animais').update(item.animal_id, { status: 'Vendido' })
+      }
     }
 
     const oldParcelas = await pb

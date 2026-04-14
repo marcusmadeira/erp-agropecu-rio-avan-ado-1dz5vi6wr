@@ -244,7 +244,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/geral"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <GestaoVendas />
           </AuthorizeRoute>
         }
@@ -268,7 +268,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/geral/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <VendaDetalhes />
           </AuthorizeRoute>
         }
@@ -276,7 +276,7 @@ const AppRoutes = () => (
       <Route
         path="/vendas/eventos/:id"
         element={
-          <AuthorizeRoute allowedRoles={[1, 2]}>
+          <AuthorizeRoute allowedRoles={[1, 2, 3]}>
             <EventoDetalhes />
           </AuthorizeRoute>
         }

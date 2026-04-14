@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-14T12:13:32.840Z",
+  "generatedAt": "2026-04-14T12:52:58.430Z",
   "collections": [
     {
       "name": "users",
@@ -278,6 +278,19 @@
           "type": "date",
           "required": false,
           "system": false
+        },
+        {
+          "name": "endereco",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "tipo_cliente",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Pessoa_Fisica", "Pessoa_Juridica"]
         }
       ],
       "indexes": [
@@ -1715,6 +1728,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "descricao",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []
@@ -1855,6 +1874,19 @@
           "type": "number",
           "required": false,
           "system": false
+        },
+        {
+          "name": "tipo_venda",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Avulsa", "Evento"]
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -1913,6 +1945,38 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "tipo_item",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Lote", "Animal"]
+        },
+        {
+          "name": "lote_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "lotes"
+        },
+        {
+          "name": "quantidade",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "valor_total",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "descricao",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -2072,7 +2136,15 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["Gerado", "Enviado", "Pago", "Vencido", "Cancelado"]
+          "selectValues": [
+            "Gerado",
+            "Enviado",
+            "Pago",
+            "Vencido",
+            "Cancelado",
+            "Atrasado",
+            "Pendente"
+          ]
         },
         {
           "name": "data_envio_cliente",
@@ -2099,6 +2171,43 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "venda_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "vendas"
+        },
+        {
+          "name": "numero_parcela",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "data_vencimento_original",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "data_pagamento",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "valor_pago",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -3551,6 +3660,203 @@
           "type": "number",
           "required": false,
           "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "lotes_evento",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "evento_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "eventos_venda"
+        },
+        {
+          "name": "lote_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "lotes"
+        },
+        {
+          "name": "quantidade_animais",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "descricao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Disponivel", "Vendido", "Cancelado"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "animais_evento",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "evento_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "eventos_venda"
+        },
+        {
+          "name": "animal_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "animais"
+        },
+        {
+          "name": "lote_evento_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "lotes_evento"
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Disponivel", "Vendido", "Cancelado"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "recebimentos_vendas",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "boleto_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "boletos"
+        },
+        {
+          "name": "venda_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "vendas"
+        },
+        {
+          "name": "data_recebimento",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "valor_recebido",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "forma_recebimento",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Dinheiro", "Transferencia", "Cheque", "Outro"]
+        },
+        {
+          "name": "comprovante_url",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "usuario_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
         },
         {
           "name": "created",

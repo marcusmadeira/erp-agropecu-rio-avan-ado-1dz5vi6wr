@@ -30,6 +30,18 @@ cronAdd('boletos_notificacoes', '0 8 * * *', () => {
     let shouldNotify = false
     let desc = ''
 
+    if (
+      diffDays < 0 &&
+      boleto.get('status_boleto') !== 'Atrasado' &&
+      boleto.get('status_boleto') !== 'Pago' &&
+      boleto.get('status_boleto') !== 'Cancelado'
+    ) {
+      try {
+        boleto.set('status_boleto', 'Atrasado')
+        $app.save(boleto)
+      } catch (e) {}
+    }
+
     if (diffDays === 5) {
       shouldNotify = true
       desc = `O boleto ${boleto.get('numero_boleto') || boleto.id} vence em 5 dias.`
