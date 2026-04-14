@@ -56,7 +56,9 @@ export default function VendaForm() {
   })
 
   useEffect(() => {
-    import('@/lib/pocketbase/client').then(m => m.default.collection('lotes').getFullList()).then(setLotes)
+    import('@/lib/pocketbase/client')
+      .then((m) => m.default.collection('lotes').getFullList())
+      .then(setLotes)
   }, [])
 
   useEffect(() => {
@@ -75,6 +77,7 @@ export default function VendaForm() {
     }
   }, [formData.evento_id, formData.tipo_venda])
 
+  useEffect(() => {
     if (id) {
       getVendaCompleta(id).then(({ venda, itens, parcelas: parcelasBD }) => {
         setFormData({
@@ -106,12 +109,19 @@ export default function VendaForm() {
   }, [id])
 
   const total = items.reduce(
-    (acc, item) => acc + (Number(item.valor_total || item.valor_unitario * (item.quantidade || 1)) - Number(item.desconto_aplicado)),
+    (acc, item) =>
+      acc +
+      (Number(item.valor_total || item.valor_unitario * (item.quantidade || 1)) -
+        Number(item.desconto_aplicado)),
     0,
   )
 
   const totalCost = items.reduce(
-    (acc, item) => acc + (item.tipo_item === 'Lote' ? (item.lote?.custo_acumulado_nutricao || 0) : (item.animal?.custo_variavel_acumulado || 0)),
+    (acc, item) =>
+      acc +
+      (item.tipo_item === 'Lote'
+        ? item.lote?.custo_acumulado_nutricao || 0
+        : item.animal?.custo_variavel_acumulado || 0),
     0,
   )
 
@@ -148,7 +158,14 @@ export default function VendaForm() {
         toast({ title: 'Este animal já foi adicionado', variant: 'destructive' })
         return
       }
-      setItems([...items, { ...newItem, animal, valor_total: Number(newItem.valor_unitario) * Number(newItem.quantidade) }])
+      setItems([
+        ...items,
+        {
+          ...newItem,
+          animal,
+          valor_total: Number(newItem.valor_unitario) * Number(newItem.quantidade),
+        },
+      ])
     } else {
       if (!newItem.lote_id || !newItem.valor_unitario) {
         toast({ title: 'Preencha o lote e o valor unitário', variant: 'destructive' })
@@ -159,9 +176,23 @@ export default function VendaForm() {
         toast({ title: 'Este lote já foi adicionado', variant: 'destructive' })
         return
       }
-      setItems([...items, { ...newItem, lote, valor_total: Number(newItem.valor_unitario) * Number(newItem.quantidade) }])
+      setItems([
+        ...items,
+        {
+          ...newItem,
+          lote,
+          valor_total: Number(newItem.valor_unitario) * Number(newItem.quantidade),
+        },
+      ])
     }
-    setNewItem({ tipo_item: newItem.tipo_item, animal_id: '', lote_id: '', quantidade: '1', valor_unitario: '', desconto_aplicado: '0' })
+    setNewItem({
+      tipo_item: newItem.tipo_item,
+      animal_id: '',
+      lote_id: '',
+      quantidade: '1',
+      valor_unitario: '',
+      desconto_aplicado: '0',
+    })
   }
 
   const handleRemoveItem = (index: number) => {
@@ -313,25 +344,25 @@ export default function VendaForm() {
               </Select>
             </div>
             {formData.tipo_venda === 'Evento' && (
-            <div className="space-y-2">
-              <Label>Evento Vinculado</Label>
-              <Select
-                value={formData.evento_id}
-                onValueChange={(v) => setFormData({ ...formData, evento_id: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um evento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum evento</SelectItem>
-                  {eventos.map((e) => (
-                    <SelectItem key={e.id} value={e.id}>
-                      {e.nome_evento}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2">
+                <Label>Evento Vinculado</Label>
+                <Select
+                  value={formData.evento_id}
+                  onValueChange={(v) => setFormData({ ...formData, evento_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um evento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum evento</SelectItem>
+                    {eventos.map((e) => (
+                      <SelectItem key={e.id} value={e.id}>
+                        {e.nome_evento}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
             <div className="space-y-2">
               <Label>Status da Venda *</Label>
@@ -363,8 +394,15 @@ export default function VendaForm() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-gray-50 p-4 rounded-lg border border-gray-200">
               <div className="space-y-2 md:col-span-2">
                 <Label>Tipo Item</Label>
-                <Select value={newItem.tipo_item} onValueChange={(v) => setNewItem({ ...newItem, tipo_item: v, animal_id: '', lote_id: '' })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  value={newItem.tipo_item}
+                  onValueChange={(v) =>
+                    setNewItem({ ...newItem, tipo_item: v, animal_id: '', lote_id: '' })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Animal">Animal</SelectItem>
                     <SelectItem value="Lote">Lote Inteiro</SelectItem>
@@ -374,20 +412,34 @@ export default function VendaForm() {
               <div className="space-y-2 md:col-span-3">
                 <Label>{newItem.tipo_item === 'Animal' ? 'Animal' : 'Lote'}</Label>
                 {newItem.tipo_item === 'Animal' ? (
-                  <Select value={newItem.animal_id} onValueChange={(v) => setNewItem({ ...newItem, animal_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Busque..." /></SelectTrigger>
+                  <Select
+                    value={newItem.animal_id}
+                    onValueChange={(v) => setNewItem({ ...newItem, animal_id: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Busque..." />
+                    </SelectTrigger>
                     <SelectContent>
                       {animais.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>{a.id_manejo_brinco} - {a.categoria}</SelectItem>
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.id_manejo_brinco} - {a.categoria}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 ) : (
-                  <Select value={newItem.lote_id} onValueChange={(v) => setNewItem({ ...newItem, lote_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Busque..." /></SelectTrigger>
+                  <Select
+                    value={newItem.lote_id}
+                    onValueChange={(v) => setNewItem({ ...newItem, lote_id: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Busque..." />
+                    </SelectTrigger>
                     <SelectContent>
                       {lotes.map((l) => (
-                        <SelectItem key={l.id} value={l.id}>{l.nome_lote} ({l.quantidade_cabecas} cab)</SelectItem>
+                        <SelectItem key={l.id} value={l.id}>
+                          {l.nome_lote} ({l.quantidade_cabecas} cab)
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -395,7 +447,12 @@ export default function VendaForm() {
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Qtd</Label>
-                <Input type="number" min="1" value={newItem.quantidade} onChange={(e) => setNewItem({ ...newItem, quantidade: e.target.value })} />
+                <Input
+                  type="number"
+                  min="1"
+                  value={newItem.quantidade}
+                  onChange={(e) => setNewItem({ ...newItem, quantidade: e.target.value })}
+                />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Valor (R$)</Label>
@@ -450,10 +507,17 @@ export default function VendaForm() {
                       const base = Number(item.valor_total || item.valor_unitario * item.quantidade)
                       const desc = Number(item.desconto_aplicado) || 0
                       const final = base - desc
-                      const cost = item.tipo_item === 'Lote' ? (item.lote?.custo_acumulado_nutricao || 0) : (item.animal?.custo_variavel_acumulado || 0)
+                      const cost =
+                        item.tipo_item === 'Lote'
+                          ? item.lote?.custo_acumulado_nutricao || 0
+                          : item.animal?.custo_variavel_acumulado || 0
                       return (
                         <tr key={idx} className="hover:bg-gray-50/50">
-                          <td className="p-3 font-medium">{item.tipo_item === 'Lote' ? `Lote: ${item.lote?.nome_lote}` : `Animal: ${item.animal?.id_manejo_brinco}`}</td>
+                          <td className="p-3 font-medium">
+                            {item.tipo_item === 'Lote'
+                              ? `Lote: ${item.lote?.nome_lote}`
+                              : `Animal: ${item.animal?.id_manejo_brinco}`}
+                          </td>
                           <td className="p-3 text-center">{item.quantidade || 1}</td>
                           <td className="p-3 text-right text-orange-600">R$ {cost.toFixed(2)}</td>
                           <td className="p-3 text-right text-gray-600">R$ {base.toFixed(2)}</td>

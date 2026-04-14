@@ -18,7 +18,9 @@ export default function TabVendas() {
         .collection('parceiros_negocios')
         .getFullList({ filter: "categoria_parceiro = 'Cliente' || tipo_cliente != ''" })
       setClientes(cli)
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   useEffect(() => {
