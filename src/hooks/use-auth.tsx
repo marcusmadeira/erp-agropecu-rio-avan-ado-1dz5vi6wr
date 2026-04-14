@@ -68,12 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (loginOrEmail: string, password: string) => {
     try {
-      const res = await pb.send('/backend/v1/autenticar_usuario', {
-        method: 'POST',
-        body: JSON.stringify({ login: loginOrEmail, password }),
-        headers: { 'Content-Type': 'application/json' },
-      })
-      pb.authStore.save(res.token, res.record)
+      await pb.collection('users').authWithPassword(loginOrEmail, password)
       return { error: null }
     } catch (error) {
       return { error }
