@@ -2,6 +2,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import TabEventos from './components/TabEventos'
 import TabVendas from './components/TabVendas'
 import TabBoletos from './components/TabBoletos'
+import TabOperacoes from './components/TabOperacoes'
+import TabClientesCRM from './components/TabClientesCRM'
 
 export default function GestaoVendas() {
   return (
