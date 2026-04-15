@@ -26,7 +26,10 @@ export default function ParceirosTab() {
 
   const { toast } = useToast()
   const { user } = useAuth()
-  const canEdit = user?.nivel_acesso === 1 || user?.nivel_acesso === 3
+  const canEdit =
+    user?.nivel_acesso === 'Gerente' ||
+    user?.nivel_acesso === 'Operacional' ||
+    user?.role === 'Admin'
 
   const loadData = async () => {
     try {

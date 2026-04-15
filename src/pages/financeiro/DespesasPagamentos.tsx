@@ -3,6 +3,7 @@ import DashboardDespesas from './components/DashboardDespesas'
 import DespesasList from './components/DespesasList'
 import BoletosPagarList from './components/BoletosPagarList'
 import PagamentosList from './components/PagamentosList'
+import ParceirosTab from '@/pages/cadastros/ParceirosTab'
 
 export default function DespesasPagamentos() {
   return (
@@ -14,11 +15,12 @@ export default function DespesasPagamentos() {
       </div>
 
       <Tabs defaultValue="dashboard" className="space-y-4">
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
+        <TabsList className="flex flex-wrap w-full justify-start gap-2 h-auto max-w-4xl">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="despesas">Despesas</TabsTrigger>
           <TabsTrigger value="boletos">Contas a Pagar</TabsTrigger>
           <TabsTrigger value="pagamentos">Pagamentos</TabsTrigger>
+          <TabsTrigger value="fornecedores">Fornecedores</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="space-y-4 mt-4">
           <DashboardDespesas />
@@ -31,6 +33,11 @@ export default function DespesasPagamentos() {
         </TabsContent>
         <TabsContent value="pagamentos" className="space-y-4 mt-4">
           <PagamentosList />
+        </TabsContent>
+        <TabsContent value="fornecedores" className="space-y-4 mt-4">
+          <div className="bg-white p-4 rounded-lg shadow-sm border">
+            <ParceirosTab />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

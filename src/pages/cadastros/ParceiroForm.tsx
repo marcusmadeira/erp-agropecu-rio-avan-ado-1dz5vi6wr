@@ -84,7 +84,7 @@ export default function ParceiroForm({ open, onOpenChange, item }: any) {
       email: '',
       endereco: '',
       endereco_envio: '',
-      categoria_parceiro: 'Cliente',
+      categoria_parceiro: 'Fornecedor',
       status: 'Ativo',
       permitir_venda_prazo: false,
     },
@@ -108,7 +108,7 @@ export default function ParceiroForm({ open, onOpenChange, item }: any) {
         email: '',
         endereco: '',
         endereco_envio: '',
-        categoria_parceiro: 'Cliente',
+        categoria_parceiro: 'Fornecedor',
         status: 'Ativo',
         permitir_venda_prazo: false,
       })
