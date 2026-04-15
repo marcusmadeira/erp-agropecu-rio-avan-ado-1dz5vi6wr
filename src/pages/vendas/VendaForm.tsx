@@ -11,8 +11,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Trash2, ArrowLeft, Save, Info } from 'lucide-react'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Plus, Trash2, ArrowLeft, Save, Info, Check, ChevronsUpDown } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 import {
   createVenda,
   updateVenda,
@@ -31,6 +41,7 @@ export default function VendaForm() {
   const [clientes, setClientes] = useState<any[]>([])
   const [eventos, setEventos] = useState<any[]>([])
   const [animais, setAnimais] = useState<any[]>([])
+  const [openCliente, setOpenCliente] = useState(false)
 
   const [formData, setFormData] = useState({
     cliente_id: '',
@@ -41,6 +52,7 @@ export default function VendaForm() {
     status_venda: 'Pendente',
     numero_parcelas: 1,
     centro_custo: 'CC02-Comercial TIP',
+    valor_entrada: '',
   })
 
   const [items, setItems] = useState<any[]>([])
@@ -64,18 +76,18 @@ export default function VendaForm() {
   useEffect(() => {
     Promise.all([getParceirosClientes(), getEventos(), getAnimaisParaVenda(id)]).then(
       ([c, e, a]) => {
-        setClientes(c)
+        // Filter to show only customers
+        setClientes(
+          c.filter(
+            (cliente: any) =>
+              !cliente.categoria_parceiro || cliente.categoria_parceiro === 'Cliente',
+          ),
+        )
         setEventos(e)
         setAnimais(a)
       },
     )
   }, [id])
-
-  useEffect(() => {
-    if (formData.tipo_venda === 'Evento' && formData.evento_id && formData.evento_id !== 'none') {
-      // Future: fetch animals mapped to event
-    }
-  }, [formData.evento_id, formData.tipo_venda])
 
   useEffect(() => {
     if (id) {
@@ -89,6 +101,7 @@ export default function VendaForm() {
           status_venda: venda.status_venda,
           numero_parcelas: venda.numero_parcelas || 1,
           centro_custo: 'CC02-Comercial TIP',
+          valor_entrada: venda.valor_entrada || '',
         })
         setItems(
           itens.map((i) => ({
@@ -129,23 +142,49 @@ export default function VendaForm() {
   const profitMarginPercent = total > 0 ? (profitMargin / total) * 100 : 0
 
   useEffect(() => {
-    if (formData.forma_pagamento === 'Parcelado' && items.length > 0 && !id) {
+    if (items.length > 0 && !id) {
       const newParcelas = []
-      const val = total / formData.numero_parcelas
-      for (let i = 1; i <= formData.numero_parcelas; i++) {
-        const d = new Date()
-        d.setDate(d.getDate() + 30 * i)
+      const valorEntradaNum = Number(formData.valor_entrada) || 0
+
+      if (valorEntradaNum > 0) {
         newParcelas.push({
-          numero: i,
-          valor: val.toFixed(2),
-          data_vencimento: d.toISOString().split('T')[0],
+          numero: 0,
+          valor: valorEntradaNum.toFixed(2),
+          data_vencimento: formData.data_venda,
+          status_parcela: 'Paga',
         })
       }
-      setParcelas(newParcelas)
-    } else if (formData.forma_pagamento === 'AVista') {
-      setParcelas([])
+
+      if (formData.forma_pagamento === 'Parcelado') {
+        const saldoDevedor = Math.max(0, total - valorEntradaNum)
+        if (saldoDevedor > 0) {
+          const numParcelas = formData.numero_parcelas || 1
+          const val = saldoDevedor / numParcelas
+          for (let i = 1; i <= numParcelas; i++) {
+            const d = new Date(formData.data_venda)
+            d.setDate(d.getDate() + 30 * i)
+            newParcelas.push({
+              numero: i,
+              valor: val.toFixed(2),
+              data_vencimento: d.toISOString().split('T')[0],
+              status_parcela: 'Pendente',
+            })
+          }
+        }
+        setParcelas(newParcelas)
+      } else if (formData.forma_pagamento === 'AVista') {
+        setParcelas(newParcelas) // Keep only the entrada parcel if any
+      }
     }
-  }, [formData.numero_parcelas, total, formData.forma_pagamento, items.length, id])
+  }, [
+    formData.numero_parcelas,
+    total,
+    formData.forma_pagamento,
+    items.length,
+    id,
+    formData.valor_entrada,
+    formData.data_venda,
+  ])
 
   const handleAddItem = () => {
     if (newItem.tipo_item === 'Animal') {
@@ -216,6 +255,15 @@ export default function VendaForm() {
       return
     }
 
+    const valorEntradaNum = Number(formData.valor_entrada) || 0
+    if (valorEntradaNum > total) {
+      toast({
+        title: 'O valor de entrada não pode ser maior que o total da venda.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     if (formData.forma_pagamento === 'Parcelado') {
       const selectedClient = clientes.find((c) => c.id === formData.cliente_id)
       if (selectedClient && (!selectedClient.numero_documento || !selectedClient.rg)) {
@@ -229,7 +277,7 @@ export default function VendaForm() {
       const sumParcelas = parcelas.reduce((acc, p) => acc + Number(p.valor), 0)
       if (Math.abs(sumParcelas - total) > 0.1) {
         toast({
-          title: 'A soma das parcelas deve ser igual ao total da venda',
+          title: 'A soma das parcelas (incluindo entrada) deve ser igual ao total da venda',
           variant: 'destructive',
         })
         return
@@ -242,6 +290,12 @@ export default function VendaForm() {
       if (!dataToSave.evento_id || dataToSave.evento_id === 'none')
         delete (dataToSave as any).evento_id
       delete (dataToSave as any).centro_custo
+
+      if (dataToSave.valor_entrada === '') {
+        delete (dataToSave as any).valor_entrada
+      } else {
+        dataToSave.valor_entrada = Number(dataToSave.valor_entrada)
+      }
 
       if (id) {
         await updateVenda(id, dataToSave, items, parcelas)
@@ -275,28 +329,56 @@ export default function VendaForm() {
             <CardTitle style={{ color: '#094016' }}>Dados da Venda</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
-            <div className="space-y-2">
+            <div className="space-y-2 flex flex-col">
               <Label>Cliente *</Label>
-              <Select
-                value={formData.cliente_id}
-                onValueChange={(v) => setFormData({ ...formData, cliente_id: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clientes.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      <div className="flex flex-col">
-                        <span>{c.nome_razao_social}</span>
-                        <span className="text-xs text-gray-500">
-                          {c.numero_documento || c.email}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={openCliente} onOpenChange={setOpenCliente}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openCliente}
+                    className="w-full justify-between font-normal"
+                  >
+                    {formData.cliente_id
+                      ? clientes.find((c) => c.id === formData.cliente_id)?.nome_razao_social
+                      : 'Selecione o cliente...'}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0">
+                  <Command>
+                    <CommandInput placeholder="Buscar cliente..." />
+                    <CommandList>
+                      <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {clientes.map((c) => (
+                          <CommandItem
+                            key={c.id}
+                            value={`${c.nome_razao_social} ${c.numero_documento || ''}`}
+                            onSelect={() => {
+                              setFormData({ ...formData, cliente_id: c.id })
+                              setOpenCliente(false)
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                formData.cliente_id === c.id ? 'opacity-100' : 'opacity-0',
+                              )}
+                            />
+                            <div className="flex flex-col">
+                              <span>{c.nome_razao_social}</span>
+                              <span className="text-xs text-gray-500">
+                                {c.numero_documento || c.email}
+                              </span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2">
               <Label>Data da Venda *</Label>
@@ -308,19 +390,15 @@ export default function VendaForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Centro de Custo</Label>
-              <Select
-                value={formData.centro_custo}
-                onValueChange={(v) => setFormData({ ...formData, centro_custo: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CC01-Nelore PO">CC01-Nelore PO</SelectItem>
-                  <SelectItem value="CC02-Comercial TIP">CC02-Comercial TIP</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Valor de Entrada (Sinal)</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.valor_entrada}
+                onChange={(e) => setFormData({ ...formData, valor_entrada: e.target.value })}
+                placeholder="0.00"
+              />
             </div>
             <div className="space-y-2">
               <Label>Tipo de Gado *</Label>
@@ -629,7 +707,7 @@ export default function VendaForm() {
               )}
             </div>
 
-            {formData.forma_pagamento === 'Parcelado' && parcelas.length > 0 && (
+            {parcelas.length > 0 && (
               <div className="mt-4 border rounded-lg p-4 bg-gray-50">
                 <h4 className="font-semibold text-gray-700 mb-4 flex items-center">
                   <Info className="w-4 h-4 mr-2 text-blue-600" /> Cronograma de Parcelas
@@ -640,8 +718,13 @@ export default function VendaForm() {
                       key={i}
                       className="flex gap-4 items-center bg-white p-3 border rounded shadow-sm"
                     >
-                      <div className="w-16 text-center text-sm font-bold text-gray-500 bg-gray-100 py-1 rounded">
-                        #{p.numero}
+                      <div
+                        className={cn(
+                          'w-16 text-center text-sm font-bold text-white py-1 rounded',
+                          p.numero === 0 ? 'bg-emerald-600' : 'bg-gray-400',
+                        )}
+                      >
+                        {p.numero === 0 ? 'Sinal' : `#${p.numero}`}
                       </div>
                       <div className="flex-1">
                         <Label className="text-xs text-gray-500 mb-1 block">Vencimento</Label>
@@ -651,6 +734,7 @@ export default function VendaForm() {
                           onChange={(e) =>
                             handleParcelaChange(i, 'data_vencimento', e.target.value)
                           }
+                          disabled={p.numero === 0}
                         />
                       </div>
                       <div className="flex-1">
@@ -660,6 +744,7 @@ export default function VendaForm() {
                           step="0.01"
                           value={p.valor}
                           onChange={(e) => handleParcelaChange(i, 'valor', e.target.value)}
+                          disabled={p.numero === 0}
                         />
                       </div>
                     </div>

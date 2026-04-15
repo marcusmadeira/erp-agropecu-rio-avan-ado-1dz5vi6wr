@@ -11,6 +11,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Check, ChevronsUpDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { createDespesa, updateDespesa } from '@/services/despesas'
 import pb from '@/lib/pocketbase/client'
 import { toast } from 'sonner'
@@ -18,6 +29,8 @@ import { toast } from 'sonner'
 export default function DespesaFormDialog({ open, onOpenChange, initialData, onSuccess }: any) {
   const [fornecedores, setFornecedores] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  const [openFornecedor, setOpenFornecedor] = useState(false)
+  const [fornecedorId, setFornecedorId] = useState('')
 
   useEffect(() => {
     if (open) {
@@ -27,6 +40,11 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
         .catch(() => {})
     }
   }, [open])
+
+  useEffect(() => {
+    if (initialData?.fornecedor_id) setFornecedorId(initialData.fornecedor_id)
+    else setFornecedorId('')
+  }, [initialData, open])
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -53,20 +71,52 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="space-y-2 flex flex-col">
               <Label>Fornecedor</Label>
-              <Select name="fornecedor_id" defaultValue={initialData?.fornecedor_id || ''} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {fornecedores.map((f) => (
-                    <SelectItem key={f.id} value={f.id}>
-                      {f.nome_razao_social}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <input type="hidden" name="fornecedor_id" value={fornecedorId} required />
+              <Popover open={openFornecedor} onOpenChange={setOpenFornecedor}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openFornecedor}
+                    className="w-full justify-between font-normal"
+                  >
+                    {fornecedorId
+                      ? fornecedores.find((f) => f.id === fornecedorId)?.nome_razao_social
+                      : 'Selecione o fornecedor...'}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[230px] p-0">
+                  <Command>
+                    <CommandInput placeholder="Buscar fornecedor..." />
+                    <CommandList>
+                      <CommandEmpty>Nenhum fornecedor encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {fornecedores.map((f) => (
+                          <CommandItem
+                            key={f.id}
+                            value={f.nome_razao_social}
+                            onSelect={() => {
+                              setFornecedorId(f.id)
+                              setOpenFornecedor(false)
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                fornecedorId === f.id ? 'opacity-100' : 'opacity-0',
+                              )}
+                            />
+                            {f.nome_razao_social}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2">
               <Label>Data</Label>

@@ -37,7 +37,7 @@ routerAdd(
         const p = parcelas[i]
         const recPar = new Record(parcelasCol)
         recPar.set('venda_id', record.id)
-        recPar.set('numero_parcela', p.numero || i + 1)
+        recPar.set('numero_parcela', p.numero !== undefined ? p.numero : i + 1)
         recPar.set('valor_parcela', p.valor)
         recPar.set('data_vencimento', p.data_vencimento)
         recPar.set('status_parcela', p.status_parcela || 'Pendente')
@@ -46,7 +46,7 @@ routerAdd(
         const recBol = new Record(boletosCol)
         recBol.set('parcela_id', recPar.id)
         recBol.set('venda_id', record.id)
-        recBol.set('numero_parcela', p.numero || i + 1)
+        recBol.set('numero_parcela', p.numero !== undefined ? p.numero : i + 1)
         recBol.set('numero_boleto', `BOL-${record.id.substring(0, 5).toUpperCase()}-${i + 1}`)
         recBol.set('valor_boleto', p.valor)
         recBol.set('data_vencimento', p.data_vencimento)
