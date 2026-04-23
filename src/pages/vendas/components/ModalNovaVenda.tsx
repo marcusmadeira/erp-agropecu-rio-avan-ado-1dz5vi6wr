@@ -32,6 +32,7 @@ export function ModalNovaVenda({ open, onOpenChange, onSuccess }: any) {
     tipo_gado: 'Comercial',
     forma_pagamento: 'AVista',
     valor_total_venda: '',
+    valor_entrada: '',
   })
   const [parcelas, setParcelas] = useState('1')
 
@@ -66,6 +67,7 @@ export function ModalNovaVenda({ open, onOpenChange, onSuccess }: any) {
         data_venda: new Date().toISOString(),
         status_venda: 'Confirmada',
         numero_parcelas: form.forma_pagamento === 'Parcelado' ? Number(parcelas) : 1,
+        valor_entrada: form.valor_entrada ? Number(form.valor_entrada) : 0,
       }
       if (payload.evento_id === 'none') delete payload.evento_id
       await createVendaCompleta(payload, selected, Number(parcelas))
@@ -131,13 +133,22 @@ export function ModalNovaVenda({ open, onOpenChange, onSuccess }: any) {
               <SelectItem value="PO">PO</SelectItem>
             </SelectContent>
           </Select>
-          <Input
-            type="number"
-            placeholder="Valor Total (R$) *"
-            value={form.valor_total_venda}
-            onChange={(e) => setForm({ ...form, valor_total_venda: e.target.value })}
-            className="border-gray-300"
-          />
+          <div className="flex gap-2 col-span-2 sm:col-span-1">
+            <Input
+              type="number"
+              placeholder="Valor Total (R$) *"
+              value={form.valor_total_venda}
+              onChange={(e) => setForm({ ...form, valor_total_venda: e.target.value })}
+              className="border-gray-300 flex-1"
+            />
+            <Input
+              type="number"
+              placeholder="Entrada (R$)"
+              value={form.valor_entrada}
+              onChange={(e) => setForm({ ...form, valor_entrada: e.target.value })}
+              className="border-gray-300 flex-1"
+            />
+          </div>
 
           <div className="col-span-2">
             <p className="text-sm font-medium mb-2 text-gray-700">Selecione os Animais *</p>

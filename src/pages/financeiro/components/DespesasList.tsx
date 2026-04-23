@@ -18,6 +18,7 @@ import pb from '@/lib/pocketbase/client'
 
 export default function DespesasList() {
   const [despesas, setDespesas] = useState<any[]>([])
+  const [boletos, setBoletos] = useState<any[]>([])
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
 
@@ -25,6 +26,8 @@ export default function DespesasList() {
     try {
       const data = await getDespesas()
       setDespesas(data)
+      const bData = await pb.collection('boletos_pagar').getFullList()
+      setBoletos(bData)
     } catch (e) {
       toast.error('Erro ao carregar despesas')
     }
@@ -34,6 +37,7 @@ export default function DespesasList() {
     load()
   }, [])
   useRealtime('despesas', load)
+  useRealtime('boletos_pagar', load)
 
   const handleDelete = async (id: string) => {
     if (!confirm('Deseja excluir esta despesa?')) return
@@ -70,45 +74,58 @@ export default function DespesasList() {
               <TableHead>Fornecedor</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Valor</TableHead>
+              <TableHead>Parcelas</TableHead>
               <TableHead>C. Custo</TableHead>
               <TableHead>Anexo</TableHead>
               <TableHead>Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {despesas.map((d) => (
-              <TableRow key={d.id}>
-                <TableCell>{new Date(d.data_despesa).toLocaleDateString()}</TableCell>
-                <TableCell>{d.expand?.fornecedor_id?.nome_razao_social || '-'}</TableCell>
-                <TableCell>{d.tipo_despesa}</TableCell>
-                <TableCell>
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                    d.valor,
-                  )}
-                </TableCell>
-                <TableCell>{d.centro_custo}</TableCell>
-                <TableCell>
-                  {d.comprovante_url && (
-                    <a
-                      href={pb.files.getUrl(d, d.comprovante_url)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-500 hover:underline"
+            {despesas.map((d) => {
+              const relBoletos = boletos.filter((b) => b.despesa_id === d.id)
+              const totalBoletos = relBoletos.length || d.quantidade_parcelas || 1
+              const pagosBoletos = relBoletos.filter((b) => b.status === 'Pago').length
+              return (
+                <TableRow key={d.id}>
+                  <TableCell>{new Date(d.data_despesa).toLocaleDateString()}</TableCell>
+                  <TableCell>{d.expand?.fornecedor_id?.nome_razao_social || '-'}</TableCell>
+                  <TableCell>{d.tipo_despesa}</TableCell>
+                  <TableCell>
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                      d.valor_total || d.valor,
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded-full ${pagosBoletos === totalBoletos ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}
                     >
-                      <Download className="w-4 h-4" />
-                    </a>
-                  )}
-                </TableCell>
-                <TableCell className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => openEdit(d)}>
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(d.id)}>
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+                      {pagosBoletos} / {totalBoletos} pagas
+                    </span>
+                  </TableCell>
+                  <TableCell>{d.centro_custo}</TableCell>
+                  <TableCell>
+                    {d.comprovante_url && (
+                      <a
+                        href={pb.files.getUrl(d, d.comprovante_url)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-500 hover:underline"
+                      >
+                        <Download className="w-4 h-4" />
+                      </a>
+                    )}
+                  </TableCell>
+                  <TableCell className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(d)}>
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(d.id)}>
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
             {despesas.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">

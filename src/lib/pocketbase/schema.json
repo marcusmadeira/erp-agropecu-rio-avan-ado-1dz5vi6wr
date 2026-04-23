@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-15T23:24:11.751Z",
+  "generatedAt": "2026-04-23T17:52:08.989Z",
   "collections": [
     {
       "name": "users",
@@ -2685,6 +2685,30 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "valor_total",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "quantidade_parcelas",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "valor_parcela",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "vencimentos_parcelas",
+          "type": "json",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []

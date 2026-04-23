@@ -1,65 +1,81 @@
-import { useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Transacao } from '@/stores/types'
 import { formatCurrency } from '@/lib/utils'
+import pb from '@/lib/pocketbase/client'
 
-export default function FinanceCalendar({ transactions }: { transactions: Transacao[] }) {
-  const currentMonthFixos = useMemo(() => {
-    const today = new Date()
-    return transactions
-      .filter((t) => {
-        if (t.Classificacao_Custo !== 'Fixo' && t.Tipo_Movimento !== 'Despesa') return false
-        const d = new Date(t.Data_Vencimento)
-        return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()
-      })
-      .sort((a, b) => new Date(a.Data_Vencimento).getTime() - new Date(b.Data_Vencimento).getTime())
-  }, [transactions])
+export default function FinanceCalendar({ transactions }: { transactions?: any[] }) {
+  const [boletos, setBoletos] = useState<any[]>([])
 
-  const totalFixoMes = currentMonthFixos.reduce((acc, t) => acc + t.Valor_Total, 0)
+  useEffect(() => {
+    const fetchBoletos = async () => {
+      const today = new Date()
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
+        .toISOString()
+        .split('T')[0]
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+        .toISOString()
+        .split('T')[0]
 
-  // Generate simple 7-col grid for current month
+      try {
+        const data = await pb.collection('boletos_pagar').getFullList({
+          filter: `data_vencimento >= "${firstDay} 00:00:00" && data_vencimento <= "${lastDay} 23:59:59"`,
+          expand: 'fornecedor_id,despesa_id',
+        })
+        setBoletos(data)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    fetchBoletos()
+  }, [])
+
+  const totalPendente = boletos
+    .filter((b) => b.status === 'Pendente' || b.status === 'Atrasado')
+    .reduce((acc, t) => acc + t.valor, 0)
+  const totalPago = boletos.filter((b) => b.status === 'Pago').reduce((acc, t) => acc + t.valor, 0)
+
   const calendarDays = useMemo(() => {
     const today = new Date()
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0)
     const days = []
 
-    // Padding start
     for (let i = 0; i < firstDay.getDay(); i++) days.push(null)
-    // Days
     for (let i = 1; i <= lastDay.getDate(); i++) {
-      const d = new Date(today.getFullYear(), today.getMonth(), i)
-      const evs = currentMonthFixos.filter((t) => new Date(t.Data_Vencimento).getDate() === i)
+      const evs = boletos.filter((t) => {
+        const d = new Date(t.data_vencimento)
+        return d.getDate() === i && d.getMonth() === today.getMonth()
+      })
       days.push({ date: i, events: evs, isToday: i === today.getDate() })
     }
     return days
-  }, [currentMonthFixos])
+  }, [boletos])
 
   return (
     <Card className="shadow-subtle">
       <CardHeader>
-        <CardTitle className="text-secondary">Calendário de Custos Fixos (Mês Atual)</CardTitle>
+        <CardTitle className="text-emerald-900">Calendário de Despesas (Mês Atual)</CardTitle>
         <CardDescription>
-          Total Projetado:{' '}
-          <strong className="text-destructive">{formatCurrency(totalFixoMes)}</strong>
+          Pendente: <strong className="text-amber-600">{formatCurrency(totalPendente)}</strong> |{' '}
+          Pago: <strong className="text-emerald-600">{formatCurrency(totalPago)}</strong>
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-7 gap-1 sm:gap-2">
           {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((d) => (
-            <div key={d} className="text-center text-xs font-bold text-slate-500 py-1">
+            <div key={d} className="text-center text-xs font-bold text-gray-500 py-1">
               {d}
             </div>
           ))}
           {calendarDays.map((d, i) => (
             <div
               key={i}
-              className={`min-h-16 sm:min-h-24 p-1 sm:p-2 border rounded-md ${d?.isToday ? 'bg-primary/5 border-primary/30' : 'bg-white border-slate-100'}`}
+              className={`min-h-16 sm:min-h-24 p-1 sm:p-2 border rounded-md ${d?.isToday ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-gray-100'}`}
             >
               {d && (
                 <>
                   <div
-                    className={`text-xs font-bold ${d.isToday ? 'text-primary' : 'text-slate-400'}`}
+                    className={`text-xs font-bold ${d.isToday ? 'text-emerald-700' : 'text-gray-400'}`}
                   >
                     {d.date}
                   </div>
@@ -67,11 +83,16 @@ export default function FinanceCalendar({ transactions }: { transactions: Transa
                     {d.events.map((ev) => (
                       <div
                         key={ev.id}
-                        className="text-[9px] leading-tight bg-slate-100 p-1 rounded text-secondary truncate"
-                        title={`${ev.Descricao_Lancamento} - ${formatCurrency(ev.Valor_Total)}`}
+                        className={`text-[10px] leading-tight p-1 rounded truncate ${
+                          ev.status === 'Pago'
+                            ? 'bg-emerald-100 text-emerald-800 line-through opacity-70'
+                            : ev.status === 'Atrasado'
+                              ? 'bg-red-100 text-red-800 font-medium'
+                              : 'bg-amber-100 text-amber-800 font-medium'
+                        }`}
+                        title={`${ev.expand?.fornecedor_id?.nome_razao_social || 'Despesa'} - ${formatCurrency(ev.valor)}`}
                       >
-                        {ev.Status_Pagamento === 'Efetivado' ? '✓' : '•'}{' '}
-                        {formatCurrency(ev.Valor_Total)}
+                        {ev.status === 'Pago' ? '✓' : '•'} {formatCurrency(ev.valor)}
                       </div>
                     ))}
                   </div>

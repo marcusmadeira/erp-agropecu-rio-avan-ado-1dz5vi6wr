@@ -77,12 +77,7 @@ export default function VendaForm() {
     Promise.all([getParceirosClientes(), getEventos(), getAnimaisParaVenda(id)]).then(
       ([c, e, a]) => {
         // Filter to show only customers
-        setClientes(
-          c.filter(
-            (cliente: any) =>
-              !cliente.categoria_parceiro || cliente.categoria_parceiro === 'Cliente',
-          ),
-        )
+        setClientes(c.filter((cliente: any) => cliente.categoria_parceiro === 'Cliente'))
         setEventos(e)
         setAnimais(a)
       },
