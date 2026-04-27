@@ -111,18 +111,13 @@ const AuthorizeRoute = ({
   allowedRoles,
 }: {
   children: React.ReactNode
-  allowedRoles: string[]
+  allowedRoles?: string[]
 }) => {
   const { user, loading } = useAuth()
   if (loading) return null
   if (!user) return <Navigate to="/login" replace />
 
-  const userRole = user.role === 'Admin' ? 'Admin' : user.nivel_acesso
-
-  if (!allowedRoles.includes(userRole) && userRole !== 'Admin') {
-    return <RestrictedAccess userRole={userRole || ''} />
-  }
-
+  // Removed RBAC role checks to grant universal access to all authenticated users
   return <ErrorBoundary>{children}</ErrorBoundary>
 }
 

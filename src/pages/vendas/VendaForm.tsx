@@ -20,9 +20,20 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Plus, Trash2, ArrowLeft, Save, Info, Check, ChevronsUpDown } from 'lucide-react'
+import {
+  Plus,
+  Trash2,
+  ArrowLeft,
+  Save,
+  Info,
+  Check,
+  ChevronsUpDown,
+  AlertTriangle,
+  X,
+} from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import { extractFieldErrors } from '@/lib/pocketbase/errors'
 import {
   createVenda,
   updateVenda,
@@ -261,9 +272,9 @@ export default function VendaForm() {
 
     if (formData.forma_pagamento === 'Parcelado') {
       const selectedClient = clientes.find((c) => c.id === formData.cliente_id)
-      if (selectedClient && (!selectedClient.numero_documento || !selectedClient.rg)) {
+      if (selectedClient && !selectedClient.numero_documento) {
         toast({
-          title: 'Venda a prazo bloqueada: Cliente sem CPF ou RG cadastrado.',
+          title: 'Venda a prazo bloqueada: Cliente sem documento (CPF/CNPJ) cadastrado.',
           variant: 'destructive',
         })
         return
@@ -300,8 +311,34 @@ export default function VendaForm() {
         toast({ title: 'Venda registrada com sucesso!' })
       }
       navigate('/vendas/geral')
-    } catch (err) {
-      toast({ title: 'Erro ao salvar venda', variant: 'destructive' })
+    } catch (err: any) {
+      const errs = extractFieldErrors(err)
+      if (Object.keys(errs).length > 0) {
+        const errorMessages = Object.entries(errs)
+          .map(([field, msg]) => `${field}: ${msg}`)
+          .join('\n')
+        toast({
+          title: (
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" /> Erro de Validação
+            </div>
+          ),
+          description: errorMessages,
+          className: 'bg-yellow-500 text-white border-yellow-600',
+          duration: 5000,
+        })
+      } else {
+        toast({
+          title: (
+            <div className="flex items-center gap-2">
+              <X className="h-4 w-4" /> Erro
+            </div>
+          ),
+          description: err.message || 'Erro ao salvar venda',
+          className: 'bg-red-600 text-white border-red-700',
+          duration: 3000,
+        })
+      }
     } finally {
       setLoading(false)
     }

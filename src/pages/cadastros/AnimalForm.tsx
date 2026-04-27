@@ -37,7 +37,7 @@ import { AiAssistantChat } from '@/components/AiAssistantChat'
 const schema = z
   .object({
     nome: z.string().min(1, 'Obrigatório').max(100, 'Máximo 100 caracteres'),
-    id_manejo_brinco: z.string().max(20, 'Máximo 20 caracteres').optional().or(z.literal('')),
+    id_manejo_brinco: z.string().min(1, 'Obrigatório').max(20, 'Máximo 20 caracteres'),
     rgd_rgn_abcz: z.string().max(50, 'Máximo 50 caracteres').optional().or(z.literal('')),
     categoria: z.enum(
       ['Matriz PO', 'Touro PO', 'Bezerro', 'Novilha TIP', 'Garrote TIP', 'Vaca Descarte TIP'],
@@ -153,9 +153,6 @@ export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
         ...data,
         data_nascimento: new Date(data.data_nascimento + 'T12:00:00Z').toISOString(),
       }
-      if (!payload.pai_id) delete payload.pai_id
-      if (!payload.mae_id) delete payload.mae_id
-      if (!payload.id_manejo_brinco) delete payload.id_manejo_brinco
 
       if (item) await updateAnimal(item.id, payload)
       else await createAnimal(payload)
@@ -243,7 +240,7 @@ export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
                   name="id_manejo_brinco"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Brinco</FormLabel>
+                      <FormLabel>Brinco *</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>

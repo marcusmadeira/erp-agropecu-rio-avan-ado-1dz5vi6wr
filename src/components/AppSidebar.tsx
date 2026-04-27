@@ -64,9 +64,8 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent className="bg-slate-950 text-slate-300">
         {navigationMenu.map((group) => {
-          const visibleItems = group.items.filter(
-            (item) => !item.roles || item.roles.includes(userRole),
-          )
+          // RBAC check removed to allow universal access to all menus
+          const visibleItems = group.items
           if (visibleItems.length === 0) return null
 
           return (
