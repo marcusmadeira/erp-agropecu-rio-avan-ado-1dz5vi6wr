@@ -47,19 +47,41 @@ export default function Animais() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const [aData, lData] = await Promise.all([
-        getAnimais({ categoria: fCat, sexo: fSexo, status: fStatus, lote_id: fLote }),
-        getLotes(),
-      ])
+      let aData: any[] = []
+      let lData: any[] = []
+
+      try {
+        aData = await getAnimais({ categoria: fCat, sexo: fSexo, status: fStatus, lote_id: fLote })
+      } catch (err: any) {
+        console.error('Failed to fetch animais:', err)
+        throw err
+      }
+
+      try {
+        lData = await getLotes()
+      } catch (err: any) {
+        console.warn('Failed to fetch lotes, continuing without them:', err)
+        lData = []
+      }
+
       setAnimais(aData)
       setLotes(lData)
-    } catch (e) {
+    } catch (e: any) {
       console.error(e)
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar os animais.',
-        variant: 'destructive',
-      })
+      if (e?.status === 0 || e?.isAbort || e?.message === 'Failed to fetch') {
+        toast({
+          title: 'Erro de Conexão',
+          description:
+            'O servidor está inacessível no momento. Verifique sua conexão com a internet.',
+          variant: 'destructive',
+        })
+      } else {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível carregar os animais.',
+          variant: 'destructive',
+        })
+      }
     } finally {
       setLoading(false)
     }

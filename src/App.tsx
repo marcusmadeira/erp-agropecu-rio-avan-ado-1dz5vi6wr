@@ -180,25 +180,25 @@ const AppRoutes = () => (
       <Route
         path="/importacao"
         element={
-          <AuthorizeRoute>
+          <ProtectedRoute>
             <Importacao />
-          </AuthorizeRoute>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/animais"
         element={
-          <AuthorizeRoute>
+          <ProtectedRoute>
             <Animais />
-          </AuthorizeRoute>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/animais/:id"
         element={
-          <AuthorizeRoute>
+          <ProtectedRoute>
             <AnimalPerfil />
-          </AuthorizeRoute>
+          </ProtectedRoute>
         }
       />
       <Route
@@ -212,57 +212,57 @@ const AppRoutes = () => (
       <Route
         path="/lotes"
         element={
-          <AuthorizeRoute>
+          <ProtectedRoute>
             <GestaoLotes />
-          </AuthorizeRoute>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/pastos"
         element={
-          <AuthorizeRoute>
+          <ProtectedRoute>
             <Pastos />
-          </AuthorizeRoute>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/apartacao"
         element={
-          <AuthorizeRoute>
+          <ProtectedRoute>
             <Apartacao />
-          </AuthorizeRoute>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/inventario"
         element={
-          <AuthorizeRoute>
+          <ProtectedRoute>
             <Inventario />
-          </AuthorizeRoute>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/estoque-rebanho"
         element={
-          <AuthorizeRoute>
+          <ProtectedRoute>
             <EstoqueRebanho />
-          </AuthorizeRoute>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/pesagem"
         element={
-          <AuthorizeRoute>
+          <ProtectedRoute>
             <Pesagem />
-          </AuthorizeRoute>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/reproducao"
         element={
-          <AuthorizeRoute>
+          <ProtectedRoute>
             <Reproducao />
-          </AuthorizeRoute>
+          </ProtectedRoute>
         }
       />
       <Route

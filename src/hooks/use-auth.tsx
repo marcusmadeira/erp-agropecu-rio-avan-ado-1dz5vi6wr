@@ -27,9 +27,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const validateSession = async () => {
       if (pb.authStore.isValid) {
         try {
-          await pb.collection('users').authRefresh()
+          await Promise.race([
+            pb.collection('users').authRefresh(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
+          ])
         } catch (err: any) {
-          if (err.status !== 0) {
+          if (err.status !== 0 && err.message !== 'Timeout') {
             pb.authStore.clear()
           }
         }
