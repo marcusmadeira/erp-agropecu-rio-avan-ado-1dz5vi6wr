@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-27T14:42:45.555Z",
+  "generatedAt": "2026-04-27T15:00:33.013Z",
   "collections": [
     {
       "name": "users",
@@ -1982,7 +1982,7 @@
         {
           "name": "animal_id",
           "type": "relation",
-          "required": true,
+          "required": false,
           "system": false,
           "collectionRef": "animais"
         },

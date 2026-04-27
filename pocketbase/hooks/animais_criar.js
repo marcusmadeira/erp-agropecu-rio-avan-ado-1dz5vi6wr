@@ -18,6 +18,16 @@ routerAdd(
     })
 
     $app.save(record)
+
+    const loteId = record.getString('lote_atual_id')
+    if (loteId) {
+      try {
+        const lote = $app.findRecordById('lotes', loteId)
+        lote.set('quantidade_cabecas', lote.getInt('quantidade_cabecas') + 1)
+        $app.save(lote)
+      } catch (_) {}
+    }
+
     $apis.enrichRecord(e, record, 'lote_atual_id', 'pai_id', 'mae_id')
     return e.json(200, record)
   },

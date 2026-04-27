@@ -303,11 +303,39 @@ export default function VendaForm() {
         dataToSave.valor_entrada = Number(dataToSave.valor_entrada)
       }
 
+      const parcelasToSave = parcelas.map((p) => ({
+        ...p,
+        numero: Number(p.numero),
+        valor: Number(p.valor),
+        numero_parcela: Number(p.numero),
+        valor_parcela: Number(p.valor),
+        data_vencimento: p.data_vencimento,
+        status_parcela: p.status_parcela,
+      }))
+
+      const itemsToSave = items.map((i) => {
+        const itemObj: any = {
+          ...i,
+          tipo_item: i.tipo_item,
+          quantidade: Number(i.quantidade),
+          valor_unitario: Number(i.valor_unitario),
+          desconto_aplicado: Number(i.desconto_aplicado),
+        }
+        if (i.tipo_item === 'Animal') {
+          itemObj.animal_id = i.animal_id || i.animal?.id
+          delete itemObj.lote_id
+        } else {
+          itemObj.lote_id = i.lote_id || i.lote?.id
+          delete itemObj.animal_id
+        }
+        return itemObj
+      })
+
       if (id) {
-        await updateVenda(id, dataToSave, items, parcelas)
+        await updateVenda(id, dataToSave, itemsToSave, parcelasToSave)
         toast({ title: 'Venda atualizada com sucesso!' })
       } else {
-        await createVenda(dataToSave, items, parcelas)
+        await createVenda(dataToSave, itemsToSave, parcelasToSave)
         toast({ title: 'Venda registrada com sucesso!' })
       }
       navigate('/vendas/geral')

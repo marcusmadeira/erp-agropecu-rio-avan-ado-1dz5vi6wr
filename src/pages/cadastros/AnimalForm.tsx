@@ -149,10 +149,14 @@ export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const payload = {
+      const payload: any = {
         ...data,
         data_nascimento: new Date(data.data_nascimento + 'T12:00:00Z').toISOString(),
       }
+
+      if (!payload.pai_id) delete payload.pai_id
+      if (!payload.mae_id) delete payload.mae_id
+      if (!payload.rgd_rgn_abcz) delete payload.rgd_rgn_abcz
 
       if (item) await updateAnimal(item.id, payload)
       else await createAnimal(payload)
