@@ -65,6 +65,7 @@ import Clima from './pages/operacoes/Clima'
 import Mercado from './pages/operacoes/Mercado'
 import DiagnosticoInicial from './pages/estrategia/DiagnosticoInicial'
 import GestaoLotes from './pages/cadastros/LotesTab'
+import Pastos from './pages/estrutura/Pastos'
 import Apartacao from './pages/rebanho/Apartacao'
 import Inventario from './pages/rebanho/Inventario'
 import EstoqueRebanho from './pages/rebanho/EstoqueRebanho'
@@ -244,6 +245,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro', 'Operacional']}>
             <GestaoLotes />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/pastos"
+        element={
+          <AuthorizeRoute allowedRoles={['Gerente', 'Financeiro', 'Operacional']}>
+            <Pastos />
           </AuthorizeRoute>
         }
       />

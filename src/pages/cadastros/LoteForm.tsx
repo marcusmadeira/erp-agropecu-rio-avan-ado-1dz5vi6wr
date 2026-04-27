@@ -34,7 +34,7 @@ import { Loader2, Check, X, AlertTriangle } from 'lucide-react'
 
 const schema = z.object({
   nome_lote: z.string().min(1, 'Nome do lote é obrigatório').max(100, 'Máximo 100 caracteres'),
-  centro_custo: z.enum(['CC01-Nelore PO', 'CC02-Comercial TIP'], { required_error: 'Obrigatório' }),
+  centro_custo: z.string().min(1, 'Obrigatório'),
   piquete_atual_id: z.string().optional(),
   formulacao_id: z.string().optional(),
   quantidade_racao_diaria: z.coerce.number().min(0, 'Deve ser maior ou igual a zero').optional(),
@@ -51,7 +51,7 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
     resolver: zodResolver(schema),
     defaultValues: {
       nome_lote: '',
-      centro_custo: undefined,
+      centro_custo: '',
       piquete_atual_id: '',
       formulacao_id: '',
       quantidade_racao_diaria: 0,
@@ -76,7 +76,7 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
       if (item) {
         form.reset({
           nome_lote: item.nome_lote || '',
-          centro_custo: item.centro_custo as any,
+          centro_custo: item.centro_custo || '',
           piquete_atual_id: item.piquete_atual_id || '',
           formulacao_id: item.formulacao_id || '',
           quantidade_racao_diaria: item.quantidade_racao_diaria || 0,
@@ -84,7 +84,7 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
       } else {
         form.reset({
           nome_lote: '',
-          centro_custo: undefined,
+          centro_custo: '',
           piquete_atual_id: '',
           formulacao_id: '',
           quantidade_racao_diaria: 0,

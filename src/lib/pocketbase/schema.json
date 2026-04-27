@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-23T17:52:08.989Z",
+  "generatedAt": "2026-04-27T11:56:03.753Z",
   "collections": [
     {
       "name": "users",
@@ -335,9 +335,9 @@
       "apiRules": {
         "list": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
         "view": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Financeiro' || @request.auth.nivel_acesso = 'Operacional')",
-        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
-        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')",
-        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional')"
+        "create": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Financeiro')",
+        "update": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Financeiro')",
+        "delete": "@request.auth.id != '' && (@request.auth.nivel_acesso = 'Gerente' || @request.auth.nivel_acesso = 'Operacional' || @request.auth.nivel_acesso = 'Financeiro')"
       },
       "fields": [
         {
@@ -1612,6 +1612,30 @@
         {
           "name": "status_ocupacao",
           "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "altura_capim_cm",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "taxa_lotacao_atual",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "altura_ideal_entrada_cm",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "altura_minima_saida_cm",
+          "type": "number",
           "required": false,
           "system": false
         }

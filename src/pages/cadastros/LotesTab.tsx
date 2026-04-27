@@ -29,6 +29,7 @@ export default function LotesTab() {
   const canEdit =
     user?.nivel_acesso === 'Gerente' ||
     user?.nivel_acesso === 'Operacional' ||
+    user?.nivel_acesso === 'Financeiro' ||
     user?.role === 'Admin'
 
   const loadData = async () => {
