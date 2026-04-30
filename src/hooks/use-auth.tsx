@@ -7,6 +7,7 @@ interface AuthContextType {
   signIn: (loginOrEmail: string, password: string) => Promise<{ error: any }>
   signOut: () => void
   loading: boolean
+  serverError: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -20,11 +21,24 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(pb.authStore.record)
   const [loading, setLoading] = useState(true)
+  const [serverError, setServerError] = useState(false)
 
   useEffect(() => {
     let mounted = true
 
     const validateSession = async () => {
+      try {
+        await pb.send('/api/health', { method: 'GET' })
+      } catch (err: any) {
+        if (err.status === 0 || err.message === 'Failed to fetch') {
+          if (mounted) {
+            setServerError(true)
+            setLoading(false)
+          }
+          return
+        }
+      }
+
       if (pb.authStore.isValid) {
         try {
           await Promise.race([
@@ -32,7 +46,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
           ])
         } catch (err: any) {
-          if (err.status !== 0 && err.message !== 'Timeout') {
+          if (err.status === 0 || err.message === 'Timeout' || err.message === 'Failed to fetch') {
+            if (mounted) setServerError(true)
+          } else {
             pb.authStore.clear()
           }
         }
@@ -71,9 +87,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (loginOrEmail: string, password: string) => {
     try {
+      setServerError(false)
       await pb.collection('users').authWithPassword(loginOrEmail, password)
       return { error: null }
     } catch (error: any) {
+      if (error.status === 0 || error.message === 'Failed to fetch') {
+        setServerError(true)
+      }
       return { error }
     }
   }
@@ -90,7 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, signUp, signIn, signOut, loading }}>
+    <AuthContext.Provider value={{ user, signUp, signIn, signOut, loading, serverError }}>
       {children}
     </AuthContext.Provider>
   )

@@ -49,7 +49,11 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
       pb.collection('parceiros_negocios')
         .getFullList({ filter: "categoria_parceiro='Fornecedor'" })
         .then(setFornecedores)
-        .catch(() => {})
+        .catch((err) => {
+          if (err.status === 0 || err.message === 'Failed to fetch') {
+            toast.error('Falha de conexão ao carregar fornecedores.')
+          }
+        })
     }
   }, [open])
 
@@ -105,7 +109,11 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
       onSuccess()
       onOpenChange(false)
     } catch (err: any) {
-      toast.error('Erro ao salvar despesa')
+      if (err.status === 0 || err.message === 'Failed to fetch') {
+        toast.error('Falha na conexão. Verifique sua internet e tente novamente.')
+      } else {
+        toast.error(err.message || 'Erro inesperado ao salvar despesa.')
+      }
     } finally {
       setLoading(false)
     }
