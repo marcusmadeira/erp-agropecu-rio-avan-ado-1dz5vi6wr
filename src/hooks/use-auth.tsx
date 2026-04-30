@@ -8,6 +8,7 @@ interface AuthContextType {
   signOut: () => void
   loading: boolean
   serverError: boolean
+  retryConnection: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -22,6 +23,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(pb.authStore.record)
   const [loading, setLoading] = useState(true)
   const [serverError, setServerError] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
+
+  const retryConnection = () => {
+    setLoading(true)
+    setServerError(false)
+    setRetryCount((c) => c + 1)
+  }
 
   useEffect(() => {
     let mounted = true
@@ -30,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         await pb.send('/api/health', { method: 'GET' })
       } catch (err: any) {
-        if (err.status === 0 || err.message === 'Failed to fetch') {
+        if (err.status === 0 || err.message === 'Failed to fetch' || err.name === 'TypeError') {
           if (mounted) {
             setServerError(true)
             setLoading(false)
@@ -46,7 +54,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
           ])
         } catch (err: any) {
-          if (err.status === 0 || err.message === 'Timeout' || err.message === 'Failed to fetch') {
+          if (
+            err.status === 0 ||
+            err.message === 'Timeout' ||
+            err.message === 'Failed to fetch' ||
+            err.name === 'TypeError'
+          ) {
             if (mounted) setServerError(true)
           } else {
             pb.authStore.clear()
@@ -70,7 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       mounted = false
       unsubscribe()
     }
-  }, [])
+  }, [retryCount])
 
   const signUp = async (data: any) => {
     try {
@@ -110,7 +123,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, signUp, signIn, signOut, loading, serverError }}>
+    <AuthContext.Provider
+      value={{ user, signUp, signIn, signOut, loading, serverError, retryConnection }}
+    >
       {children}
     </AuthContext.Provider>
   )

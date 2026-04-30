@@ -80,43 +80,50 @@ import ReceitaForm from './pages/estoque/ReceitaForm'
 import ProducaoRacao from './pages/estoque/ProducaoRacao'
 import SaidaRacao from './pages/estoque/SaidaRacao'
 
-const ServiceUnavailable = () => (
+import { Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
+const ServiceUnavailable = ({ onRetry }: { onRetry: () => void }) => (
   <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-center px-4">
-    <h2 className="text-2xl font-bold text-red-900 mb-4">Serviço Indisponível</h2>
+    <h2 className="text-2xl font-bold text-red-900 mb-4">Falha de Conexão</h2>
     <p className="text-gray-600 mb-6 max-w-md">
-      Não foi possível conectar ao servidor. Verifique sua conexão com a internet ou tente novamente
-      mais tarde.
+      Não foi possível conectar ao servidor. Verifique sua conexão com a internet ou tente
+      novamente.
     </p>
-    <button
-      onClick={() => window.location.reload()}
-      className="bg-red-800 text-white px-6 py-2 rounded-md hover:bg-red-900 transition-colors"
-    >
+    <Button onClick={onRetry} className="bg-red-800 text-white hover:bg-red-900 transition-colors">
       Tentar Novamente
-    </button>
+    </Button>
+  </div>
+)
+
+const LoadingScreen = () => (
+  <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-center px-4">
+    <Loader2 className="h-8 w-8 animate-spin text-emerald-800 mb-4" />
+    <p className="text-gray-600">Verificando sessão, aguarde...</p>
   </div>
 )
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading, serverError } = useAuth()
-  if (loading) return null
-  if (serverError) return <ServiceUnavailable />
+  const { user, loading, serverError, retryConnection } = useAuth()
+  if (loading) return <LoadingScreen />
+  if (serverError) return <ServiceUnavailable onRetry={retryConnection} />
   if (!user) return <Navigate to="/login" replace />
   return <>{children}</>
 }
 
 const AuthorizeRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading, serverError } = useAuth()
-  if (loading) return null
-  if (serverError) return <ServiceUnavailable />
+  const { user, loading, serverError, retryConnection } = useAuth()
+  if (loading) return <LoadingScreen />
+  if (serverError) return <ServiceUnavailable onRetry={retryConnection} />
   if (!user) return <Navigate to="/login" replace />
 
   return <ErrorBoundary>{children}</ErrorBoundary>
 }
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading, serverError } = useAuth()
-  if (loading) return null
-  if (serverError) return <ServiceUnavailable />
+  const { user, loading, serverError, retryConnection } = useAuth()
+  if (loading) return <LoadingScreen />
+  if (serverError) return <ServiceUnavailable onRetry={retryConnection} />
   if (user) return <Navigate to="/" replace />
   return <>{children}</>
 }
