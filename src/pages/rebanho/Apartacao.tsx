@@ -140,7 +140,9 @@ export default function Apartacao() {
           <CardContent>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Lote de Origem</label>
+                <label className="text-sm font-medium">
+                  Lote de Origem <span className="text-red-500">*</span>
+                </label>
                 <Select
                   value={sourceLoteId}
                   onValueChange={(v) => {
@@ -171,7 +173,9 @@ export default function Apartacao() {
           <CardContent>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Lote de Destino</label>
+                <label className="text-sm font-medium">
+                  Lote de Destino <span className="text-red-500">*</span>
+                </label>
                 <Select value={destLoteId} onValueChange={setDestLoteId}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione o Lote" />
@@ -187,7 +191,9 @@ export default function Apartacao() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Pasto/Piquete de Destino</label>
+                <label className="text-sm font-medium">
+                  Pasto/Piquete de Destino <span className="text-red-500">*</span>
+                </label>
                 <Select value={destPastoId} onValueChange={setDestPastoId}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione o Pasto" />

@@ -135,7 +135,9 @@ export default function SaidaRacao() {
           <CardContent>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label>Lote de Animais</Label>
+                <Label>
+                  Lote de Animais <span className="text-red-500">*</span>
+                </Label>
                 <Select
                   onValueChange={(val) => form.setValue('lote_id', val)}
                   value={form.watch('lote_id')}
@@ -158,7 +160,9 @@ export default function SaidaRacao() {
                 )}
               </div>
               <div className="space-y-2">
-                <Label>Ração (Formulação)</Label>
+                <Label>
+                  Ração (Formulação) <span className="text-red-500">*</span>
+                </Label>
                 <Select
                   onValueChange={(val) => form.setValue('formulacao_id', val)}
                   value={form.watch('formulacao_id')}
@@ -176,7 +180,9 @@ export default function SaidaRacao() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Quantidade a usar (kg)</Label>
+                <Label>
+                  Quantidade a usar (kg) <span className="text-red-500">*</span>
+                </Label>
                 <Input type="number" step="0.01" {...form.register('quantidade_kg')} />
                 {form.formState.errors.quantidade_kg && (
                   <p className="text-sm text-destructive">
@@ -185,8 +191,13 @@ export default function SaidaRacao() {
                 )}
               </div>
               <div className="space-y-2">
-                <Label>Data do Trato</Label>
+                <Label>
+                  Data do Trato <span className="text-red-500">*</span>
+                </Label>
                 <Input type="date" {...form.register('data')} />
+                {form.formState.errors.data && (
+                  <p className="text-sm text-destructive">{form.formState.errors.data.message}</p>
+                )}
               </div>
               <Button type="submit" className="w-full" disabled={submitting}>
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Registrar Saída

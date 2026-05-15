@@ -110,12 +110,12 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
 
     const tipo_despesa = formData.get('tipo_despesa') as string
     if (!tipo_despesa || !tipo_despesa.trim()) {
-      toast.error('O tipo de despesa é obrigatório.')
+      toast.error('O Tipo de Despesa é obrigatório.')
       return
     }
 
     if (!valorTotal || Number(valorTotal) <= 0) {
-      toast.error('O valor total é obrigatório e deve ser maior que zero.')
+      toast.error('O Valor Total é obrigatório e deve ser maior que zero.')
       return
     }
 
@@ -263,7 +263,9 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
                 />
               </div>
               <div className="space-y-2">
-                <Label>Tipo de Despesa</Label>
+                <Label>
+                  Tipo de Despesa <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   name="tipo_despesa"
                   defaultValue={initialData?.tipo_despesa || ''}
@@ -271,7 +273,9 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
                 />
               </div>
               <div className="space-y-2">
-                <Label>Valor Total (R$)</Label>
+                <Label>
+                  Valor Total (R$) <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -283,7 +287,9 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
               </div>
 
               <div className="space-y-2">
-                <Label>Quantidade de Parcelas</Label>
+                <Label>
+                  Quantidade de Parcelas <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   type="number"
                   min="1"

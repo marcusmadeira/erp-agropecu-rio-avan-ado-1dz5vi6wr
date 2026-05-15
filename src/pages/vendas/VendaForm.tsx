@@ -346,13 +346,9 @@ export default function VendaForm() {
           .map(([field, msg]) => `${field}: ${msg}`)
           .join('\n')
         toast({
-          title: (
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" /> Erro de Validação
-            </div>
-          ),
+          title: 'Erro de Validação',
           description: errorMessages,
-          className: 'bg-yellow-500 text-white border-yellow-600',
+          variant: 'destructive',
           duration: 5000,
         })
       } else {

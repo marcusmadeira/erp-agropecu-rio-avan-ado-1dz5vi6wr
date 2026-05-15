@@ -89,7 +89,8 @@ export default function ImportadorNotasFiscais() {
     } catch (error: any) {
       toast({
         title: 'Erro na extração',
-        description: error.message || 'Ocorreu um erro ao processar o arquivo PDF.',
+        description:
+          error.response?.message || error.message || 'Ocorreu um erro ao processar o arquivo PDF.',
         variant: 'destructive',
       })
     } finally {
@@ -123,7 +124,8 @@ export default function ImportadorNotasFiscais() {
     } catch (error: any) {
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Ocorreu um erro ao processar a nota fiscal.',
+        description:
+          error.response?.message || error.message || 'Ocorreu um erro ao processar a nota fiscal.',
         variant: 'destructive',
       })
     } finally {

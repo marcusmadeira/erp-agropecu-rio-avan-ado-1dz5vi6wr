@@ -110,7 +110,7 @@ export default function ProducaoRacao() {
     } catch (error: any) {
       toast({
         title: 'Erro na produção',
-        description: error.message || 'Falha ao produzir.',
+        description: error.response?.message || error.message || 'Falha ao produzir.',
         variant: 'destructive',
       })
     } finally {
@@ -142,7 +142,9 @@ export default function ProducaoRacao() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Receita / Formulação</Label>
+              <Label>
+                Receita / Formulação <span className="text-red-500">*</span>
+              </Label>
               <Select value={receitaId} onValueChange={setReceitaId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a receita..." />
@@ -158,10 +160,13 @@ export default function ProducaoRacao() {
             </div>
 
             <div className="space-y-2">
-              <Label>Quantidade a Produzir (Kg)</Label>
+              <Label>
+                Quantidade a Produzir (Kg) <span className="text-red-500">*</span>
+              </Label>
               <Input
                 type="number"
-                min="0"
+                min="0.1"
+                step="0.1"
                 placeholder="Ex: 2000"
                 value={quantidadeKg}
                 onChange={(e) => setQuantidadeKg(e.target.value)}

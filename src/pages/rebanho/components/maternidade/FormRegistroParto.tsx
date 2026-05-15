@@ -27,6 +27,7 @@ import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 const schema = z.object({
   matriz_mae_id: z.string().min(1, 'Selecione a matriz mãe'),
+  touro_pai_id: z.string().optional(),
   data_nascimento: z.string().min(1, 'A data é obrigatória'),
   sexo: z.string().min(1, 'Selecione o sexo'),
   peso_nascer: z.string().optional(),
@@ -44,6 +45,7 @@ export function DialogRegistroParto({
   onSuccess: () => void
 }) {
   const [matrizes, setMatrizes] = useState<any[]>([])
+  const [touros, setTouros] = useState<any[]>([])
   const [lotes, setLotes] = useState<any[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -61,6 +63,11 @@ export function DialogRegistroParto({
               variant: 'destructive',
             })
         })
+
+      pb.collection('animais')
+        .getFullList({ filter: "sexo='Macho' || categoria='Touro PO'", sort: 'id_manejo_brinco' })
+        .then((data) => mounted && setTouros(data))
+        .catch(() => {})
 
       pb.collection('lotes')
         .getFullList({ sort: 'nome_lote' })
@@ -83,6 +90,7 @@ export function DialogRegistroParto({
     resolver: zodResolver(schema),
     defaultValues: {
       matriz_mae_id: '',
+      touro_pai_id: '',
       data_nascimento: '',
       sexo: '',
       peso_nascer: '',
@@ -96,6 +104,8 @@ export function DialogRegistroParto({
       setIsSubmitting(true)
       await createRegistroNascimento({
         matriz_mae_id: values.matriz_mae_id,
+        touro_pai_id:
+          values.touro_pai_id && values.touro_pai_id !== 'none' ? values.touro_pai_id : null,
         data_nascimento: values.data_nascimento ? `${values.data_nascimento}T12:00:00.000Z` : null,
         sexo: values.sexo,
         peso_nascer: parseFloat(values.peso_nascer || '0') || null,
@@ -128,30 +138,57 @@ export function DialogRegistroParto({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="matriz_mae_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Matriz Mãe</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {matrizes.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
-                          {m.id_manejo_brinco} {m.nome ? `- ${m.nome}` : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="matriz_mae_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Matriz Mãe</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {matrizes.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {m.id_manejo_brinco} {m.nome ? `- ${m.nome}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="touro_pai_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Touro Pai (Opcional)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Desconhecido / IA</SelectItem>
+                        {touros.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {t.id_manejo_brinco} {t.nome ? `- ${t.nome}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
