@@ -44,7 +44,8 @@ routerAdd(
 
       const parcelas = txApp.findRecordsByFilter('parcelas_venda', `venda_id = '${id}'`, '', 0, 0)
       for (let i = 0; i < parcelas.length; i++) {
-        if (parcelas[i].get('status_parcela') !== 'Paga') {
+        const st = parcelas[i].get('status_parcela')
+        if (st === 'Pendente' || st === 'Atrasada') {
           parcelas[i].set('status_parcela', 'Cancelada')
           txApp.save(parcelas[i])
         }

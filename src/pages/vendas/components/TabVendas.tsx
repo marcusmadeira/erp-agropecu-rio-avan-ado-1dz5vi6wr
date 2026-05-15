@@ -1,145 +1,89 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertTriangle, Clock, Users, Activity } from 'lucide-react'
+import { DollarSign, AlertCircle, Clock, CalendarDays } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
 
 export default function TabVendas() {
-  const [boletos, setBoletos] = useState<any[]>([])
-  const [clientes, setClientes] = useState<any[]>([])
+  const [data, setData] = useState({
+    recebido: 0,
+    aReceber: 0,
+    vencido: 0,
+    proximos7Dias: 0,
+  })
 
-  const loadData = async () => {
+  const loadDashboard = async () => {
     try {
-      const bol = await pb
-        .collection('boletos')
-        .getFullList({ expand: 'venda_id,venda_id.cliente_id' })
-      setBoletos(bol)
-      const cli = await pb
-        .collection('parceiros_negocios')
-        .getFullList({ filter: "categoria_parceiro = 'Cliente' || tipo_cliente != ''" })
-      setClientes(cli)
+      const res = await pb.send('/backend/v1/obter_dashboard_financeiro_vendas', { method: 'GET' })
+      setData(res)
     } catch (e) {
       console.error(e)
     }
   }
 
   useEffect(() => {
-    loadData()
+    loadDashboard()
   }, [])
-  useRealtime('boletos', loadData)
 
-  const analytics = useMemo(() => {
-    const today = new Date()
-    let overdueCount = 0
-    let overdueValue = 0
-    let dueSoonCount = 0
+  useRealtime('parcelas_venda', loadDashboard)
+  useRealtime('vendas', loadDashboard)
 
-    const debtorMap: Record<string, { name: string; debt: number }> = {}
-
-    boletos.forEach((b) => {
-      const isPending = b.status_boleto !== 'Pago' && b.status_boleto !== 'Cancelado'
-      if (!isPending) return
-
-      const vDate = new Date(b.data_vencimento)
-      const diffTime = vDate.getTime() - today.getTime()
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
-      if (diffDays < 0) {
-        overdueCount++
-        overdueValue += b.valor_boleto || 0
-      } else if (diffDays <= 3) {
-        dueSoonCount++
-      }
-
-      const clientName = b.expand?.venda_id?.expand?.cliente_id?.nome_razao_social || 'Desconhecido'
-      if (!debtorMap[clientName]) debtorMap[clientName] = { name: clientName, debt: 0 }
-      debtorMap[clientName].debt += b.valor_boleto || 0
-    })
-
-    const topDebtors = Object.values(debtorMap)
-      .filter((d) => d.debt > 0)
-      .sort((a, b) => b.debt - a.debt)
-      .slice(0, 5)
-
-    return { overdueCount, overdueValue, dueSoonCount, topDebtors }
-  }, [boletos])
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0)
+  }
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-red-500 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500 flex items-center">
-              <AlertTriangle className="w-4 h-4 mr-2 text-red-500" /> Boletos Atrasados
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{analytics.overdueCount}</div>
-            <p className="text-xs text-gray-500 mt-1">
-              R$ {analytics.overdueValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-yellow-500 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500 flex items-center">
-              <Clock className="w-4 h-4 mr-2 text-yellow-500" /> Vencem em 3 Dias
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{analytics.dueSoonCount}</div>
-            <p className="text-xs text-gray-500 mt-1">Requer atenção</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-emerald-500 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500 flex items-center">
-              <Users className="w-4 h-4 mr-2 text-emerald-500" /> Total de Clientes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">{clientes.length}</div>
-            <p className="text-xs text-gray-500 mt-1">Ativos na base</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-blue-500 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500 flex items-center">
-              <Activity className="w-4 h-4 mr-2 text-blue-500" /> Ações Pendentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">0</div>
-            <p className="text-xs text-gray-500 mt-1">Vendas sem cobrança</p>
-          </CardContent>
-        </Card>
+      <div className="mb-4">
+        <h2 className="text-xl font-bold text-gray-800">Dashboard Financeiro</h2>
+        <p className="text-sm text-gray-500">Visão avançada dos recebíveis de vendas.</p>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-gray-800">Maiores Devedores (Risco)</CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <Card className="border-emerald-100 bg-emerald-50/50 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-emerald-800">Recebido</CardTitle>
+            <DollarSign className="w-4 h-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {analytics.topDebtors.map((d, i) => (
-                <div
-                  key={i}
-                  className="flex justify-between items-center border-b border-gray-100 pb-2"
-                >
-                  <span className="font-medium text-gray-700">{d.name}</span>
-                  <span className="text-red-600 font-bold">
-                    R$ {d.debt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-              ))}
-              {analytics.topDebtors.length === 0 && (
-                <p className="text-gray-500">Nenhum devedor encontrado.</p>
-              )}
+            <div className="text-2xl font-bold text-emerald-900">
+              {formatCurrency(data.recebido)}
             </div>
+            <p className="text-xs text-emerald-600 mt-1">Total já pago</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-blue-100 bg-blue-50/50 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-blue-800">A Receber</CardTitle>
+            <Clock className="w-4 h-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-900">{formatCurrency(data.aReceber)}</div>
+            <p className="text-xs text-blue-600 mt-1">Saldo futuro pendente</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-red-100 bg-red-50/50 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-red-800">Vencido</CardTitle>
+            <AlertCircle className="w-4 h-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-900">{formatCurrency(data.vencido)}</div>
+            <p className="text-xs text-red-600 mt-1">Parcelas em atraso</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-amber-100 bg-amber-50/50 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-amber-800">Vencendo em 7 dias</CardTitle>
+            <CalendarDays className="w-4 h-4 text-amber-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-900">
+              {formatCurrency(data.proximos7Dias)}
+            </div>
+            <p className="text-xs text-amber-600 mt-1">Vencimentos na próxima semana</p>
           </CardContent>
         </Card>
       </div>

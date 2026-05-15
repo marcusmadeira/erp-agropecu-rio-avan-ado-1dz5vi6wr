@@ -64,6 +64,7 @@ export default function VendaForm() {
     numero_parcelas: 1,
     centro_custo: 'CC02-Comercial TIP',
     valor_entrada: '',
+    data_vencimento_entrada: new Date().toISOString().split('T')[0],
   })
 
   const [items, setItems] = useState<any[]>([])
@@ -108,6 +109,9 @@ export default function VendaForm() {
           numero_parcelas: venda.numero_parcelas || 1,
           centro_custo: 'CC02-Comercial TIP',
           valor_entrada: venda.valor_entrada || '',
+          data_vencimento_entrada: venda.data_vencimento_entrada
+            ? venda.data_vencimento_entrada.split('T')[0]
+            : venda.data_venda.split('T')[0],
         })
         setItems(
           itens.map((i) => ({
@@ -152,17 +156,21 @@ export default function VendaForm() {
       const newParcelas = []
       const valorEntradaNum = Number(formData.valor_entrada) || 0
 
+      const todayStr = new Date().toISOString().split('T')[0]
+
       if (valorEntradaNum > 0) {
+        const isPaga = formData.data_vencimento_entrada <= todayStr
         newParcelas.push({
           numero: 0,
           valor: valorEntradaNum.toFixed(2),
-          data_vencimento: formData.data_venda,
-          status_parcela: 'Paga',
+          data_vencimento: formData.data_vencimento_entrada,
+          status_parcela: isPaga ? 'Paga' : 'Pendente',
         })
       }
 
+      const saldoDevedor = Math.max(0, total - valorEntradaNum)
+
       if (formData.forma_pagamento === 'Parcelado') {
-        const saldoDevedor = Math.max(0, total - valorEntradaNum)
         if (saldoDevedor > 0) {
           const numParcelas = formData.numero_parcelas || 1
           const val = saldoDevedor / numParcelas
@@ -177,10 +185,18 @@ export default function VendaForm() {
             })
           }
         }
-        setParcelas(newParcelas)
       } else if (formData.forma_pagamento === 'AVista') {
-        setParcelas(newParcelas) // Keep only the entrada parcel if any
+        if (saldoDevedor > 0) {
+          const isPaga = formData.data_venda <= todayStr
+          newParcelas.push({
+            numero: 1,
+            valor: saldoDevedor.toFixed(2),
+            data_vencimento: formData.data_venda,
+            status_parcela: isPaga ? 'Paga' : 'Pendente',
+          })
+        }
       }
+      setParcelas(newParcelas)
     }
   }, [
     formData.numero_parcelas,
@@ -190,6 +206,7 @@ export default function VendaForm() {
     id,
     formData.valor_entrada,
     formData.data_venda,
+    formData.data_vencimento_entrada,
   ])
 
   const handleAddItem = () => {
@@ -292,7 +309,11 @@ export default function VendaForm() {
 
     setLoading(true)
     try {
-      const dataToSave = { ...formData, data_venda: new Date(formData.data_venda).toISOString() }
+      const dataToSave = {
+        ...formData,
+        data_venda: new Date(formData.data_venda).toISOString(),
+        data_vencimento_entrada: new Date(formData.data_vencimento_entrada).toISOString(),
+      }
       if (!dataToSave.evento_id || dataToSave.evento_id === 'none')
         delete (dataToSave as any).evento_id
       delete (dataToSave as any).centro_custo
@@ -454,6 +475,17 @@ export default function VendaForm() {
                 value={formData.valor_entrada}
                 onChange={(e) => setFormData({ ...formData, valor_entrada: e.target.value })}
                 placeholder="0.00"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Vencimento da Entrada</Label>
+              <Input
+                type="date"
+                value={formData.data_vencimento_entrada}
+                onChange={(e) =>
+                  setFormData({ ...formData, data_vencimento_entrada: e.target.value })
+                }
+                required
               />
             </div>
             <div className="space-y-2">
@@ -748,11 +780,11 @@ export default function VendaForm() {
               </div>
               {formData.forma_pagamento === 'Parcelado' && (
                 <div className="space-y-2">
-                  <Label>Número de Parcelas *</Label>
+                  <Label>Número de Parcelas (Saldo) *</Label>
                   <Input
                     type="number"
                     min="2"
-                    max="48"
+                    max="40"
                     value={formData.numero_parcelas}
                     onChange={(e) =>
                       setFormData({ ...formData, numero_parcelas: parseInt(e.target.value) || 1 })

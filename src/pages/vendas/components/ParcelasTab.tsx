@@ -7,6 +7,8 @@ import { Card } from '@/components/ui/card'
 import { Plus, Edit2, Link as LinkIcon, FileText } from 'lucide-react'
 import ParcelaDialog from './ParcelaDialog'
 import BoletoDialog from './BoletoDialog'
+import { ModalRecebimentoParcela } from './ModalRecebimentoParcela'
+import { DollarSign } from 'lucide-react'
 
 export default function ParcelasTab({ vendaId }: { vendaId: string }) {
   const [parcelas, setParcelas] = useState<any[]>([])
@@ -16,6 +18,8 @@ export default function ParcelasTab({ vendaId }: { vendaId: string }) {
   const [parcelaForBoleto, setParcelaForBoleto] = useState<string | null>(null)
   const [isParcelaOpen, setIsParcelaOpen] = useState(false)
   const [isBoletoOpen, setIsBoletoOpen] = useState(false)
+  const [isRecebimentoOpen, setIsRecebimentoOpen] = useState(false)
+  const [parcelaToReceive, setParcelaToReceive] = useState<any>(null)
 
   const loadData = useCallback(async () => {
     const [p, b] = await Promise.all([getParcelas(vendaId), getBoletosDaVenda(vendaId)])
@@ -99,6 +103,18 @@ export default function ParcelasTab({ vendaId }: { vendaId: string }) {
                   >
                     <LinkIcon className="w-4 h-4 mr-1" /> Add Boleto
                   </Button>
+                  {(p.status_parcela === 'Pendente' || p.status_parcela === 'Atrasada') && (
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                      onClick={() => {
+                        setParcelaToReceive(p)
+                        setIsRecebimentoOpen(true)
+                      }}
+                    >
+                      <DollarSign className="w-4 h-4 mr-1" /> Receber
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -188,6 +204,14 @@ export default function ParcelasTab({ vendaId }: { vendaId: string }) {
         parcelaId={parcelaForBoleto!}
         editData={boletoEdit}
       />
+      {parcelaToReceive && (
+        <ModalRecebimentoParcela
+          open={isRecebimentoOpen}
+          onOpenChange={setIsRecebimentoOpen}
+          parcela={parcelaToReceive}
+          onSuccess={loadData}
+        />
+      )}
     </div>
   )
 }
