@@ -92,6 +92,7 @@ export function SimuladorTab() {
         receita_total: res.receita_total,
         lucro_bruto: res.lucro_bruto,
         margem_lucro: res.margem_lucro,
+        roi: res.roi,
         peso_final: res.peso_final,
       })
       toast({ title: 'Simulação salva com sucesso!' })
@@ -252,6 +253,12 @@ export function SimuladorTab() {
                   maximumFractionDigits: 2,
                 })}
               </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-sm text-muted-foreground">ROI Esperado</div>
+              <div className="text-2xl font-bold">{res.roi.toFixed(2)}%</div>
             </CardContent>
           </Card>
           <Card>
