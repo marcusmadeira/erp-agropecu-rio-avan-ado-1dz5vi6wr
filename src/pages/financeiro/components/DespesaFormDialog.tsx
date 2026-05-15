@@ -77,18 +77,22 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
 
   // Recalculate vencimentos when qtdParcelas changes
   useEffect(() => {
-    if (!initialData || vencimentos.length !== qtdParcelas) {
-      const newVenc = [...vencimentos]
+    if (qtdParcelas > 0) {
+      const newVenc = []
       for (let i = 0; i < qtdParcelas; i++) {
-        if (!newVenc[i]) {
+        if (vencimentos[i]) {
+          newVenc.push(vencimentos[i])
+        } else {
           const d = new Date(dataBase)
           d.setMonth(d.getMonth() + i)
-          newVenc[i] = d.toISOString().split('T')[0]
+          newVenc.push(d.toISOString().split('T')[0])
         }
       }
-      setVencimentos(newVenc.slice(0, qtdParcelas))
+      if (JSON.stringify(newVenc) !== JSON.stringify(vencimentos)) {
+        setVencimentos(newVenc)
+      }
     }
-  }, [qtdParcelas, dataBase, vencimentos, initialData])
+  }, [qtdParcelas, dataBase, vencimentos])
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -97,13 +101,30 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
       return
     }
 
-    setLoading(true)
     const formData = new FormData(e.currentTarget)
+
+    const tipo_despesa = formData.get('tipo_despesa') as string
+    if (!tipo_despesa || !tipo_despesa.trim()) {
+      toast.error('O tipo de despesa é obrigatório.')
+      return
+    }
+
+    if (!valorTotal || Number(valorTotal) <= 0) {
+      toast.error('O valor total é obrigatório e deve ser maior que zero.')
+      return
+    }
+
+    if (!qtdParcelas || qtdParcelas <= 0) {
+      toast.error('A quantidade de parcelas deve ser pelo menos 1.')
+      return
+    }
+
+    setLoading(true)
 
     const dataObj: any = {
       fornecedor_id: fornecedorId,
       data_despesa: formData.get('data_despesa'),
-      tipo_despesa: formData.get('tipo_despesa'),
+      tipo_despesa,
       valor_total: Number(valorTotal),
       valor: Number(valorTotal),
       quantidade_parcelas: qtdParcelas,
@@ -119,8 +140,35 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
         await updateDespesa(initialData.id, dataObj)
         toast.success('Despesa atualizada com sucesso!')
       } else {
-        await pb.collection('despesas').create(dataObj)
-        toast.success('Despesa criada com sucesso!')
+        const novaDespesa = await pb.collection('despesas').create(dataObj)
+
+        const valorTotalNum = Number(valorTotal)
+        const valorBase = Math.floor((valorTotalNum / qtdParcelas) * 100) / 100
+        const somaBase = valorBase * qtdParcelas
+        const diferenca = Number((valorTotalNum - somaBase).toFixed(2))
+
+        const boletosPromises = []
+        for (let i = 0; i < qtdParcelas; i++) {
+          let valorParcela = valorBase
+          if (i === qtdParcelas - 1) {
+            valorParcela = Number((valorBase + diferenca).toFixed(2))
+          }
+
+          boletosPromises.push(
+            pb.collection('boletos_pagar').create({
+              despesa_id: novaDespesa.id,
+              fornecedor_id: fornecedorId,
+              valor: valorParcela,
+              data_vencimento: vencimentos[i] || dataBase,
+              status: 'Pendente',
+              numero_boleto: `PARC-${i + 1}/${qtdParcelas}`,
+            }),
+          )
+        }
+
+        await Promise.all(boletosPromises)
+
+        toast.success('Despesa e parcelas criadas com sucesso!')
       }
       onSuccess()
       onOpenChange(false)
