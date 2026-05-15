@@ -56,6 +56,7 @@ export const navigationMenu = [
     items: [
       { title: 'Vendas', url: '/vendas/geral', icon: ShoppingCart, roles: [1, 2, 3] },
       { title: 'Recebimento', url: '/controle-recebimento', icon: Banknote, roles: [1, 2, 3] },
+      { title: 'Painel de Cobrança', url: '/painel-cobranca', icon: Banknote, roles: [1, 2, 3] },
       { title: 'Despesas', url: '/despesas', icon: DollarSign, roles: [1, 2, 3] },
     ],
   },

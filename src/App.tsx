@@ -56,6 +56,7 @@ import ImportadorNotasFiscais from './pages/admin/ImportadorNotasFiscais'
 import Animais from './pages/rebanho/Animais'
 import AnimalPerfil from './pages/rebanho/AnimalPerfil'
 import DespesasPagamentos from './pages/financeiro/DespesasPagamentos'
+import PainelCobranca from './pages/financeiro/PainelCobranca'
 import RecebimentoBoletos from './pages/financeiro/RecebimentoBoletos'
 import GestaoVendas from './pages/vendas/GestaoVendas'
 import VendaForm from './pages/vendas/VendaForm'
@@ -305,6 +306,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute>
             <RecebimentoBoletos />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/painel-cobranca"
+        element={
+          <AuthorizeRoute>
+            <PainelCobranca />
           </AuthorizeRoute>
         }
       />
