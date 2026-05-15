@@ -27,12 +27,16 @@ import { useAuth } from '@/hooks/use-auth'
 import { ExportButtons } from '@/components/ExportButtons'
 import { exportToPDF, exportToExcel } from '@/lib/export'
 import { format } from 'date-fns'
+import pb from '@/lib/pocketbase/client'
+import PesagemLoteForm from '@/components/pesagem/PesagemLoteForm'
+import { createPesagemLote } from '@/services/pesagens'
 
 export default function Pesagem() {
   const { user } = useAuth()
   const { toast } = useToast()
   const [pesagens, setPesagens] = useState<PesagemDiaria[]>([])
   const [animais, setAnimais] = useState<any[]>([])
+  const [lotes, setLotes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   const [animalFilter, setAnimalFilter] = useState<string>('all')
@@ -40,16 +44,19 @@ export default function Pesagem() {
   const [dateTo, setDateTo] = useState<string>('')
 
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isLoteFormOpen, setIsLoteFormOpen] = useState(false)
   const [editingRecord, setEditingRecord] = useState<PesagemDiaria | undefined>(undefined)
 
   const loadData = async () => {
     try {
-      const [pData, aData] = await Promise.all([
+      const [pData, aData, lData] = await Promise.all([
         getPesagens({ expand: 'animal_id', sort: '-data_pesagem' }),
         getAnimais(),
+        pb.collection('lotes').getFullList(),
       ])
       setPesagens(pData)
       setAnimais(aData)
+      setLotes(lData)
     } catch (error) {
       toast({ title: 'Erro', description: 'Erro ao carregar dados.', variant: 'destructive' })
     } finally {
@@ -90,7 +97,24 @@ export default function Pesagem() {
     } catch (err: any) {
       toast({
         title: 'Erro',
-        description: err.message || 'Erro ao salvar.',
+        description: err.data?.message || err.message || 'Erro ao salvar.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleLoteSubmit = async (data: any) => {
+    try {
+      const res = await createPesagemLote(data)
+      toast({
+        title: 'Sucesso',
+        description: `${res.animais_pesados} animais pesados com sucesso.`,
+      })
+      setIsLoteFormOpen(false)
+    } catch (err: any) {
+      toast({
+        title: 'Erro',
+        description: err.data?.message || err.message || 'Erro ao salvar pesagem em lote.',
         variant: 'destructive',
       })
     }
@@ -142,12 +166,21 @@ export default function Pesagem() {
           </div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Gestão de Pesagem</h1>
         </div>
-        <Button
-          onClick={openNew}
-          className="bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-all"
-        >
-          <Plus className="w-4 h-4 mr-2" /> Nova Pesagem
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setIsLoteFormOpen(true)}
+            variant="outline"
+            className="shadow-sm transition-all"
+          >
+            <Scale className="w-4 h-4 mr-2" /> Pesagem em Lote
+          </Button>
+          <Button
+            onClick={openNew}
+            className="bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-all"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Nova Pesagem
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row gap-4 items-end">
@@ -219,6 +252,13 @@ export default function Pesagem() {
         initialData={editingRecord}
         animais={animais}
         onSubmit={handleSubmit}
+      />
+
+      <PesagemLoteForm
+        isOpen={isLoteFormOpen}
+        onClose={() => setIsLoteFormOpen(false)}
+        lotes={lotes}
+        onSubmit={handleLoteSubmit}
       />
     </div>
   )

@@ -33,7 +33,17 @@ export const getPesagem = async (id: string, options?: any) => {
 }
 
 export const createPesagem = async (data: Partial<PesagemDiaria>) => {
-  return pb.send('/backend/v1/animais/pesagem', {
+  return pb.collection('pesagens_diarias').create(data)
+}
+
+export const createPesagemLote = async (data: {
+  lote_id: string
+  data_pesagem: string
+  peso_medio_kg: number
+  responsavel_pesagem?: string
+  observacoes?: string
+}) => {
+  return pb.send('/backend/v1/animais/pesagem-lote', {
     method: 'POST',
     body: JSON.stringify(data),
     headers: { 'Content-Type': 'application/json' },
