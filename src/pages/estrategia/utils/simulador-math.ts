@@ -19,10 +19,17 @@ export function calcularCenario(data: SimInputs) {
   const peso_final = data.peso_entrada + data.gmd_estimado * data.dias_duracao
   const arrobas_final = peso_final / 15
   const arrobas_venda_total = arrobas_final * data.quantidade_animais
-  const arrobas_produzidas_total = (arrobas_final - arrobas_entrada) * data.quantidade_animais
 
-  const custo_diario = data.custo_acao + data.custo_mao_obra + data.custo_adicionais
-  const custo_operacao = custo_diario * data.quantidade_animais * data.dias_duracao
+  // 1. Calculate Weight Gain
+  const ganho_peso_por_animal = peso_final - data.peso_entrada
+
+  // 2. Convert Gain to Arrobas
+  const arrobas_produzidas_por_animal = ganho_peso_por_animal / 15
+  const arrobas_produzidas_total = arrobas_produzidas_por_animal * data.quantidade_animais
+
+  const custo_diario_por_animal = data.custo_acao + data.custo_mao_obra + data.custo_adicionais
+  const custo_operacao_por_animal = custo_diario_por_animal * data.dias_duracao
+  const custo_operacao = custo_operacao_por_animal * data.quantidade_animais
 
   const custo_total = custo_compra + custo_operacao
   const receita_total = arrobas_venda_total * data.preco_venda
@@ -30,8 +37,12 @@ export function calcularCenario(data: SimInputs) {
   const margem_lucro = receita_total > 0 ? (lucro_bruto / receita_total) * 100 : 0
   const roi = custo_total > 0 ? (lucro_bruto / custo_total) * 100 : 0
   const ponto_equilibrio = arrobas_venda_total > 0 ? custo_total / arrobas_venda_total : 0
+
+  // 3. Calculate Final Cost: (Feed Cost + Operational Expenses) / Arrobas Produced
   const custo_arroba_produzida =
-    arrobas_produzidas_total > 0 ? custo_operacao / arrobas_produzidas_total : 0
+    arrobas_produzidas_por_animal > 0
+      ? custo_operacao_por_animal / arrobas_produzidas_por_animal
+      : 0
 
   const sensibilidade = [
     {
