@@ -48,16 +48,30 @@ export const saveIatf = (id: string | null, data: any) => {
 }
 export const deleteIatf = (id: string) => pb.collection('manejo_iatf_curral').delete(id)
 
-export const getRegistrosNascimento = () =>
-  pb
-    .collection('registro_nascimento')
-    .getFullList({ expand: 'vaca_mae_id', sort: '-data_nascimento' })
+export const getRegistrosNascimento = async () => {
+  const records = await pb
+    .collection('nascimentos_e_desmama')
+    .getFullList({ expand: 'matriz_mae_id', sort: '-data_nascimento' })
+  return records.map((r) => ({
+    ...r,
+    vaca_mae_id: r.matriz_mae_id,
+    expand: {
+      ...r.expand,
+      vaca_mae_id: r.expand?.matriz_mae_id,
+    },
+  }))
+}
 export const saveRegistroNascimento = (id: string | null, data: any) => {
-  if (id) return pb.collection('registro_nascimento').update(id, data)
-  return pb.collection('registro_nascimento').create(data)
+  const payload = { ...data }
+  if (payload.vaca_mae_id) {
+    payload.matriz_mae_id = payload.vaca_mae_id
+    delete payload.vaca_mae_id
+  }
+  if (id) return pb.collection('nascimentos_e_desmama').update(id, payload)
+  return pb.collection('nascimentos_e_desmama').create(payload)
 }
 export const deleteRegistroNascimento = (id: string) =>
-  pb.collection('registro_nascimento').delete(id)
+  pb.collection('nascimentos_e_desmama').delete(id)
 
 export const saveReclassificacao = (data: any) =>
   pb.collection('reclassificacao_descarte').create(data)

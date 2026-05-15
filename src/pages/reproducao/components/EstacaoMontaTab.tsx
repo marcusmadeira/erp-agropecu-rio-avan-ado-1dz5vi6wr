@@ -36,6 +36,7 @@ import {
 } from '@/services/reproducao'
 import { useRealtime } from '@/hooks/use-realtime'
 import { format } from 'date-fns'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 export default function EstacaoMontaTab({ touros, lotes }: { touros: any[]; lotes: any[] }) {
   const [estacoes, setEstacoes] = useState<any[]>([])
@@ -84,7 +85,7 @@ export default function EstacaoMontaTab({ touros, lotes }: { touros: any[]; lote
       setOpenEstacao(false)
       setFormEstacao({ nome: '', data_inicio: '', data_fim: '', status: 'Ativa' })
     } catch (e) {
-      toast({ title: 'Erro ao salvar', variant: 'destructive' })
+      toast({ title: 'Erro ao salvar', description: getErrorMessage(e), variant: 'destructive' })
     }
   }
 
@@ -107,7 +108,7 @@ export default function EstacaoMontaTab({ touros, lotes }: { touros: any[]; lote
         data_retirada: '',
       })
     } catch (e) {
-      toast({ title: 'Erro ao salvar', variant: 'destructive' })
+      toast({ title: 'Erro ao salvar', description: getErrorMessage(e), variant: 'destructive' })
     }
   }
 

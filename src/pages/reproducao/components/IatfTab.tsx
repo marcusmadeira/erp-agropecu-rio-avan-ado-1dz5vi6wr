@@ -30,6 +30,7 @@ import { useToast } from '@/hooks/use-toast'
 import { getIatfs, saveIatf, saveReclassificacao, updateAnimal } from '@/services/reproducao'
 import { useRealtime } from '@/hooks/use-realtime'
 import { format } from 'date-fns'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 export default function IatfTab({ femeas, touros }: { femeas: any[]; touros: any[] }) {
   const [data, setData] = useState<any[]>([])
@@ -70,7 +71,11 @@ export default function IatfTab({ femeas, touros }: { femeas: any[]; touros: any
       setOpen(false)
       setForm({ matriz_id: '', data_iatf: '', touro_utilizado_id: '' })
     } catch (e) {
-      toast({ title: 'Erro ao salvar', variant: 'destructive' })
+      toast({
+        title: 'Erro ao salvar IATF',
+        description: getErrorMessage(e),
+        variant: 'destructive',
+      })
     }
   }
 
@@ -116,7 +121,7 @@ export default function IatfTab({ femeas, touros }: { femeas: any[]; touros: any
         motivo: '',
       })
     } catch (e) {
-      toast({ title: 'Erro ao salvar', variant: 'destructive' })
+      toast({ title: 'Erro ao salvar DG', description: getErrorMessage(e), variant: 'destructive' })
     }
   }
 

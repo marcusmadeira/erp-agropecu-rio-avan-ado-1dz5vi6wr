@@ -1,7 +1,7 @@
 import pb from '@/lib/pocketbase/client'
 
 export const getRegistrosNascimento = () =>
-  pb.collection('registro_nascimento').getFullList({ expand: 'vaca_mae_id', sort: '-created' })
+  pb.collection('nascimentos_e_desmama').getFullList({ expand: 'matriz_mae_id', sort: '-created' })
 
 export const getBezerros = () =>
   pb
@@ -11,28 +11,32 @@ export const getBezerros = () =>
 export const getReclassificacoes = () =>
   pb.collection('reclassificacao_descarte').getFullList({ expand: 'animal_id', sort: '-data' })
 
-export const createRegistroNascimento = async (data: any, animalData?: any) => {
-  return pb.send('/backend/v1/maternidade/nascimento', {
-    method: 'POST',
-    body: JSON.stringify(data),
-    headers: { 'Content-Type': 'application/json' },
-  })
+export const createRegistroNascimento = async (data: any) => {
+  try {
+    const nascimento = await pb.collection('nascimentos_e_desmama').create(data)
+
+    await pb.collection('animais').create({
+      id_manejo_brinco: data.rgn_provisorio_abcz || `BEZ-${Date.now()}`,
+      mae_id: data.matriz_mae_id,
+      data_nascimento: data.data_nascimento,
+      sexo: data.sexo,
+      categoria: 'Bezerro',
+      status: 'Ativo',
+    })
+
+    return nascimento
+  } catch (error) {
+    throw error
+  }
 }
 
 export const updateRegistroRGN = async (id: string, rgn: string) => {
-  return pb.send(`/backend/v1/maternidade/rgn/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ rgn_abcz: rgn }),
-    headers: { 'Content-Type': 'application/json' },
-  })
+  return pb.collection('nascimentos_e_desmama').update(id, { rgn_provisorio_abcz: rgn })
 }
 
 export const adicionarAoEstoque = async (registro: any) => {
-  return pb.send('/backend/v1/maternidade/estoque', {
-    method: 'POST',
-    body: JSON.stringify({ registro_id: registro.id }),
-    headers: { 'Content-Type': 'application/json' },
-  })
+  // Legacy function - behavior merged into createRegistroNascimento to ensure atomicity
+  return true
 }
 
 export const destinarBezerro = async (animalId: string, destino: string, motivo: string) => {

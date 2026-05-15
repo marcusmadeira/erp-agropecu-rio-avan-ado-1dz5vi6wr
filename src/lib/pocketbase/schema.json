@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-15T18:45:31.612Z",
+  "generatedAt": "2026-05-15T19:09:40.074Z",
   "collections": [
     {
       "name": "users",
@@ -445,7 +445,8 @@
             "Bezerro",
             "Novilha TIP",
             "Garrote TIP",
-            "Vaca Descarte TIP"
+            "Vaca Descarte TIP",
+            "Matriz TIP"
           ]
         },
         {

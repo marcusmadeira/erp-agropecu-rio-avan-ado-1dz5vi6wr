@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AnimalKPIs } from '@/components/animais/AnimalKPIs'
 import { AnimalReclassificacao } from '@/components/animais/AnimalReclassificacao'
 import { AnimalHistory } from '@/components/animais/AnimalHistory'
+import { AnimalReproducao } from '@/components/animais/AnimalReproducao'
 import AnimalForm from '@/pages/cadastros/AnimalForm'
 import { useRealtime } from '@/hooks/use-realtime'
 import { getRentabilidadeAnimal } from '@/services/animais'
@@ -96,9 +97,12 @@ export default function AnimalPerfil() {
       </div>
 
       <Tabs defaultValue="kpis" className="w-full">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 flex flex-wrap h-auto gap-1">
           <TabsTrigger value="kpis">Rentabilidade & KPIs</TabsTrigger>
           <TabsTrigger value="history">Histórico de Pesagem</TabsTrigger>
+          {animal.sexo === 'Fêmea' && (
+            <TabsTrigger value="reproducao">Histórico Reprodutivo</TabsTrigger>
+          )}
           <TabsTrigger value="reclass">Reclassificação & Descarte</TabsTrigger>
         </TabsList>
         <TabsContent value="kpis">
@@ -139,6 +143,11 @@ export default function AnimalPerfil() {
         <TabsContent value="history">
           <AnimalHistory pesagens={pesagens} animalId={animal.id} />
         </TabsContent>
+        {animal.sexo === 'Fêmea' && (
+          <TabsContent value="reproducao">
+            <AnimalReproducao animalId={animal.id} />
+          </TabsContent>
+        )}
         <TabsContent value="reclass">
           <AnimalReclassificacao animal={animal} onReclassified={loadData} />
         </TabsContent>

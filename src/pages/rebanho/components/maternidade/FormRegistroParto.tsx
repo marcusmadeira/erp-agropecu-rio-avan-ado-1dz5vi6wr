@@ -23,13 +23,14 @@ import { Input } from '@/components/ui/input'
 import { createRegistroNascimento } from '@/services/maternidade'
 import { toast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 const schema = z.object({
-  vaca_mae_id: z.string().min(1, 'Selecione a matriz mãe'),
+  matriz_mae_id: z.string().min(1, 'Selecione a matriz mãe'),
   data_nascimento: z.string().min(1, 'A data é obrigatória'),
   sexo: z.string().min(1, 'Selecione o sexo'),
   peso_nascer: z.string().optional(),
-  numero_tatuagem: z.string().min(1, 'Número da tatuagem é obrigatório'),
+  rgn_provisorio_abcz: z.string().min(1, 'Nº Tatuagem / Brinco é obrigatório'),
 })
 
 export function DialogRegistroParto({
@@ -55,28 +56,28 @@ export function DialogRegistroParto({
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
-      vaca_mae_id: '',
+      matriz_mae_id: '',
       data_nascimento: '',
       sexo: '',
       peso_nascer: '',
-      numero_tatuagem: '',
+      rgn_provisorio_abcz: '',
     },
   })
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
       await createRegistroNascimento({
-        vaca_mae_id: values.vaca_mae_id,
+        matriz_mae_id: values.matriz_mae_id,
         data_nascimento: values.data_nascimento ? `${values.data_nascimento}T12:00:00.000Z` : null,
         sexo: values.sexo,
         peso_nascer: parseFloat(values.peso_nascer || '0') || null,
-        numero_tatuagem: values.numero_tatuagem,
+        rgn_provisorio_abcz: values.rgn_provisorio_abcz,
       })
-      toast({ title: 'Nascimento registrado com sucesso' })
+      toast({ title: 'Nascimento registrado e animal adicionado ao estoque com sucesso.' })
       form.reset()
       onSuccess()
     } catch (e: any) {
-      const msg = e.response?.message || 'Erro ao salvar nascimento'
+      const msg = getErrorMessage(e)
       toast({ title: 'Erro', description: msg, variant: 'destructive' })
     }
   }
@@ -91,7 +92,7 @@ export function DialogRegistroParto({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="vaca_mae_id"
+              name="matriz_mae_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Matriz Mãe</FormLabel>
@@ -129,10 +130,10 @@ export function DialogRegistroParto({
               />
               <FormField
                 control={form.control}
-                name="numero_tatuagem"
+                name="rgn_provisorio_abcz"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nº Tatuagem</FormLabel>
+                    <FormLabel>Nº Tatuagem / Brinco</FormLabel>
                     <FormControl>
                       <Input placeholder="Ex: 1234" {...field} />
                     </FormControl>
