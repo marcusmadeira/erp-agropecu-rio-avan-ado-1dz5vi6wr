@@ -168,6 +168,68 @@ export function VisaoGeralEstoque() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Itens em Estoque (Insumos & Rações)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left border-collapse">
+              <thead>
+                <tr className="border-b bg-slate-50">
+                  <th className="p-3 font-semibold text-slate-700">Produto</th>
+                  <th className="p-3 font-semibold text-slate-700">Categoria</th>
+                  <th className="p-3 font-semibold text-slate-700 text-right">Qtd Atual</th>
+                  <th className="p-3 font-semibold text-slate-700 text-right">Custo Médio</th>
+                  <th className="p-3 font-semibold text-slate-700 text-right">Valor Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {insumosComCMP.map((ins) => (
+                  <tr key={ins.id} className="hover:bg-slate-50/50">
+                    <td className="p-3 font-medium text-slate-900">{ins.produto}</td>
+                    <td className="p-3 text-slate-500">{ins.categoria || 'Outros'}</td>
+                    <td className="p-3 text-right">
+                      <span
+                        className={
+                          ins.quantidade_atual <= (ins.estoque_minimo_critico || 0)
+                            ? 'text-red-600 font-bold'
+                            : ''
+                        }
+                      >
+                        {ins.quantidade_atual.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}{' '}
+                        {ins.unidade_medida || 'kg'}
+                      </span>
+                    </td>
+                    <td className="p-3 text-right">
+                      R${' '}
+                      {ins.cmp.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td className="p-3 text-right font-medium text-[#094016]">
+                      R${' '}
+                      {ins.valorTotal.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                  </tr>
+                ))}
+                {insumosComCMP.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="p-4 text-center text-slate-500">
+                      Nenhum item encontrado no estoque.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

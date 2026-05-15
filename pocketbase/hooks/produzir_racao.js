@@ -18,20 +18,14 @@ routerAdd(
 
     $app.runInTransaction((txApp) => {
       const formulacao = txApp.findRecordById('formulacoes_racao', receita_id)
-      const itens = txApp.findRecordsByFilter(
-        'itens_formulacao',
-        `formulacao_id = '${receita_id}'`,
-        '',
-        1000,
-        0,
-      )
+      const ingredientes = formulacao.get('ingredientes') || []
 
       let custoIngredientes = 0
 
       // Decrement inventory and calculate raw material costs
-      for (const item of itens) {
-        const insumo_id = item.get('insumo_id')
-        const perc = Number(item.get('quantidade_kg')) || 0
+      for (const item of ingredientes) {
+        const insumo_id = item.id_produto
+        const perc = Number(item.proporcao_percentual) || 0
         const requiredQty = (perc / 100) * quantidade_kg
 
         const insumo = txApp.findRecordById('estoque_insumos', insumo_id)

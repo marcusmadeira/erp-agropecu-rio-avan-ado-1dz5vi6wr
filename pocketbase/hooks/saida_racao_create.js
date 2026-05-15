@@ -3,76 +3,66 @@ routerAdd(
   '/backend/v1/saida-racao',
   (e) => {
     const body = e.requestInfo().body
-    const loteId = body.lote_id
-    const formulacaoId = body.formulacao_id
-    const quantidade = Number(body.quantidade_kg)
+    const lote_id = body.lote_id
+    const formulacao_id = body.formulacao_id
+    const quantidade_kg = Number(body.quantidade_kg)
     const data = body.data
 
-    if (!loteId || !formulacaoId || quantidade <= 0 || !data) {
-      throw new BadRequestError('Dados inválidos para saída de ração.')
+    if (!lote_id || !formulacao_id || !quantidade_kg || !data) {
+      return e.badRequestError('Dados incompletos.')
     }
 
-    const auth = e.auth
-    const usuarioId = auth?.id || ''
-
-    let custoTotalTrato = 0
-
+    let result = {}
     $app.runInTransaction((txApp) => {
-      const estoques = txApp.findRecordsByFilter(
-        'racao_formulada',
-        'receita_id = {:receitaId} && quantidade_kg > 0',
-        'data_producao ASC',
-        1000,
-        0,
-        { receitaId: formulacaoId },
-      )
+      const formulacao = txApp.findRecordById('formulacoes_racao', formulacao_id)
+      const feedName = 'Ração - ' + formulacao.get('nome_formulacao')
 
-      let restante = quantidade
-
-      for (let i = 0; i < estoques.length; i++) {
-        if (restante <= 0) break
-        const est = estoques[i]
-        const disponivel = est.get('quantidade_kg')
-        const custoKg = est.get('custo_total_kg') || 0
-
-        const aDescontar = Math.min(disponivel, restante)
-
-        est.set('quantidade_kg', disponivel - aDescontar)
-        txApp.save(est)
-
-        custoTotalTrato += aDescontar * custoKg
-        restante -= aDescontar
+      let feedInsumo
+      try {
+        feedInsumo = txApp.findFirstRecordByFilter('estoque_insumos', `produto = '${feedName}'`)
+      } catch (_) {
+        throw new BadRequestError(`Ração não encontrada no estoque: ${feedName}`)
       }
 
-      if (restante > 0) {
+      const currentQty = Number(feedInsumo.get('quantidade_atual')) || 0
+      if (currentQty < quantidade_kg) {
         throw new BadRequestError(
-          `Estoque insuficiente de ração formulada. Faltam ${restante.toFixed(2)} kg.`,
+          `Estoque insuficiente de ${feedName}. Requer ${quantidade_kg}kg, disponível ${currentQty}kg.`,
         )
       }
 
-      const tratoCol = txApp.findCollectionByNameOrId('trato_diario_lotes')
-      const trato = new Record(tratoCol)
+      feedInsumo.set('quantidade_atual', currentQty - quantidade_kg)
+      txApp.save(feedInsumo)
+
+      const custoUnitario =
+        Number(feedInsumo.get('custo_medio_unitario')) ||
+        Number(formulacao.get('custo_kg_produzido')) ||
+        0
+      const custoTotalTrato = custoUnitario * quantidade_kg
+
+      const mov = new Record(txApp.findCollectionByNameOrId('estoque_movimentacoes'))
+      mov.set('tipo', 'SAIDA_RACAO')
+      mov.set('produto_id', feedInsumo.id)
+      mov.set('quantidade', quantidade_kg)
+      mov.set('valor_unitario', custoUnitario)
+      mov.set('valor_total', custoTotalTrato)
+      mov.set('data', data)
+      mov.set('usuario_id', e.auth?.id || '')
+      mov.set('racao_id', formulacao_id)
+      txApp.save(mov)
+
+      const trato = new Record(txApp.findCollectionByNameOrId('trato_diario_lotes'))
       trato.set('data', data)
-      trato.set('lote_id', loteId)
-      trato.set('formulacao_id', formulacaoId)
-      trato.set('quantidade_kg_servida', quantidade)
+      trato.set('lote_id', lote_id)
+      trato.set('formulacao_id', formulacao_id)
+      trato.set('quantidade_kg_servida', quantidade_kg)
       trato.set('custo_total_trato', custoTotalTrato)
-      trato.set('usuario_id', usuarioId)
+      trato.set('usuario_id', e.auth?.id || '')
       txApp.save(trato)
 
-      const movCol = txApp.findCollectionByNameOrId('estoque_movimentacoes')
-      const mov = new Record(movCol)
-      mov.set('tipo', 'SAIDA_RACAO')
-      mov.set('racao_id', formulacaoId)
-      mov.set('quantidade', quantidade)
-      mov.set('valor_total', custoTotalTrato)
-      mov.set('valor_unitario', quantidade > 0 ? custoTotalTrato / quantidade : 0)
-      mov.set('data', data)
-      mov.set('usuario_id', usuarioId)
-      txApp.save(mov)
+      result = { success: true, trato_id: trato.id }
     })
-
-    return e.json(200, { success: true })
+    return e.json(200, result)
   },
   $apis.requireAuth(),
 )

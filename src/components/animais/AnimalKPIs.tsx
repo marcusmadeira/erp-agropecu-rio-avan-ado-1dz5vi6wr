@@ -23,9 +23,13 @@ export function AnimalKPIs({ animal, pesagens }: { animal: any; pesagens: any[] 
       if (days > 0) gmd = (last.peso_kg - first.peso_kg) / days
     }
 
+    const arrobasAtuais =
+      animal.arrobas_atuais || (animal.peso_atual_kg ? animal.peso_atual_kg / 30 : 0)
+    const custoPorArroba = arrobasAtuais > 0 ? custo / arrobasAtuais : 0
+
     const recommendDescarte = roi < 10 || gmd < 0.5
 
-    return { custo, receitaEstimada, lucro, roi, gmd, recommendDescarte }
+    return { custo, receitaEstimada, lucro, roi, gmd, custoPorArroba, recommendDescarte }
   }, [animal, pesagens])
 
   return (
@@ -51,18 +55,20 @@ export function AnimalKPIs({ animal, pesagens }: { animal: any; pesagens: any[] 
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Lucro Projetado</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-500">Custo por @</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-[#094016]">R$ {kpis.lucro.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-orange-600">
+              R$ {kpis.custoPorArroba.toFixed(2)}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">ROI (%)</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-500">Lucro Projetado</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{kpis.roi.toFixed(1)}%</p>
+            <p className="text-2xl font-bold text-[#094016]">R$ {kpis.lucro.toFixed(2)}</p>
           </CardContent>
         </Card>
       </div>

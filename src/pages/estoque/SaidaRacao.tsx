@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { format } from 'date-fns'
-import { PackageMinus, Loader2, Info } from 'lucide-react'
+import { PackageMinus, Loader2, Info, Trash2 } from 'lucide-react'
+import pb from '@/lib/pocketbase/client'
 import { getLotes } from '@/services/lotes'
 import { getFormulacoes } from '@/services/formulacoes_racao'
 import { registrarSaidaRacao, getHistoricoSaidaRacao } from '@/services/saida_racao'
@@ -218,6 +219,7 @@ export default function SaidaRacao() {
                       <th className="px-4 py-3 font-medium">Ração</th>
                       <th className="px-4 py-3 font-medium">Quantidade</th>
                       <th className="px-4 py-3 font-medium">Responsável</th>
+                      <th className="px-4 py-3 font-medium"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -230,6 +232,31 @@ export default function SaidaRacao() {
                         <td className="px-4 py-3">{h.quantidade_kg_servida} kg</td>
                         <td className="px-4 py-3 text-muted-foreground">
                           {h.expand?.usuario_id?.name || h.expand?.usuario_id?.email || 'Sistema'}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={async () => {
+                              if (
+                                confirm('Deseja cancelar esta saída e reverter o estoque/custo?')
+                              ) {
+                                try {
+                                  await pb.collection('trato_diario_lotes').delete(h.id)
+                                  toast({ title: 'Saída revertida com sucesso!' })
+                                } catch (e: any) {
+                                  toast({
+                                    title: 'Erro ao reverter',
+                                    description: e.message,
+                                    variant: 'destructive',
+                                  })
+                                }
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </td>
                       </tr>
                     ))}

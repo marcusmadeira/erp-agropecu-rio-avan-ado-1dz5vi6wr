@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { Factory, AlertTriangle, CheckCircle2, History } from 'lucide-react'
+import { Factory, AlertTriangle, CheckCircle2, History, Trash2 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
 import { format } from 'date-fns'
@@ -67,18 +67,19 @@ export default function ProducaoRacao() {
   const validation = useMemo(() => {
     if (!receitaId || qty <= 0) return { items: [], isValid: false }
 
-    const recipeItems = itensFormulacao.filter((i) => i.formulacao_id === receitaId)
+    const recipe = formulacoes.find((f) => f.id === receitaId)
+    const ingredientes = recipe?.ingredientes || []
     let isValid = true
 
-    const items = recipeItems.map((item) => {
-      const insumo = insumos.find((ins) => ins.id === item.insumo_id)
-      const reqQty = ((item.quantidade_kg || 0) / 100) * qty
+    const items = ingredientes.map((item: any) => {
+      const insumo = insumos.find((ins) => ins.id === item.id_produto)
+      const reqQty = ((item.proporcao_percentual || 0) / 100) * qty
       const currQty = insumo?.quantidade_atual || 0
       const hasEnough = currQty >= reqQty
       if (!hasEnough) isValid = false
 
       return {
-        id: item.id,
+        id: item.id_produto,
         name: insumo?.produto || 'Desconhecido',
         reqQty,
         currQty,
@@ -87,7 +88,7 @@ export default function ProducaoRacao() {
     })
 
     return { items, isValid: items.length > 0 && isValid }
-  }, [receitaId, qty, itensFormulacao, insumos])
+  }, [receitaId, qty, formulacoes, insumos])
 
   const handleProduce = async () => {
     if (!validation.isValid || isSubmitting) return
@@ -270,6 +271,7 @@ export default function ProducaoRacao() {
                 <TableHead className="text-right">Custo Rateado</TableHead>
                 <TableHead className="text-right">Custo Final/Kg</TableHead>
                 <TableHead className="text-right">Responsável</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -306,6 +308,29 @@ export default function ProducaoRacao() {
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground text-sm">
                       {h.expand?.usuario_id?.name || h.expand?.usuario_id?.email || 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={async () => {
+                          if (confirm('Deseja cancelar esta produção e reverter o estoque?')) {
+                            try {
+                              await pb.collection('racao_formulada').delete(h.id)
+                              toast({ title: 'Produção revertida com sucesso!' })
+                            } catch (e: any) {
+                              toast({
+                                title: 'Erro ao reverter',
+                                description: e.message,
+                                variant: 'destructive',
+                              })
+                            }
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
