@@ -23,16 +23,22 @@ export default function Reproducao() {
   }, [location.hash])
 
   useEffect(() => {
+    let mounted = true
     Promise.all([getAnimais(), getAnimaisFemeas(), getAnimaisTouros(), getLotes()])
       .then(([a, f, t, l]) => {
+        if (!mounted) return
         setAnimais(a)
         setFemeas(f)
         setTouros(t)
         setLotes(l)
       })
       .catch((e) => {
-        console.error(e)
+        console.error('Erro ao carregar dados de reprodução:', e)
       })
+
+    return () => {
+      mounted = false
+    }
   }, [])
 
   return (

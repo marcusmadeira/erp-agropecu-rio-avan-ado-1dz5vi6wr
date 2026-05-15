@@ -8,16 +8,23 @@ export default function DashboardReproducao() {
   const [nascimentos, setNascimentos] = useState<any[]>([])
 
   useEffect(() => {
+    let mounted = true
+
     getIatfs()
-      .then(setIatfs)
-      .catch((e) => {
-        console.error(e)
+      .then((data) => {
+        if (mounted) setIatfs(data)
       })
+      .catch((e) => console.error('Erro ao carregar IATFs:', e))
+
     getRegistrosNascimento()
-      .then(setNascimentos)
-      .catch((e) => {
-        console.error(e)
+      .then((data) => {
+        if (mounted) setNascimentos(data)
       })
+      .catch((e) => console.error('Erro ao carregar nascimentos:', e))
+
+    return () => {
+      mounted = false
+    }
   }, [])
 
   const totalInseminadas = iatfs.length
@@ -28,7 +35,7 @@ export default function DashboardReproducao() {
     .filter((i) => i.resultado_dg === 'Prenhe' && i.expand?.touro_utilizado_id)
     .reduce(
       (acc, curr) => {
-        const name = curr.expand.touro_utilizado_id.id_manejo_brinco
+        const name = curr.expand.touro_utilizado_id.id_manejo_brinco || 'Desconhecido'
         acc[name] = (acc[name] || 0) + 1
         return acc
       },

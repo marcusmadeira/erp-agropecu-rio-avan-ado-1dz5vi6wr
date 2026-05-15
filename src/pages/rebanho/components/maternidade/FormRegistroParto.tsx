@@ -31,6 +31,7 @@ const schema = z.object({
   sexo: z.string().min(1, 'Selecione o sexo'),
   peso_nascer: z.string().optional(),
   rgn_provisorio_abcz: z.string().min(1, 'Nº Tatuagem / Brinco é obrigatório'),
+  lote_atual_id: z.string().optional(),
 })
 
 export function DialogRegistroParto({
@@ -43,13 +44,38 @@ export function DialogRegistroParto({
   onSuccess: () => void
 }) {
   const [matrizes, setMatrizes] = useState<any[]>([])
+  const [lotes, setLotes] = useState<any[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
+    let mounted = true
     if (open) {
       pb.collection('animais')
-        .getFullList({ filter: "sexo='Fêmea' || categoria='Matriz PO'" })
-        .then(setMatrizes)
-        .catch(console.error)
+        .getFullList({ filter: "sexo='Fêmea' || categoria='Matriz PO'", sort: 'id_manejo_brinco' })
+        .then((data) => mounted && setMatrizes(data))
+        .catch((e) => {
+          if (mounted)
+            toast({
+              title: 'Erro ao carregar matrizes',
+              description: getErrorMessage(e),
+              variant: 'destructive',
+            })
+        })
+
+      pb.collection('lotes')
+        .getFullList({ sort: 'nome_lote' })
+        .then((data) => mounted && setLotes(data))
+        .catch((e) => {
+          if (mounted)
+            toast({
+              title: 'Erro ao carregar lotes',
+              description: getErrorMessage(e),
+              variant: 'destructive',
+            })
+        })
+    }
+    return () => {
+      mounted = false
     }
   }, [open])
 
@@ -61,24 +87,36 @@ export function DialogRegistroParto({
       sexo: '',
       peso_nascer: '',
       rgn_provisorio_abcz: '',
+      lote_atual_id: '',
     },
   })
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
+      setIsSubmitting(true)
       await createRegistroNascimento({
         matriz_mae_id: values.matriz_mae_id,
         data_nascimento: values.data_nascimento ? `${values.data_nascimento}T12:00:00.000Z` : null,
         sexo: values.sexo,
         peso_nascer: parseFloat(values.peso_nascer || '0') || null,
         rgn_provisorio_abcz: values.rgn_provisorio_abcz,
+        lote_atual_id:
+          values.lote_atual_id && values.lote_atual_id !== 'none' ? values.lote_atual_id : null,
       })
-      toast({ title: 'Nascimento registrado e animal adicionado ao estoque com sucesso.' })
+      toast({
+        title: 'Sucesso',
+        description: 'Nascimento registrado e animal adicionado ao estoque com sucesso.',
+      })
       form.reset()
       onSuccess()
     } catch (e: any) {
-      const msg = getErrorMessage(e)
-      toast({ title: 'Erro', description: msg, variant: 'destructive' })
+      toast({
+        title: 'Erro ao registrar nascimento',
+        description: getErrorMessage(e),
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -178,11 +216,39 @@ export function DialogRegistroParto({
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="lote_atual_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lote Inicial do Bezerro (Opcional)</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um lote..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum</SelectItem>
+                      {lotes.map((l) => (
+                        <SelectItem key={l.id} value={l.id}>
+                          {l.nome_lote}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <Button
               type="submit"
+              disabled={isSubmitting}
               className="w-full bg-[#094016] hover:bg-[#094016]/90 text-white font-bold"
             >
-              Salvar Nascimento
+              {isSubmitting ? 'Salvando...' : 'Salvar Nascimento'}
             </Button>
           </form>
         </Form>
