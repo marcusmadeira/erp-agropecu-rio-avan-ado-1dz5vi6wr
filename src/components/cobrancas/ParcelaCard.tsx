@@ -16,7 +16,8 @@ interface Props {
 
 export function ParcelaCard({ parcela, itens, historicos, onRefresh }: Props) {
   const cliente = parcela.expand?.venda_id?.expand?.cliente_id
-  const fone = cliente?.contato_whatsapp || cliente?.contato_whatsapp_cobranca || 'N/A'
+  const fone =
+    cliente?.contato_whatsapp || cliente?.contato_whatsapp_cobranca || 'Contato não cadastrado'
 
   const diasAtraso = differenceInDays(
     startOfDay(new Date()),

@@ -18,10 +18,18 @@ function getGrupoKey(vencimento: string) {
   return 'outros'
 }
 
+import { Card, CardContent } from '@/components/ui/card'
+
 export default function PainelCobranca() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [data, setData] = useState<{ parcelas: any[]; itens: any[]; historicos: any[] }>({
+  const [data, setData] = useState<{
+    dashboard: any
+    parcelas: any[]
+    itens: any[]
+    historicos: any[]
+  }>({
+    dashboard: { recebido: 0, aReceber: 0, vencido: 0, vencendo7Dias: 0 },
     parcelas: [],
     itens: [],
     historicos: [],
@@ -75,6 +83,51 @@ export default function PainelCobranca() {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
+      )}
+
+      {!loading && !error && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card className="border-l-4 border-l-emerald-500 shadow-sm">
+            <CardContent className="p-4 flex flex-col justify-center h-full">
+              <p className="text-sm text-gray-500 font-medium">Recebido</p>
+              <p className="text-2xl font-bold text-emerald-700">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                  data.dashboard.recebido,
+                )}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-blue-500 shadow-sm">
+            <CardContent className="p-4 flex flex-col justify-center h-full">
+              <p className="text-sm text-gray-500 font-medium">A Receber</p>
+              <p className="text-2xl font-bold text-blue-700">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                  data.dashboard.aReceber,
+                )}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-red-500 shadow-sm">
+            <CardContent className="p-4 flex flex-col justify-center h-full">
+              <p className="text-sm text-gray-500 font-medium">Vencido</p>
+              <p className="text-2xl font-bold text-red-700">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                  data.dashboard.vencido,
+                )}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-orange-400 shadow-sm">
+            <CardContent className="p-4 flex flex-col justify-center h-full">
+              <p className="text-sm text-gray-500 font-medium">Vencendo em 7 dias</p>
+              <p className="text-2xl font-bold text-orange-600">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                  data.dashboard.vencendo7Dias,
+                )}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {loading ? (

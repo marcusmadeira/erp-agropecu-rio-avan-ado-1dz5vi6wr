@@ -107,11 +107,12 @@ export function AcaoCobrancaModal({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Resultado / Observação</Label>
+            <Label>Mensagem Enviada / Resultado</Label>
             <Textarea
               placeholder="Ex: Prometeu pagar amanhã..."
               value={resultado}
               onChange={(e) => setResultado(e.target.value)}
+              className="min-h-[100px]"
             />
           </div>
         </div>

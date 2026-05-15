@@ -67,6 +67,8 @@ export default function VendaForm() {
     data_vencimento_entrada: new Date().toISOString().split('T')[0],
   })
 
+  const [intervaloParcelas, setIntervaloParcelas] = useState('30')
+
   const [items, setItems] = useState<any[]>([])
   const [parcelas, setParcelas] = useState<any[]>([])
   const [lotes, setLotes] = useState<any[]>([])
@@ -174,9 +176,10 @@ export default function VendaForm() {
         if (saldoDevedor > 0) {
           const numParcelas = formData.numero_parcelas || 1
           const val = saldoDevedor / numParcelas
+          const interval = parseInt(intervaloParcelas) || 30
           for (let i = 1; i <= numParcelas; i++) {
             const d = new Date(formData.data_venda)
-            d.setDate(d.getDate() + 30 * i)
+            d.setDate(d.getDate() + interval * i)
             newParcelas.push({
               numero: i,
               valor: val.toFixed(2),
@@ -207,6 +210,7 @@ export default function VendaForm() {
     formData.valor_entrada,
     formData.data_venda,
     formData.data_vencimento_entrada,
+    intervaloParcelas,
   ])
 
   const handleAddItem = () => {
@@ -265,6 +269,40 @@ export default function VendaForm() {
     const updated = [...parcelas]
     updated[index][field] = value
     setParcelas(updated)
+  }
+
+  const handleCancelarVenda = async () => {
+    if (
+      confirm(
+        'Tem certeza que deseja cancelar esta venda? As parcelas pendentes também serão canceladas.',
+      )
+    ) {
+      setLoading(true)
+      try {
+        await pb.collection('vendas').update(id!, { status_venda: 'Cancelada' })
+        const parcelasPendentes = await pb.collection('parcelas_venda').getFullList({
+          filter: `venda_id = '${id}' && (status_parcela = 'Pendente' || status_parcela = 'Atrasada')`,
+        })
+        for (const p of parcelasPendentes) {
+          await pb.collection('parcelas_venda').update(p.id, { status_parcela: 'Cancelada' })
+        }
+
+        await pb.collection('auditoria_movimentacoes').create({
+          usuario_id: pb.authStore.record!.id,
+          tipo_acao: 'Edição',
+          tabela_afetada: 'vendas',
+          registro_id: id!,
+          description: 'Venda e parcelas pendentes canceladas manualmente.',
+        })
+
+        toast({ title: 'Venda cancelada com sucesso!' })
+        navigate('/vendas/geral')
+      } catch (e: any) {
+        toast({ title: 'Erro', description: e.message, variant: 'destructive' })
+      } finally {
+        setLoading(false)
+      }
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -779,19 +817,35 @@ export default function VendaForm() {
                 </Select>
               </div>
               {formData.forma_pagamento === 'Parcelado' && (
-                <div className="space-y-2">
-                  <Label>Número de Parcelas (Saldo) *</Label>
-                  <Input
-                    type="number"
-                    min="2"
-                    max="40"
-                    value={formData.numero_parcelas}
-                    onChange={(e) =>
-                      setFormData({ ...formData, numero_parcelas: parseInt(e.target.value) || 1 })
-                    }
-                    required
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label>Número de Parcelas (Saldo) *</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="40"
+                      value={formData.numero_parcelas}
+                      onChange={(e) =>
+                        setFormData({ ...formData, numero_parcelas: parseInt(e.target.value) || 1 })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Intervalo entre Parcelas</Label>
+                    <Select value={intervaloParcelas} onValueChange={setIntervaloParcelas}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="30">Mensal (30 dias)</SelectItem>
+                        <SelectItem value="15">Quinzenal (15 dias)</SelectItem>
+                        <SelectItem value="10">Dez dias (10 dias)</SelectItem>
+                        <SelectItem value="7">Semanal (7 dias)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
               )}
             </div>
 
@@ -843,24 +897,38 @@ export default function VendaForm() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end space-x-4 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate(-1)}
-            className="w-32 border-gray-300"
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            disabled={loading}
-            className="text-white px-8 shadow-md"
-            style={{ backgroundColor: '#094016' }}
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {loading ? 'Salvando...' : 'Salvar Venda'}
-          </Button>
+        <div className="flex justify-between items-center pt-4">
+          {id ? (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleCancelarVenda}
+              disabled={loading || formData.status_venda === 'Cancelada'}
+            >
+              Cancelar Venda
+            </Button>
+          ) : (
+            <div />
+          )}
+          <div className="flex space-x-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate(-1)}
+              className="w-32 border-gray-300"
+            >
+              Voltar
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="text-white px-8 shadow-md"
+              style={{ backgroundColor: '#094016' }}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {loading ? 'Salvando...' : 'Salvar Venda'}
+            </Button>
+          </div>
         </div>
       </form>
     </div>
