@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import useAppStore from '@/stores/useAppStore'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,30 +20,49 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
-import { ShieldAlert, ArrowRight } from 'lucide-react'
+import { ShieldAlert, ArrowRight, Loader2 } from 'lucide-react'
+import pb from '@/lib/pocketbase/client'
+import { updateAnimal } from '@/services/animais'
+import { createReclassificacao } from '@/services/reclassificacao'
+import { useRealtime } from '@/hooks/use-realtime'
 
 export default function Reclassificacao() {
-  const { state, dispatch } = useAppStore()
   const { toast } = useToast()
 
   const [open, setOpen] = useState(false)
   const [selectedAnimal, setSelectedAnimal] = useState<any>(null)
+  const [animais, setAnimais] = useState<any[]>([])
+  const [lotes, setLotes] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     category: 'Vaca Descarte TIP',
     loteId: '',
-    costCenter: 'CC02-TIP',
     motivo: '',
   })
 
-  const poAnimals = state.animais.filter((a) => a.costCenter === 'CC01-PO' && a.status === 'Ativo')
+  const loadData = () => {
+    pb.collection('animais')
+      .getFullList({ filter: 'status="Ativo"', expand: 'lote_atual_id' })
+      .then(setAnimais)
+    pb.collection('lotes').getFullList().then(setLotes)
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  useRealtime('animais', loadData)
+  useRealtime('lotes', loadData)
+
+  const poAnimals = animais.filter((a) => a.categoria?.includes('PO'))
 
   const openForm = (animal: any) => {
     setSelectedAnimal(animal)
-    setForm({ category: 'Vaca Descarte TIP', loteId: '', costCenter: 'CC02-TIP', motivo: '' })
+    setForm({ category: 'Vaca Descarte TIP', loteId: '', motivo: '' })
     setOpen(true)
   }
 
-  const handleReclassificar = () => {
+  const handleReclassificar = async () => {
     if (!selectedAnimal || !form.loteId || !form.motivo) {
       toast({
         title: 'Aviso',
@@ -54,81 +72,79 @@ export default function Reclassificacao() {
       return
     }
 
-    dispatch((s) => ({
-      ...s,
-      animais: s.animais.map((a) =>
-        a.id === selectedAnimal.id
-          ? {
-              ...a,
-              costCenter: form.costCenter as any,
-              status: `Reclassificado`,
-              categoria: form.category,
-              loteId: form.loteId,
-            }
-          : a,
-      ),
-      auditLogs: [
-        {
-          id: Math.random().toString(),
-          date: new Date().toISOString(),
-          userName: s.currentUser?.name || 'Sistema',
-          action: 'Update',
-          table: 'Animais',
-          recordId: selectedAnimal.brinco,
-          oldValue: 'CC01-PO',
-          newValue: `Mudança para ${form.costCenter} / Motivo: ${form.motivo}`,
-        },
-        ...s.auditLogs,
-      ],
-    }))
+    setLoading(true)
+    try {
+      await updateAnimal(selectedAnimal.id, {
+        categoria: form.category,
+        lote_atual_id: form.loteId,
+      })
 
-    setOpen(false)
-    toast({
-      title: 'Reclassificação Sucesso!',
-      description: 'Animal enviado para engorda comercial.',
-    })
+      await createReclassificacao({
+        data: new Date().toISOString(),
+        animal_id: selectedAnimal.id,
+        nova_categoria: form.category,
+        novo_lote_destino_id: form.loteId,
+        motivo: form.motivo,
+      })
+
+      setOpen(false)
+      toast({
+        title: 'Reclassificação Sucesso!',
+        description: 'Animal reclassificado e movimentado com sucesso.',
+        className: 'bg-green-600 text-white',
+      })
+    } catch (e: any) {
+      toast({
+        title: 'Erro',
+        description: 'Falha ao reclassificar: ' + e.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in-up pb-20 p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center gap-3">
         <ShieldAlert className="w-8 h-8 text-amber-500" />
-        <h2 className="text-2xl font-bold text-emerald-900">Reclassificação (Descarte PO)</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Reclassificação (Descarte PO)</h2>
+          <p className="text-muted-foreground text-sm">
+            Obrigue a transferência com motivo justificado para animais PO desclassificados.
+          </p>
+        </div>
       </div>
-      <p className="text-muted-foreground">
-        Obrigue a transferência de centro de custo com motivo justificado p/ animais PO
-        desclassificados.
-      </p>
 
-      <Card className="shadow-subtle border-t-4 border-t-amber-500">
+      <Card className="shadow-sm border-t-4 border-t-amber-500">
         <CardHeader>
           <CardTitle>Animais PO Elegíveis</CardTitle>
         </CardHeader>
         <CardContent className="p-0 overflow-auto">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-slate-50">
                 <TableHead>Brinco</TableHead>
                 <TableHead>Categoria Atual</TableHead>
-                <TableHead>C. Custo</TableHead>
+                <TableHead>Lote Atual</TableHead>
                 <TableHead className="text-right">Ação</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {poAnimals.map((a) => (
                 <TableRow key={a.id}>
-                  <TableCell className="font-bold">{a.brinco}</TableCell>
-                  <TableCell>{a.categoria}</TableCell>
+                  <TableCell className="font-bold">{a.id_manejo_brinco}</TableCell>
                   <TableCell>
-                    <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-semibold">
-                      {a.costCenter}
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
+                      {a.categoria}
                     </span>
                   </TableCell>
+                  <TableCell>{a.expand?.lote_atual_id?.nome_lote || '-'}</TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-amber-700 border-amber-300"
+                      className="text-amber-700 border-amber-300 hover:bg-amber-50"
                       onClick={() => openForm(a)}
                     >
                       Rebaixar p/ TIP <ArrowRight className="w-4 h-4 ml-2" />
@@ -136,6 +152,13 @@ export default function Reclassificacao() {
                   </TableCell>
                 </TableRow>
               ))}
+              {poAnimals.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    Nenhum animal PO encontrado.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -144,20 +167,19 @@ export default function Reclassificacao() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Movimentação Comercial</DialogTitle>
+            <DialogTitle>Movimentação e Reclassificação Comercial</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
-            <div>
-              <Label>Motivo Obrigatório</Label>
-              <Input
-                required
-                placeholder="Ex: Falha reprodutiva, Defeito fenotípico"
-                value={form.motivo}
-                onChange={(e) => setForm({ ...form, motivo: e.target.value })}
-              />
+            <div className="bg-slate-50 p-3 rounded-md mb-4 border">
+              <p className="text-sm font-medium">
+                Animal Selecionado: {selectedAnimal?.id_manejo_brinco}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Categoria Atual: {selectedAnimal?.categoria}
+              </p>
             </div>
             <div>
-              <Label>Nova Categoria</Label>
+              <Label>Nova Categoria *</Label>
               <Select
                 value={form.category}
                 onValueChange={(v) => setForm({ ...form, category: v })}
@@ -173,26 +195,35 @@ export default function Reclassificacao() {
               </Select>
             </div>
             <div>
-              <Label>Lote Destino (Engorda)</Label>
+              <Label>Lote Destino (Engorda Comercial) *</Label>
               <Select value={form.loteId} onValueChange={(v) => setForm({ ...form, loteId: v })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o Lote..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {state.lotes
-                    .filter((l) => l.costCenter === 'CC02-TIP')
-                    .map((l) => (
-                      <SelectItem key={l.id} value={l.id}>
-                        {l.name}
-                      </SelectItem>
-                    ))}
+                  {lotes.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.nome_lote} ({l.finalidade_principal || 'Sem finalidade'})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label>Motivo Obrigatório *</Label>
+              <Input
+                required
+                placeholder="Ex: Falha reprodutiva, Defeito fenotípico"
+                value={form.motivo}
+                onChange={(e) => setForm({ ...form, motivo: e.target.value })}
+              />
+            </div>
             <Button
               onClick={handleReclassificar}
-              className="w-full bg-amber-600 hover:bg-amber-700"
+              disabled={loading}
+              className="w-full bg-amber-600 hover:bg-amber-700 mt-4"
             >
+              {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
               Confirmar Rebaixamento
             </Button>
           </div>

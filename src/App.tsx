@@ -70,6 +70,7 @@ import Apartacao from './pages/rebanho/Apartacao'
 import Inventario from './pages/rebanho/Inventario'
 import EstoqueRebanho from './pages/rebanho/EstoqueRebanho'
 import Pesagem from './pages/rebanho/Pesagem'
+import Reclassificacao from './pages/rebanho/Reclassificacao'
 import Reproducao from './pages/reproducao/Reproducao'
 import MetasKPIs from './pages/estrategia/MetasKPIs'
 import SimuladorCenarios from './pages/estrategia/SimuladorCenarios'
@@ -256,6 +257,14 @@ const AppRoutes = () => (
         element={
           <ProtectedRoute>
             <Apartacao />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reclassificacao"
+        element={
+          <ProtectedRoute>
+            <Reclassificacao />
           </ProtectedRoute>
         }
       />

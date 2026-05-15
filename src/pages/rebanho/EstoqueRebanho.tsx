@@ -10,23 +10,35 @@ import {
 } from '@/components/ui/table'
 import pb from '@/lib/pocketbase/client'
 
+import { useRealtime } from '@/hooks/use-realtime'
+
 export default function EstoqueRebanho() {
   const [estoque, setEstoque] = useState<any[]>([])
   const [animais, setAnimais] = useState<any[]>([])
 
-  useEffect(() => {
+  const loadData = () => {
     pb.collection('animais').getFullList({ filter: 'status="Ativo"' }).then(setAnimais)
     pb.collection('estoque_peso_fazenda').getFullList({ sort: '-data_calculo' }).then(setEstoque)
+  }
+
+  useEffect(() => {
+    loadData()
   }, [])
+
+  useRealtime('animais', loadData)
+  useRealtime('estoque_peso_fazenda', loadData)
 
   const totalCabecas = animais.length
   const totalPeso = animais.reduce((acc, a) => acc + (a.peso_atual_kg || 0), 0)
   const totalArrobas = totalPeso / 15
-  const valorArroba = 250
-  const totalValor = totalArrobas * valorArroba
+  // get latest value from latest estoque if possible to be consistent
+  const latestEstoque = estoque[0]
+  const totalValor = latestEstoque
+    ? totalArrobas * (latestEstoque.valor_total_rebanho / (latestEstoque.total_arrobas || 1))
+    : totalArrobas * 250
 
   const formatCurr = (val: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0)
 
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6 pb-20">

@@ -28,7 +28,16 @@ routerAdd(
       } catch (_) {}
     }
 
-    $apis.enrichRecord(e, record, 'lote_atual_id', 'pai_id', 'mae_id')
+    const pastoId = record.getString('piquete_atual_id')
+    if (pastoId) {
+      try {
+        const pasto = $app.findRecordById('pastos_e_piquetes', pastoId)
+        pasto.set('taxa_lotacao_atual', pasto.getInt('taxa_lotacao_atual') + 1)
+        $app.save(pasto)
+      } catch (_) {}
+    }
+
+    $apis.enrichRecord(e, record, 'lote_atual_id', 'piquete_atual_id', 'pai_id', 'mae_id')
     return e.json(200, record)
   },
   $apis.requireAuth(),

@@ -7,6 +7,7 @@ routerAdd(
 
     const record = $app.findRecordById('animais', id)
     const oldLoteId = record.getString('lote_atual_id')
+    const oldPastoId = record.getString('piquete_atual_id')
 
     Object.keys(body).forEach((key) => {
       if (key !== 'id' && key !== 'created' && key !== 'updated') {
@@ -34,7 +35,25 @@ routerAdd(
       }
     }
 
-    $apis.enrichRecord(e, record, 'lote_atual_id', 'pai_id', 'mae_id')
+    const newPastoId = record.getString('piquete_atual_id')
+    if (oldPastoId !== newPastoId) {
+      if (oldPastoId) {
+        try {
+          const oldPasto = $app.findRecordById('pastos_e_piquetes', oldPastoId)
+          oldPasto.set('taxa_lotacao_atual', Math.max(0, oldPasto.getInt('taxa_lotacao_atual') - 1))
+          $app.save(oldPasto)
+        } catch (_) {}
+      }
+      if (newPastoId) {
+        try {
+          const newPasto = $app.findRecordById('pastos_e_piquetes', newPastoId)
+          newPasto.set('taxa_lotacao_atual', newPasto.getInt('taxa_lotacao_atual') + 1)
+          $app.save(newPasto)
+        } catch (_) {}
+      }
+    }
+
+    $apis.enrichRecord(e, record, 'lote_atual_id', 'piquete_atual_id', 'pai_id', 'mae_id')
     return e.json(200, record)
   },
   $apis.requireAuth(),

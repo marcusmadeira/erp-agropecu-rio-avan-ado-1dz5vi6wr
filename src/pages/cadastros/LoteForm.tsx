@@ -35,6 +35,7 @@ import { Loader2, Check, X, AlertTriangle } from 'lucide-react'
 const schema = z.object({
   nome_lote: z.string().min(1, 'Nome do lote é obrigatório').max(100, 'Máximo 100 caracteres'),
   centro_custo: z.string().min(1, 'Obrigatório'),
+  finalidade_principal: z.string().min(1, 'Obrigatório'),
   piquete_atual_id: z.string().optional(),
   formulacao_id: z.string().optional(),
   quantidade_racao_diaria: z.coerce.number().min(0, 'Deve ser maior ou igual a zero').optional(),
@@ -52,6 +53,7 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
     defaultValues: {
       nome_lote: '',
       centro_custo: '',
+      finalidade_principal: '',
       piquete_atual_id: '',
       formulacao_id: '',
       quantidade_racao_diaria: 0,
@@ -77,6 +79,7 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
         form.reset({
           nome_lote: item.nome_lote || '',
           centro_custo: item.centro_custo || '',
+          finalidade_principal: item.finalidade_principal || '',
           piquete_atual_id: item.piquete_atual_id || '',
           formulacao_id: item.formulacao_id || '',
           quantidade_racao_diaria: item.quantidade_racao_diaria || 0,
@@ -85,6 +88,7 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
         form.reset({
           nome_lote: '',
           centro_custo: '',
+          finalidade_principal: '',
           piquete_atual_id: '',
           formulacao_id: '',
           quantidade_racao_diaria: 0,
@@ -163,27 +167,64 @@ export default function LoteForm({ open, onOpenChange, item }: any) {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="centro_custo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Centro de Custo *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ''}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o centro de custo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="CC01-Nelore PO">CC01 - Nelore PO</SelectItem>
-                      <SelectItem value="CC02-Comercial TIP">CC02 - Comercial TIP</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="centro_custo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Centro de Custo *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o centro de custo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="CC01-Nelore PO">CC01 - Nelore PO</SelectItem>
+                        <SelectItem value="CC02-Comercial TIP">CC02 - Comercial TIP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="finalidade_principal"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Finalidade *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {[
+                          'vacas',
+                          'bezerros',
+                          'desmama',
+                          'recria',
+                          'novilhas',
+                          'touros',
+                          'engorda',
+                          'comercial',
+                          'PO',
+                        ].map((f) => (
+                          <SelectItem key={f} value={f}>
+                            {f.charAt(0).toUpperCase() + f.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid grid-cols-1 gap-4">
               <FormField

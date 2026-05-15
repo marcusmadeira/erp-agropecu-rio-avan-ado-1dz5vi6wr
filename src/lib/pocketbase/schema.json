@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-15T19:13:45.968Z",
+  "generatedAt": "2026-05-15T19:25:16.977Z",
   "collections": [
     {
       "name": "users",
@@ -404,6 +404,23 @@
           "type": "number",
           "required": false,
           "system": false
+        },
+        {
+          "name": "finalidade_principal",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "vacas",
+            "bezerros",
+            "desmama",
+            "recria",
+            "novilhas",
+            "touros",
+            "engorda",
+            "comercial",
+            "PO"
+          ]
         }
       ],
       "indexes": [
@@ -558,6 +575,13 @@
           "required": false,
           "system": false,
           "collectionRef": "rebanhos"
+        },
+        {
+          "name": "piquete_atual_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "pastos_e_piquetes"
         }
       ],
       "indexes": [
@@ -3542,6 +3566,20 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "pasto_anterior_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "pastos_e_piquetes"
+        },
+        {
+          "name": "pasto_novo_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "pastos_e_piquetes"
         }
       ],
       "indexes": []

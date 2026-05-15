@@ -62,7 +62,8 @@ const schema = z
     custo_variavel_acumulado: z.coerce.number().min(0).optional(),
     pai_id: z.string().optional().or(z.literal('')),
     mae_id: z.string().optional().or(z.literal('')),
-    lote_atual_id: z.string().min(1, 'Obrigatório'),
+    lote_atual_id: z.string().optional().or(z.literal('')),
+    piquete_atual_id: z.string().optional().or(z.literal('')),
   })
   .superRefine((data, ctx) => {
     if (data.pai_id && data.mae_id && data.pai_id === data.mae_id) {
@@ -72,6 +73,22 @@ const schema = z
         path: ['pai_id'],
       })
     }
+    if (data.status === 'Ativo') {
+      if (!data.lote_atual_id) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Lote obrigatório para animais ativos',
+          path: ['lote_atual_id'],
+        })
+      }
+      if (!data.piquete_atual_id) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Pasto/Piquete obrigatório para animais ativos',
+          path: ['piquete_atual_id'],
+        })
+      }
+    }
   })
 
 type FormData = z.infer<typeof schema>
@@ -79,6 +96,7 @@ type FormData = z.infer<typeof schema>
 export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
   const { toast } = useToast()
   const [lotes, setLotes] = useState<any[]>([])
+  const [pastos, setPastos] = useState<any[]>([])
   const [animais, setAnimais] = useState<any[]>([])
   const [showAi, setShowAi] = useState(false)
 
@@ -97,6 +115,7 @@ export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
       pai_id: '',
       mae_id: '',
       lote_atual_id: '',
+      piquete_atual_id: '',
     },
   })
 
@@ -104,6 +123,11 @@ export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
     if (open) {
       getLotes()
         .then((res: any) => setLotes(Array.isArray(res) ? res : res?.items || []))
+        .catch(() => {})
+      import('@/services/pastos')
+        .then(({ getPastos }) => {
+          getPastos().then((res: any) => setPastos(Array.isArray(res) ? res : res?.items || []))
+        })
         .catch(() => {})
       getAnimais()
         .then((res: any) => setAnimais(Array.isArray(res) ? res : res?.items || []))
@@ -126,6 +150,7 @@ export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
           sexo: item.sexo || undefined,
           status: item.status || 'Ativo',
           lote_atual_id: item.lote_atual_id || '',
+          piquete_atual_id: item.piquete_atual_id || '',
         })
       } else {
         form.reset({
@@ -141,6 +166,7 @@ export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
           pai_id: '',
           mae_id: '',
           lote_atual_id: '',
+          piquete_atual_id: '',
         })
       }
       setShowAi(false)
@@ -394,7 +420,7 @@ export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
                   name="lote_atual_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Lote *</FormLabel>
+                      <FormLabel>Lote {form.watch('status') === 'Ativo' && '*'}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value || ''}>
                         <FormControl>
                           <SelectTrigger>
@@ -405,6 +431,35 @@ export default function AnimalForm({ open, onOpenChange, item, onSaved }: any) {
                           {lotes.map((l) => (
                             <SelectItem key={l.id} value={l.id}>
                               {l.nome_lote}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  control={form.control}
+                  name="piquete_atual_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Pasto / Piquete {form.watch('status') === 'Ativo' && '*'}
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {pastos.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.nome}
                             </SelectItem>
                           ))}
                         </SelectContent>

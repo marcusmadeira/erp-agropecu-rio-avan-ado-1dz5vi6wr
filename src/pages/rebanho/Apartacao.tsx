@@ -21,21 +21,25 @@ import { ArrowRightLeft, CheckSquare, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
+import { updateAnimal } from '@/services/animais'
 
 export default function Apartacao() {
   const { toast } = useToast()
   const [lotes, setLotes] = useState<any[]>([])
+  const [pastos, setPastos] = useState<any[]>([])
   const [animais, setAnimais] = useState<any[]>([])
   const [sourceLoteId, setSourceLoteId] = useState('')
   const [destLoteId, setDestLoteId] = useState('')
+  const [destPastoId, setDestPastoId] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [motivo, setMotivo] = useState('')
   const [isTransferring, setIsTransferring] = useState(false)
 
   const loadData = () => {
     pb.collection('lotes').getFullList().then(setLotes)
+    pb.collection('pastos_e_piquetes').getFullList().then(setPastos)
     pb.collection('animais')
-      .getFullList({ filter: 'status="Ativo"', expand: 'lote_atual_id' })
+      .getFullList({ filter: 'status="Ativo"', expand: 'lote_atual_id,piquete_atual_id' })
       .then(setAnimais)
   }
 
@@ -44,6 +48,7 @@ export default function Apartacao() {
   }, [])
 
   useRealtime('lotes', loadData)
+  useRealtime('pastos_e_piquetes', loadData)
   useRealtime('animais', loadData)
 
   const sourceAnimais = animais.filter((a) => a.lote_atual_id === sourceLoteId)
@@ -59,11 +64,10 @@ export default function Apartacao() {
   }
 
   const handleTransfer = async () => {
-    if (!sourceLoteId || !destLoteId || selectedIds.length === 0) return
-    if (sourceLoteId === destLoteId) {
+    if (!sourceLoteId || !destLoteId || !destPastoId || selectedIds.length === 0) {
       toast({
         title: 'Atenção',
-        description: 'Lote de origem e destino devem ser diferentes.',
+        description: 'Selecione animais, lote e pasto de destino.',
         variant: 'destructive',
       })
       return
@@ -73,37 +77,27 @@ export default function Apartacao() {
     try {
       const numTransferidos = selectedIds.length
 
-      // 1. Atualiza os animais
       await Promise.all(
-        selectedIds.map((id) => pb.collection('animais').update(id, { lote_atual_id: destLoteId })),
-      )
+        selectedIds.map(async (id) => {
+          const animal = animais.find((a) => a.id === id)
 
-      // 2. Registra o histórico de apartação
-      await Promise.all(
-        selectedIds.map((id) =>
-          pb.collection('apartacao_dinamica').create({
+          // Using updateAnimal calls our custom route which maintains counts correctly!
+          await updateAnimal(id, {
+            lote_atual_id: destLoteId,
+            piquete_atual_id: destPastoId,
+          })
+
+          await pb.collection('apartacao_dinamica').create({
             animal_id: id,
             data_apartacao: new Date().toISOString(),
             lote_anterior_id: sourceLoteId,
             lote_novo_id: destLoteId,
+            pasto_anterior_id: animal?.piquete_atual_id || null,
+            pasto_novo_id: destPastoId,
             motivo,
-          }),
-        ),
+          })
+        }),
       )
-
-      // 3. Atualiza a contagem de cabeças nos lotes
-      const sourceLote = lotes.find((l) => l.id === sourceLoteId)
-      const destLote = lotes.find((l) => l.id === destLoteId)
-
-      if (sourceLote) {
-        const novaQtdSource = Math.max(0, (sourceLote.quantidade_cabecas || 0) - numTransferidos)
-        await pb.collection('lotes').update(sourceLoteId, { quantidade_cabecas: novaQtdSource })
-      }
-
-      if (destLote) {
-        const novaQtdDest = (destLote.quantidade_cabecas || 0) + numTransferidos
-        await pb.collection('lotes').update(destLoteId, { quantidade_cabecas: novaQtdDest })
-      }
 
       toast({
         title: 'Apartação Concluída!',
@@ -113,7 +107,6 @@ export default function Apartacao() {
 
       setSelectedIds([])
       setMotivo('')
-      // loadData() will be triggered by useRealtime
     } catch {
       toast({
         title: 'Erro na apartação',
@@ -134,7 +127,7 @@ export default function Apartacao() {
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Apartação Dinâmica</h2>
           <p className="text-sm text-muted-foreground">
-            Mova animais entre lotes de forma simplificada e automatizada.
+            Mova animais entre lotes e pastos de forma simplificada e automatizada.
           </p>
         </div>
       </div>
@@ -142,47 +135,73 @@ export default function Apartacao() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="shadow-sm border-t-4 border-t-amber-500">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Lote de Origem</CardTitle>
+            <CardTitle className="text-lg">Origem</CardTitle>
           </CardHeader>
           <CardContent>
-            <Select
-              value={sourceLoteId}
-              onValueChange={(v) => {
-                setSourceLoteId(v)
-                setSelectedIds([])
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione o Lote de Origem" />
-              </SelectTrigger>
-              <SelectContent>
-                {lotes.map((l) => (
-                  <SelectItem key={l.id} value={l.id}>
-                    {l.nome_lote} ({l.quantidade_cabecas || 0} cabeças)
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Lote de Origem</label>
+                <Select
+                  value={sourceLoteId}
+                  onValueChange={(v) => {
+                    setSourceLoteId(v)
+                    setSelectedIds([])
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o Lote" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {lotes.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>
+                        {l.nome_lote} ({l.quantidade_cabecas || 0} cabeças)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card className="shadow-sm border-t-4 border-t-primary">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Lote de Destino</CardTitle>
+            <CardTitle className="text-lg">Destino</CardTitle>
           </CardHeader>
           <CardContent>
-            <Select value={destLoteId} onValueChange={setDestLoteId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione o Lote de Destino" />
-              </SelectTrigger>
-              <SelectContent>
-                {lotes.map((l) => (
-                  <SelectItem key={l.id} value={l.id}>
-                    {l.nome_lote} ({l.quantidade_cabecas || 0} cabeças)
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Lote de Destino</label>
+                <Select value={destLoteId} onValueChange={setDestLoteId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o Lote" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {lotes.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>
+                        {l.nome_lote} ({l.quantidade_cabecas || 0} cabeças)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Pasto/Piquete de Destino</label>
+                <Select value={destPastoId} onValueChange={setDestPastoId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o Pasto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pastos.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nome} (Ocupação: {p.taxa_lotacao_atual || 0}/{p.capacidade || 0})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -211,7 +230,7 @@ export default function Apartacao() {
               </Button>
               <Button
                 onClick={handleTransfer}
-                disabled={selectedIds.length === 0 || !destLoteId || isTransferring}
+                disabled={selectedIds.length === 0 || !destLoteId || !destPastoId || isTransferring}
                 className="min-w-[140px]"
               >
                 {isTransferring ? (
@@ -242,7 +261,7 @@ export default function Apartacao() {
                   </TableHead>
                   <TableHead>Brinco (ID Manejo)</TableHead>
                   <TableHead>Categoria</TableHead>
-                  <TableHead>Sexo</TableHead>
+                  <TableHead>Pasto Atual</TableHead>
                   <TableHead className="text-right">Peso Atual (kg)</TableHead>
                 </TableRow>
               </TableHeader>
@@ -268,7 +287,7 @@ export default function Apartacao() {
                         {a.categoria || '-'}
                       </span>
                     </TableCell>
-                    <TableCell>{a.sexo || '-'}</TableCell>
+                    <TableCell>{a.expand?.piquete_atual_id?.nome || '-'}</TableCell>
                     <TableCell className="text-right font-medium">
                       {a.peso_atual_kg ? `${a.peso_atual_kg} kg` : '-'}
                     </TableCell>
