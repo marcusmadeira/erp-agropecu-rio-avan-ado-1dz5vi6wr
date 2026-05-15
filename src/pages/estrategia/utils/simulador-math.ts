@@ -38,11 +38,9 @@ export function calcularCenario(data: SimInputs) {
   const roi = custo_total > 0 ? (lucro_bruto / custo_total) * 100 : 0
   const ponto_equilibrio = arrobas_venda_total > 0 ? custo_total / arrobas_venda_total : 0
 
-  // 3. Calculate Final Cost: (Feed Cost + Operational Expenses) / Arrobas Produced
+  // 3. Calculate Final Cost: (Custo Total) / ((Peso Final - Peso Inicial) / 15)
   const custo_arroba_produzida =
-    arrobas_produzidas_por_animal > 0
-      ? custo_operacao_por_animal / arrobas_produzidas_por_animal
-      : 0
+    arrobas_produzidas_total > 0 ? custo_total / arrobas_produzidas_total : 0
 
   const sensibilidade = [
     {
