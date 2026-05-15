@@ -12,22 +12,18 @@ export const getReclassificacoes = () =>
   pb.collection('reclassificacao_descarte').getFullList({ expand: 'animal_id', sort: '-data' })
 
 export const createRegistroNascimento = async (data: any) => {
-  try {
-    const nascimento = await pb.collection('nascimentos_e_desmama').create(data)
+  const nascimento = await pb.collection('nascimentos_e_desmama').create(data)
 
-    await pb.collection('animais').create({
-      id_manejo_brinco: data.rgn_provisorio_abcz || `BEZ-${Date.now()}`,
-      mae_id: data.matriz_mae_id,
-      data_nascimento: data.data_nascimento,
-      sexo: data.sexo,
-      categoria: 'Bezerro',
-      status: 'Ativo',
-    })
+  await pb.collection('animais').create({
+    id_manejo_brinco: data.rgn_provisorio_abcz || `BEZ-${Date.now()}`,
+    mae_id: data.matriz_mae_id,
+    data_nascimento: data.data_nascimento,
+    sexo: data.sexo,
+    categoria: 'Bezerro',
+    status: 'Ativo',
+  })
 
-    return nascimento
-  } catch (error) {
-    throw error
-  }
+  return nascimento
 }
 
 export const updateRegistroRGN = async (id: string, rgn: string) => {
