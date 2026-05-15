@@ -26,6 +26,17 @@ routerAdd(
           txApp.save(animal)
         } else if (item.tipo_item === 'Lote' && item.lote_id) {
           const lote = txApp.findRecordById('lotes', item.lote_id)
+          const animaisNoLote = txApp.findRecordsByFilter(
+            'animais',
+            `lote_atual_id = '${item.lote_id}' && status != 'Vendido'`,
+            '',
+            0,
+            0,
+          )
+          for (let i = 0; i < animaisNoLote.length; i++) {
+            animaisNoLote[i].set('status', 'Vendido')
+            txApp.save(animaisNoLote[i])
+          }
           txApp.save(lote)
         }
       }
@@ -53,6 +64,18 @@ routerAdd(
         recBol.set('data_vencimento_original', p.data_vencimento)
         recBol.set('status_boleto', p.status_parcela === 'Paga' ? 'Pago' : 'Pendente')
         txApp.save(recBol)
+
+        if (p.status_parcela === 'Paga') {
+          const recebimentosCol = txApp.findCollectionByNameOrId('recebimentos_vendas')
+          const recRec = new Record(recebimentosCol)
+          recRec.set('boleto_id', recBol.id)
+          recRec.set('venda_id', record.id)
+          recRec.set('data_recebimento', p.data_vencimento || venda.data_venda)
+          recRec.set('valor_recebido', p.valor)
+          recRec.set('forma_recebimento', 'Dinheiro')
+          recRec.set('usuario_id', e.auth.id)
+          txApp.save(recRec)
+        }
       }
 
       if (venda.status_venda === 'Confirmada' || venda.status_venda === 'Entregue') {

@@ -75,7 +75,19 @@ export const updateVenda = async (id: string, venda: any, itens: any[], parcelas
       await pb.collection('itens_venda').create(payload)
       if (item.tipo_item === 'Animal' && item.animal_id) {
         await pb.collection('animais').update(item.animal_id, { status: 'Vendido' })
+      } else if (item.tipo_item === 'Lote' && item.lote_id) {
+        const animaisLote = await pb
+          .collection('animais')
+          .getFullList({ filter: `lote_atual_id='${item.lote_id}' && status!='Vendido'` })
+        for (const a of animaisLote) {
+          await pb.collection('animais').update(a.id, { status: 'Vendido' })
+        }
       }
+    }
+
+    const oldBoletos = await pb.collection('boletos').getFullList({ filter: `venda_id='${id}'` })
+    for (const ob of oldBoletos) {
+      await pb.collection('boletos').delete(ob.id)
     }
 
     const oldParcelas = await pb
@@ -86,22 +98,53 @@ export const updateVenda = async (id: string, venda: any, itens: any[], parcelas
     }
 
     if (venda.forma_pagamento === 'Parcelado' && parcelas.length > 0) {
-      for (const p of parcelas) {
-        await pb.collection('parcelas_venda').create({
+      for (let i = 0; i < parcelas.length; i++) {
+        const p = parcelas[i]
+        const recPar = await pb.collection('parcelas_venda').create({
           venda_id: record.id,
           numero_parcela: p.numero,
           valor_parcela: Number(p.valor),
           data_vencimento: p.data_vencimento,
           status_parcela: p.status_parcela || 'Pendente',
         })
+        const recBol = await pb.collection('boletos').create({
+          parcela_id: recPar.id,
+          venda_id: record.id,
+          numero_parcela: p.numero,
+          numero_boleto: `BOL-${record.id.substring(0, 5).toUpperCase()}-${i + 1}-ED`,
+          valor_boleto: Number(p.valor),
+          data_vencimento: p.data_vencimento,
+          data_vencimento_original: p.data_vencimento,
+          status_boleto: p.status_parcela === 'Paga' ? 'Pago' : 'Pendente',
+        })
+        if (p.status_parcela === 'Paga') {
+          await pb.collection('recebimentos_vendas').create({
+            boleto_id: recBol.id,
+            venda_id: record.id,
+            data_recebimento: p.data_vencimento || venda.data_venda,
+            valor_recebido: Number(p.valor),
+            forma_recebimento: 'Dinheiro',
+            usuario_id: pb.authStore.record?.id,
+          })
+        }
       }
     } else {
-      await pb.collection('parcelas_venda').create({
+      const recPar = await pb.collection('parcelas_venda').create({
         venda_id: record.id,
         numero_parcela: 1,
         valor_parcela: valor_total_venda,
         data_vencimento: new Date().toISOString(),
         status_parcela: 'Pendente',
+      })
+      await pb.collection('boletos').create({
+        parcela_id: recPar.id,
+        venda_id: record.id,
+        numero_parcela: 1,
+        numero_boleto: `BOL-${record.id.substring(0, 5).toUpperCase()}-1-ED`,
+        valor_boleto: valor_total_venda,
+        data_vencimento: new Date().toISOString(),
+        data_vencimento_original: new Date().toISOString(),
+        status_boleto: 'Pendente',
       })
     }
   } catch (err) {

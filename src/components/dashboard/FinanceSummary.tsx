@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -19,61 +19,70 @@ import { format, differenceInDays } from 'date-fns'
 export default function FinanceSummary({ transactions }: { transactions: Transacao[] }) {
   const { state } = useAppStore()
 
-  const { receitas, despesas, saldo, overdueAmount, expected30d, pieData, overdueList } =
-    useMemo(() => {
-      const today = new Date()
-      const in30d = new Date()
-      in30d.setDate(today.getDate() + 30)
+  const [dashboardStats, setDashboardStats] = useState({
+    realizedRevenue: 0,
+    pendingRevenue: 0,
+    delinquency: 0,
+  })
 
-      let rec = 0,
-        des = 0,
-        overdueAmt = 0,
-        exp30 = 0
-      let recPaid = 0,
-        recPending = 0,
-        recOverdue = 0
-      const list: any[] = []
+  useEffect(() => {
+    import('@/lib/pocketbase/client').then((m) => {
+      m.default
+        .send('/backend/v1/obter_dashboard_financeiro_vendas', { method: 'GET' })
+        .then((data: any) => setDashboardStats(data))
+        .catch(console.error)
+    })
+  }, [])
 
-      transactions.forEach((t) => {
-        const val = t.Valor_Total || 0
-        const vDate = new Date(t.Data_Vencimento)
-        const isPast = vDate < today
+  const { despesas, overdueAmount, expected30d, pieData, overdueList } = useMemo(() => {
+    const today = new Date()
+    const in30d = new Date()
+    in30d.setDate(today.getDate() + 30)
 
-        if (t.Tipo_Movimento === 'Receita') {
-          if (t.Status_Pagamento === 'Efetivado') {
-            rec += val
-            recPaid += val
-          } else {
-            if (isPast || t.Status_Pagamento === 'Atrasado') {
-              overdueAmt += val
-              recOverdue += val
-              list.push(t)
-            } else {
-              recPending += val
-              if (vDate <= in30d) exp30 += val
-            }
+    let des = 0,
+      exp30 = 0
+    const list: any[] = []
+
+    transactions.forEach((t) => {
+      const val = t.Valor_Total || 0
+      const vDate = new Date(t.Data_Vencimento)
+      const isPast = vDate < today
+
+      if (t.Tipo_Movimento === 'Receita') {
+        if (t.Status_Pagamento !== 'Efetivado' && t.Status_Pagamento !== 'Recebido') {
+          if (isPast || t.Status_Pagamento === 'Atrasado') {
+            list.push(t)
+          } else if (vDate <= in30d) {
+            exp30 += val
           }
-        } else {
-          if (t.Status_Pagamento === 'Efetivado') des += val
         }
-      })
-
-      return {
-        receitas: rec,
-        despesas: des,
-        saldo: rec - des,
-        overdueAmount: overdueAmt,
-        expected30d: exp30,
-        pieData: [
-          { name: 'Recebido', value: recPaid, color: '#16a34a' },
-          { name: 'A Receber', value: recPending, color: '#eab308' },
-          { name: 'Atrasado', value: recOverdue, color: '#dc2626' },
-        ].filter((d) => d.value > 0),
-        overdueList: list.sort(
-          (a, b) => new Date(a.Data_Vencimento).getTime() - new Date(b.Data_Vencimento).getTime(),
-        ),
+      } else {
+        if (
+          t.Status_Pagamento === 'Efetivado' ||
+          t.Status_Pagamento === 'Pago' ||
+          t.Status_Pagamento === 'Realizado'
+        )
+          des += val
       }
-    }, [transactions])
+    })
+
+    return {
+      despesas: des,
+      overdueAmount: dashboardStats.delinquency,
+      expected30d: dashboardStats.pendingRevenue,
+      pieData: [
+        { name: 'Recebido', value: dashboardStats.realizedRevenue, color: '#16a34a' },
+        { name: 'A Receber', value: dashboardStats.pendingRevenue, color: '#eab308' },
+        { name: 'Atrasado', value: dashboardStats.delinquency, color: '#dc2626' },
+      ].filter((d) => d.value > 0),
+      overdueList: list.sort(
+        (a, b) => new Date(a.Data_Vencimento).getTime() - new Date(b.Data_Vencimento).getTime(),
+      ),
+    }
+  }, [transactions, dashboardStats])
+
+  const receitas = dashboardStats.realizedRevenue
+  const saldo = receitas - despesas
 
   const openWhatsApp = (phone?: string, text?: string) => {
     if (!phone) return
