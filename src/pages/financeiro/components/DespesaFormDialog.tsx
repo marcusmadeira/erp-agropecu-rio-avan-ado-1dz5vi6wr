@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Check, ChevronsUpDown } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import { updateDespesa } from '@/services/despesas'
 import pb from '@/lib/pocketbase/client'
@@ -44,6 +45,8 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
   const [valorTotal, setValorTotal] = useState<number | string>('')
   const [vencimentos, setVencimentos] = useState<string[]>([])
   const [dataBase, setDataBase] = useState(new Date().toISOString().split('T')[0])
+  const [pagarAgora, setPagarAgora] = useState(false)
+  const [formaPagamentoVista, setFormaPagamentoVista] = useState('Dinheiro')
 
   useEffect(() => {
     if (open) {
@@ -72,6 +75,8 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
       setValorTotal('')
       setDataBase(new Date().toISOString().split('T')[0])
       setVencimentos([new Date().toISOString().split('T')[0]])
+      setPagarAgora(false)
+      setFormaPagamentoVista('Dinheiro')
     }
   }, [initialData, open])
 
@@ -142,31 +147,19 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
       } else {
         const novaDespesa = await pb.collection('despesas').create(dataObj)
 
-        const valorTotalNum = Number(valorTotal)
-        const valorBase = Math.floor((valorTotalNum / qtdParcelas) * 100) / 100
-        const somaBase = valorBase * qtdParcelas
-        const diferenca = Number((valorTotalNum - somaBase).toFixed(2))
-
-        const boletosPromises = []
-        for (let i = 0; i < qtdParcelas; i++) {
-          let valorParcela = valorBase
-          if (i === qtdParcelas - 1) {
-            valorParcela = Number((valorBase + diferenca).toFixed(2))
+        if (qtdParcelas === 1 && pagarAgora) {
+          const boletos = await pb
+            .collection('boletos_pagar')
+            .getFullList({ filter: `despesa_id='${novaDespesa.id}'` })
+          if (boletos.length > 0) {
+            const fd = new FormData()
+            fd.append('boleto_pagar_id', boletos[0].id)
+            fd.append('data_pagamento', dataBase)
+            fd.append('valor_pago', String(valorTotal))
+            fd.append('forma_pagamento', formaPagamentoVista)
+            await pb.collection('pagamentos_realizados').create(fd)
           }
-
-          boletosPromises.push(
-            pb.collection('boletos_pagar').create({
-              despesa_id: novaDespesa.id,
-              fornecedor_id: fornecedorId,
-              valor: valorParcela,
-              data_vencimento: vencimentos[i] || dataBase,
-              status: 'Pendente',
-              numero_boleto: `PARC-${i + 1}/${qtdParcelas}`,
-            }),
-          )
         }
-
-        await Promise.all(boletosPromises)
 
         toast.success('Despesa e parcelas criadas com sucesso!')
       }
@@ -203,9 +196,10 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
         <ScrollArea className="flex-1 px-6">
           <form id="despesa-form" onSubmit={onSubmit} className="space-y-4 py-2">
             {initialData && (
-              <div className="bg-amber-50 text-amber-900 p-3 rounded-md text-sm border border-amber-200">
-                <strong>Atenção:</strong> A edição desta despesa não atualizará as parcelas já
-                geradas. Gerencie os pagamentos individualmente na seção de contas a pagar.
+              <div className="bg-blue-50 text-blue-900 p-3 rounded-md text-sm border border-blue-200">
+                <strong>Informação:</strong> Ao editar o valor total ou quantidade de parcelas, o
+                sistema recalculará automaticamente as parcelas pendentes para refletir as mudanças,
+                mantendo intactas as parcelas já pagas.
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -303,6 +297,40 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
                 <Label>Valor por Parcela (R$)</Label>
                 <Input type="text" value={valorParcelaPreview} disabled className="bg-gray-50" />
               </div>
+
+              {qtdParcelas === 1 && !initialData && (
+                <div className="col-span-1 md:col-span-2 flex flex-col sm:flex-row gap-4 p-4 border rounded-md bg-slate-50 mt-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="pagarAgora"
+                      checked={pagarAgora}
+                      onCheckedChange={(c: boolean) => setPagarAgora(c)}
+                    />
+                    <Label
+                      htmlFor="pagarAgora"
+                      className="cursor-pointer font-medium text-emerald-800"
+                    >
+                      Marcar como Pago (À Vista)
+                    </Label>
+                  </div>
+                  {pagarAgora && (
+                    <div className="flex-1">
+                      <Select value={formaPagamentoVista} onValueChange={setFormaPagamentoVista}>
+                        <SelectTrigger className="w-full sm:w-[200px] border-emerald-200">
+                          <SelectValue placeholder="Forma de pagamento" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                          <SelectItem value="PIX">PIX</SelectItem>
+                          <SelectItem value="Transferência">Transferência</SelectItem>
+                          <SelectItem value="Boleto">Boleto</SelectItem>
+                          <SelectItem value="Cartão">Cartão</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Centro de Custo</Label>

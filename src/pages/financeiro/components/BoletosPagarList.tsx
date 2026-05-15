@@ -75,7 +75,7 @@ export default function BoletosPagarList() {
             <TableRow>
               <TableHead>Vencimento</TableHead>
               <TableHead>Fornecedor</TableHead>
-              <TableHead>Nº Boleto</TableHead>
+              <TableHead>Nº Parcela / Doc</TableHead>
               <TableHead>Valor</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Ações</TableHead>
@@ -104,7 +104,7 @@ export default function BoletosPagarList() {
                   </span>
                 </TableCell>
                 <TableCell className="flex items-center gap-2">
-                  {b.status !== 'Pago' && (
+                  {b.status !== 'Pago' && b.status !== 'Cancelado' && (
                     <Button
                       variant="outline"
                       size="sm"

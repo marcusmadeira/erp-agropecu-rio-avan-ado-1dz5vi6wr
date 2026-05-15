@@ -6,17 +6,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts'
 import { differenceInDays } from 'date-fns'
 import { ChartContainer } from '@/components/ui/chart'
+import pb from '@/lib/pocketbase/client'
+import { ArrowDownIcon, ArrowUpIcon, AlertTriangleIcon, WalletIcon } from 'lucide-react'
 
 const COLORS = ['#094016', '#2ecc71', '#1abc9c', '#f1c40f', '#e67e22', '#e74c3c']
 
 export default function DashboardDespesas() {
   const [despesas, setDespesas] = useState<any[]>([])
   const [boletos, setBoletos] = useState<any[]>([])
+  const [receitasRealizadas, setReceitasRealizadas] = useState<number>(0)
 
   const load = async () => {
     try {
       setDespesas(await getDespesas())
       setBoletos(await getBoletosPagar())
+
+      const parcelasPagas = await pb.collection('parcelas_venda').getFullList({
+        filter: "status_parcela='Paga'",
+      })
+      const totalReceitas = parcelasPagas.reduce((acc, p) => acc + (p.valor_parcela || 0), 0)
+
+      const recebimentos = await pb.collection('recebimentos_vendas').getFullList()
+      const totalRecebimentos = recebimentos.reduce((acc, r) => acc + (r.valor_recebido || 0), 0)
+
+      setReceitasRealizadas(Math.max(totalReceitas, totalRecebimentos))
     } catch (e) {
       console.error(e)
     }
@@ -27,31 +40,45 @@ export default function DashboardDespesas() {
   }, [])
   useRealtime('despesas', load)
   useRealtime('boletos_pagar', load)
+  useRealtime('parcelas_venda', load)
+  useRealtime('recebimentos_vendas', load)
 
   const kpis = useMemo(() => {
-    let totalToPay = 0
+    let despesasPagas = 0
+    let despesasAPagar = 0
     let overdueCount = 0
     let delaySum = 0
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
     boletos.forEach((b) => {
-      if (b.status !== 'Pago' && b.status !== 'Cancelado') {
-        totalToPay += b.valor || 0
+      if (b.status === 'Pago') {
+        despesasPagas += b.valor || 0
+      } else if (b.status === 'Pendente' || b.status === 'Atrasado') {
+        despesasAPagar += b.valor || 0
       }
-      const venc = new Date(b.data_vencimento)
-      if (b.status === 'Pendente' && venc < today) {
+
+      if (
+        b.status === 'Atrasado' ||
+        (b.status === 'Pendente' && new Date(b.data_vencimento) < today)
+      ) {
         overdueCount++
-        delaySum += differenceInDays(today, venc)
+        delaySum += differenceInDays(today, new Date(b.data_vencimento))
       }
     })
 
-    const avgDelay = overdueCount > 0 ? Math.round(delaySum / overdueCount) : 0
+    const saldo = receitasRealizadas - despesasPagas
     const totalExp = despesas.reduce((acc, d) => acc + (d.valor || 0), 0)
-    const ticketMedio = despesas.length > 0 ? totalExp / despesas.length : 0
 
-    return { totalToPay, overdueCount, avgDelay, ticketMedio }
-  }, [boletos, despesas])
+    return {
+      receitasRealizadas,
+      despesasPagas,
+      despesasAPagar,
+      saldo,
+      overdueCount,
+      delaySum,
+    }
+  }, [boletos, despesas, receitasRealizadas])
 
   const charts = useMemo(() => {
     const suppMap: any = {}
@@ -76,45 +103,73 @@ export default function DashboardDespesas() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Total a Pagar</CardTitle>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium">Receitas (Realizadas)</CardTitle>
+            <ArrowUpIcon className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-emerald-700">
               {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                kpis.totalToPay,
+                kpis.receitasRealizadas,
               )}
             </div>
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Boletos Atrasados</CardTitle>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium">Despesas Pagas</CardTitle>
+            <ArrowDownIcon className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{kpis.overdueCount}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Média de Atraso</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{kpis.avgDelay} dias</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Ticket Médio</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-slate-700">
               {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                kpis.ticketMedio,
+                kpis.despesasPagas,
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium">Despesas a Pagar</CardTitle>
+            <AlertTriangleIcon className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                kpis.despesasAPagar,
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium">Saldo</CardTitle>
+            <WalletIcon className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div
+              className={`text-2xl font-bold ${kpis.saldo >= 0 ? 'text-blue-600' : 'text-red-600'}`}
+            >
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                kpis.saldo,
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium">Inadimplência</CardTitle>
+            <AlertTriangleIcon className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{kpis.overdueCount} boletos</div>
+            <p className="text-xs text-muted-foreground mt-1">Atrasados</p>
           </CardContent>
         </Card>
       </div>

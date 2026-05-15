@@ -63,7 +63,13 @@ export default function PagamentosList() {
             {pagamentos.map((p) => (
               <TableRow key={p.id}>
                 <TableCell>{new Date(p.data_pagamento).toLocaleDateString()}</TableCell>
-                <TableCell>{p.expand?.boleto_pagar_id?.numero_boleto || 'N/A'}</TableCell>
+                <TableCell>
+                  {p.expand?.boleto_pagar_id?.numero_boleto || 'N/A'}
+                  <br />
+                  <span className="text-xs text-muted-foreground">
+                    {p.expand?.boleto_pagar_id?.expand?.fornecedor_id?.nome_razao_social}
+                  </span>
+                </TableCell>
                 <TableCell>
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                     p.valor_pago,

@@ -40,7 +40,20 @@ export default function DespesasList() {
   useRealtime('boletos_pagar', load)
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Deseja excluir esta despesa?')) return
+    const despesaBoletos = boletos.filter((b) => b.despesa_id === id)
+    const hasPago = despesaBoletos.some((b) => b.status === 'Pago')
+
+    if (hasPago) {
+      if (
+        !confirm(
+          'ATENÇÃO: Existem parcelas PAGAS para esta despesa. Ao excluir, as parcelas serão canceladas/excluídas. Tem certeza que deseja prosseguir?',
+        )
+      )
+        return
+    } else {
+      if (!confirm('Deseja excluir esta despesa?')) return
+    }
+
     try {
       await deleteDespesa(id)
       toast.success('Excluída com sucesso')

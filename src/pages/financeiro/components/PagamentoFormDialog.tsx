@@ -1,5 +1,12 @@
 import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -55,7 +62,18 @@ export default function PagamentoFormDialog({ open, onOpenChange, boleto, onSucc
           </div>
           <div className="space-y-2">
             <Label>Forma de Pagamento</Label>
-            <Input name="forma_pagamento" placeholder="Ex: PIX, Transferência, Boleto" required />
+            <Select name="forma_pagamento" defaultValue="PIX" required>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                <SelectItem value="PIX">PIX</SelectItem>
+                <SelectItem value="Transferência">Transferência</SelectItem>
+                <SelectItem value="Boleto">Boleto</SelectItem>
+                <SelectItem value="Cartão">Cartão</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label>Comprovante (Opcional)</Label>
