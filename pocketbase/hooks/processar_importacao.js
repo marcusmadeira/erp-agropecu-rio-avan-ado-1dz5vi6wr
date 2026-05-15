@@ -39,26 +39,30 @@ routerAdd(
               inseridos.push(record.id)
             } else if (tipo_dado === 'parceiros') {
               if (!reg.numero_documento) throw new Error('Documento obrigatório')
+              let record
+              let isUpdate = false
+              let docClean = String(reg.numero_documento).replace(/\D/g, '')
               try {
-                txApp.findFirstRecordByData(
+                record = txApp.findFirstRecordByData(
                   'parceiros_negocios',
                   'numero_documento',
-                  reg.numero_documento,
+                  docClean || reg.numero_documento,
                 )
-                throw new Error(`Documento ${reg.numero_documento} já existe`)
+                isUpdate = true
               } catch (err) {
-                if (err.message.includes('já existe')) throw err
+                const col = txApp.findCollectionByNameOrId('parceiros_negocios')
+                record = new Record(col)
               }
-              const col = txApp.findCollectionByNameOrId('parceiros_negocios')
-              const record = new Record(col)
-              record.set('nome_razao_social', reg.nome_razao_social || 'Desconhecido')
-              record.set('numero_documento', reg.numero_documento)
-              record.set('tipo_documento', reg.tipo_documento || 'CPF')
-              record.set('categoria_parceiro', reg.categoria_parceiro || 'Cliente')
-              record.set('status', reg.status || 'Ativo')
-              record.set('contato_whatsapp_cobranca', reg.contato_whatsapp_cobranca || '')
-              record.set('email_cobranca', reg.email_cobranca || '')
-              if (reg.origem_importacao) {
+
+              if (reg.nome_razao_social) record.set('nome_razao_social', reg.nome_razao_social)
+              record.set('numero_documento', docClean || reg.numero_documento)
+              if (reg.tipo_documento) record.set('tipo_documento', reg.tipo_documento)
+              if (reg.categoria_parceiro) record.set('categoria_parceiro', reg.categoria_parceiro)
+              if (reg.status) record.set('status', reg.status)
+              if (reg.contato_whatsapp_cobranca)
+                record.set('contato_whatsapp_cobranca', reg.contato_whatsapp_cobranca)
+              if (reg.email_cobranca) record.set('email_cobranca', reg.email_cobranca)
+              if (reg.origem_importacao && !isUpdate) {
                 record.set('origem_importacao', reg.origem_importacao)
               }
               txApp.save(record)
@@ -81,11 +85,12 @@ routerAdd(
               record.set('centro_custo', 'CC01')
 
               if (reg.parceiro_documento) {
+                let pDocClean = String(reg.parceiro_documento).replace(/\D/g, '')
                 try {
                   const p = txApp.findFirstRecordByData(
                     'parceiros_negocios',
                     'numero_documento',
-                    reg.parceiro_documento,
+                    pDocClean || reg.parceiro_documento,
                   )
                   record.set('parceiro_id', p.id)
                 } catch (_) {}

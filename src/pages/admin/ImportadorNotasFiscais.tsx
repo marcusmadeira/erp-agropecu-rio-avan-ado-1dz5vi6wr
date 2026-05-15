@@ -23,17 +23,25 @@ import { useToast } from '@/hooks/use-toast'
 import { Upload, CheckCircle2, FileText, Loader2, X } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 
+interface FornecedorOCR {
+  nome: string
+  cnpj: string
+}
+
 interface ProdutoExtraido {
   nome: string
   quantidade: number
   valor_unitario: number
   valor_total: number
+  tipo: 'estoque' | 'despesa'
 }
 
 interface DadosExtraidos {
-  fornecedor: string
+  fornecedor: FornecedorOCR
   nota_fiscal: string
   data: string
+  data_vencimento?: string
+  valor_total: number
   produtos: ProdutoExtraido[]
 }
 
@@ -94,45 +102,20 @@ export default function ImportadorNotasFiscais() {
 
     setIsSaving(true)
     try {
-      for (const produto of extractedData.produtos) {
-        let insumoId = ''
-        try {
-          const insumo = await pb
-            .collection('estoque_insumos')
-            .getFirstListItem(`produto = "${produto.nome}"`)
-          insumoId = insumo.id
-
-          await pb.collection('estoque_insumos').update(insumoId, {
-            quantidade_atual: insumo.quantidade_atual + produto.quantidade,
-            custo_medio_unitario: produto.valor_unitario,
-          })
-        } catch {
-          const novoInsumo = await pb.collection('estoque_insumos').create({
-            produto: produto.nome,
-            quantidade_atual: produto.quantidade,
-            unidade_medida: 'UN',
-            custo_medio_unitario: produto.valor_unitario,
-            estoque_minimo_critico: 0,
-          })
-          insumoId = novoInsumo.id
-        }
-
-        await pb.collection('estoque_movimentacoes').create({
-          tipo: 'ENTRADA_NOTA_FISCAL',
-          produto_id: insumoId,
-          quantidade: produto.quantidade,
-          valor_unitario: produto.valor_unitario,
-          valor_total: produto.valor_total,
-          fornecedor: extractedData.fornecedor,
-          nota_fiscal: extractedData.nota_fiscal,
-          data: extractedData.data,
-          usuario_id: user.id,
-        })
+      const formData = new FormData()
+      formData.append('dados', JSON.stringify(extractedData))
+      if (file) {
+        formData.append('arquivo', file)
       }
+
+      await pb.send('/backend/v1/salvar_nota_fiscal_ocr', {
+        method: 'POST',
+        body: formData,
+      })
 
       toast({
         title: 'Importação concluída',
-        description: 'O estoque foi atualizado com sucesso baseado na nota fiscal.',
+        description: 'A nota fiscal foi processada e os registros foram criados com sucesso.',
       })
       setFile(null)
       setExtractedData(null)
@@ -140,7 +123,7 @@ export default function ImportadorNotasFiscais() {
     } catch (error: any) {
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Ocorreu um erro ao salvar as movimentações.',
+        description: error.message || 'Ocorreu um erro ao processar a nota fiscal.',
         variant: 'destructive',
       })
     } finally {
@@ -236,18 +219,31 @@ export default function ImportadorNotasFiscais() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-1 md:col-span-2">
                   <Label>Fornecedor</Label>
-                  <Input value={extractedData.fornecedor} readOnly className="bg-muted/50" />
+                  <Input value={extractedData.fornecedor.nome} readOnly className="bg-muted/50" />
+                </div>
+                <div className="space-y-1">
+                  <Label>CNPJ</Label>
+                  <Input value={extractedData.fornecedor.cnpj} readOnly className="bg-muted/50" />
                 </div>
                 <div className="space-y-1">
                   <Label>Número da Nota</Label>
                   <Input value={extractedData.nota_fiscal} readOnly className="bg-muted/50" />
                 </div>
-                <div className="space-y-1 sm:col-span-2">
+                <div className="space-y-1 md:col-span-2">
                   <Label>Data da Nota</Label>
                   <Input value={extractedData.data} readOnly type="date" className="bg-muted/50" />
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <Label>Data de Vencimento</Label>
+                  <Input
+                    value={extractedData.data_vencimento || ''}
+                    readOnly
+                    type="date"
+                    className="bg-muted/50"
+                  />
                 </div>
               </div>
 
@@ -255,7 +251,8 @@ export default function ImportadorNotasFiscais() {
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead>Produto</TableHead>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Tipo</TableHead>
                       <TableHead className="text-right">Qtd</TableHead>
                       <TableHead className="text-right">V. Unitário</TableHead>
                       <TableHead className="text-right">V. Total</TableHead>
@@ -265,6 +262,7 @@ export default function ImportadorNotasFiscais() {
                     {extractedData.produtos.map((p, idx) => (
                       <TableRow key={idx}>
                         <TableCell className="font-medium">{p.nome}</TableCell>
+                        <TableCell className="capitalize text-slate-600">{p.tipo}</TableCell>
                         <TableCell className="text-right">{p.quantidade}</TableCell>
                         <TableCell className="text-right">
                           {new Intl.NumberFormat('pt-BR', {

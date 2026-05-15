@@ -159,7 +159,7 @@ export default function Auditoria() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-600">Usuário (Email)</label>
                   <Input
@@ -192,6 +192,28 @@ export default function Auditoria() {
                       <SelectItem value="DELETE">DELETE</SelectItem>
                       <SelectItem value="LOGIN">LOGIN</SelectItem>
                       <SelectItem value="LOGOUT">LOGOUT</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-600">Tabela</label>
+                  <Select
+                    value={tableName}
+                    onValueChange={(v) => {
+                      setTableName(v)
+                      setPage(1)
+                    }}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Todas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as tabelas</SelectItem>
+                      <SelectItem value="parceiros_negocios">Fornecedores</SelectItem>
+                      <SelectItem value="despesas">Despesas</SelectItem>
+                      <SelectItem value="boletos_pagar">Boletos</SelectItem>
+                      <SelectItem value="estoque_movimentacoes">Estoque</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

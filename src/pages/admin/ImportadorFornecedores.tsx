@@ -80,7 +80,9 @@ export default function ImportadorFornecedores() {
         if (!doc) errors.push('Documento obrigatório')
 
         const docClean = doc.replace(/\D/g, '')
-        if (docClean && existingSet.has(docClean)) errors.push('Documento já cadastrado')
+        const isUpdate = docClean && existingSet.has(docClean)
+        const warnings: string[] = []
+        if (isUpdate) warnings.push('Documento já cadastrado (será atualizado)')
 
         return {
           nome_razao_social: nome,
@@ -91,9 +93,9 @@ export default function ImportadorFornecedores() {
           categoria_parceiro: cat,
           status: raw.status || 'Ativo',
           origem_importacao: origem,
-          status_linha: errors.length > 0 ? 'Error' : 'Valid',
+          status_linha: errors.length > 0 ? 'Error' : warnings.length > 0 ? 'Warning' : 'Valid',
           errors,
-          warnings: [],
+          warnings,
         }
       })
       setPreviewData(mapped)
@@ -146,27 +148,35 @@ export default function ImportadorFornecedores() {
 
   const confirmImport = async () => {
     setIsProcessing(true)
-    let success = 0
-    let error = 0
-    const valid = previewData.filter((r) => r.status_linha === 'Valid')
+    const valid = previewData.filter(
+      (r) => r.status_linha === 'Valid' || r.status_linha === 'Warning',
+    )
 
-    for (const row of valid) {
-      try {
-        await pb.collection('parceiros_negocios').create({
-          ...row,
-          data_importacao: new Date().toISOString(),
-        })
-        success++
-      } catch (err) {
-        error++
-      }
+    try {
+      const res = await pb.send('/backend/v1/processar-importacao', {
+        method: 'POST',
+        body: JSON.stringify({
+          tipo_dado: 'parceiros',
+          registros: valid,
+          arquivo_nome: file?.name || 'fornecedores.csv',
+          estrategia: 'apenas_validos',
+        }),
+      })
+
+      setStats({ success: res.inseridos || 0, error: res.erros?.length || 0 })
+      toast({
+        title: 'Importação finalizada',
+        description: `${res.inseridos} importados/atualizados, ${res.erros?.length || 0} falhas.`,
+      })
+    } catch (err: any) {
+      toast({
+        title: 'Erro na importação',
+        description: err.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setIsProcessing(false)
     }
-    setStats({ success, error })
-    setIsProcessing(false)
-    toast({
-      title: 'Importação finalizada',
-      description: `${success} importados, ${error} falhas.`,
-    })
   }
 
   const reset = () => {
@@ -271,10 +281,17 @@ export default function ImportadorFornecedores() {
             <Button
               className="w-full bg-[#094016] hover:bg-[#094016]/90"
               onClick={confirmImport}
-              disabled={!previewData.some((r) => r.status_linha === 'Valid')}
+              disabled={
+                !previewData.some((r) => r.status_linha === 'Valid' || r.status_linha === 'Warning')
+              }
             >
-              Confirmar Importação ({previewData.filter((r) => r.status_linha === 'Valid').length}{' '}
-              válidos)
+              Confirmar Importação (
+              {
+                previewData.filter(
+                  (r) => r.status_linha === 'Valid' || r.status_linha === 'Warning',
+                ).length
+              }{' '}
+              registros)
             </Button>
           </div>
         </div>
