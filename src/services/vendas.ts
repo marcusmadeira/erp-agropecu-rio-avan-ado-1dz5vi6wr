@@ -69,18 +69,55 @@ export const updateVenda = async (id: string, venda: any, itens: any[], parcelas
       }
       if (item.tipo_item === 'Lote') {
         payload.lote_id = item.lote_id
+        const oldItem = oldItens.find((oi: any) => oi.lote_id === item.lote_id)
+        if (oldItem) {
+          payload.lote_id_origem = oldItem.lote_id_origem
+          payload.pastagem_id_origem = oldItem.pastagem_id_origem
+        } else {
+          try {
+            const lote = await pb.collection('lotes').getOne(item.lote_id)
+            payload.lote_id_origem = lote.id
+            payload.pastagem_id_origem = lote.piquete_atual_id
+          } catch {
+            /* intentionally ignored */
+          }
+        }
       } else {
         payload.animal_id = item.animal_id
+        const oldItem = oldItens.find((oi: any) => oi.animal_id === item.animal_id)
+        if (oldItem) {
+          payload.lote_id_origem = oldItem.lote_id_origem
+          payload.pastagem_id_origem = oldItem.pastagem_id_origem
+          payload.peso_momento_venda = oldItem.peso_momento_venda
+          payload.status_anterior = oldItem.status_anterior
+        } else {
+          try {
+            const animal = await pb.collection('animais').getOne(item.animal_id)
+            payload.lote_id_origem = animal.lote_atual_id
+            payload.pastagem_id_origem = animal.piquete_atual_id
+            payload.peso_momento_venda = animal.peso_atual_kg
+            payload.status_anterior = animal.status
+          } catch {
+            /* intentionally ignored */
+          }
+        }
       }
       await pb.collection('itens_venda').create(payload)
       if (item.tipo_item === 'Animal' && item.animal_id) {
-        await pb.collection('animais').update(item.animal_id, { status: 'Vendido' })
-      } else if (item.tipo_item === 'Lote' && item.lote_id) {
-        const animaisLote = await pb
+        await pb
           .collection('animais')
-          .getFullList({ filter: `lote_atual_id='${item.lote_id}' && status!='Vendido'` })
-        for (const a of animaisLote) {
-          await pb.collection('animais').update(a.id, { status: 'Vendido' })
+          .update(item.animal_id, { status: 'Vendido' })
+          .catch(() => {})
+      } else if (item.tipo_item === 'Lote' && item.lote_id) {
+        try {
+          const animaisLote = await pb
+            .collection('animais')
+            .getFullList({ filter: `lote_atual_id='${item.lote_id}' && status!='Vendido'` })
+          for (const a of animaisLote) {
+            await pb.collection('animais').update(a.id, { status: 'Vendido' })
+          }
+        } catch {
+          /* intentionally ignored */
         }
       }
     }

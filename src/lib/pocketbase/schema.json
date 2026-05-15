@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-15T19:34:17.653Z",
+  "generatedAt": "2026-05-15T19:44:01.896Z",
   "collections": [
     {
       "name": "users",
@@ -2065,6 +2065,32 @@
         },
         {
           "name": "descricao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "lote_id_origem",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "lotes"
+        },
+        {
+          "name": "pastagem_id_origem",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "pastos_e_piquetes"
+        },
+        {
+          "name": "peso_momento_venda",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status_anterior",
           "type": "text",
           "required": false,
           "system": false

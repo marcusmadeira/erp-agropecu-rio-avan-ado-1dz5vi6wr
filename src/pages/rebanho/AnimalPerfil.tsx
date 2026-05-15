@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getAnimal } from '@/services/animais'
 import { getPesagens } from '@/services/pesagens'
-import { ArrowLeft, Edit } from 'lucide-react'
+import { ArrowLeft, Edit, InfoIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -14,12 +14,15 @@ import AnimalForm from '@/pages/cadastros/AnimalForm'
 import { useRealtime } from '@/hooks/use-realtime'
 import { getRentabilidadeAnimal } from '@/services/animais'
 import { getHistoricoPesagem } from '@/services/pesagens'
+import { format } from 'date-fns'
+import pb from '@/lib/pocketbase/client'
 
 export default function AnimalPerfil() {
   const { id } = useParams()
   const [animal, setAnimal] = useState<any>(null)
   const [pesagens, setPesagens] = useState<any[]>([])
   const [rentabilidade, setRentabilidade] = useState<any>(null)
+  const [saleItem, setSaleItem] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [formOpen, setFormOpen] = useState(false)
 
@@ -34,6 +37,17 @@ export default function AnimalPerfil() {
       setAnimal(aData)
       setPesagens(pData)
       setRentabilidade(rData)
+
+      if (aData.status === 'Vendido') {
+        const vendas = await pb.collection('itens_venda').getFullList({
+          filter: `animal_id='${id}'`,
+          expand: 'venda_id,venda_id.cliente_id,lote_id_origem,pastagem_id_origem',
+          sort: '-created',
+        })
+        if (vendas.length > 0) setSaleItem(vendas[0])
+      } else {
+        setSaleItem(null)
+      }
     } catch (e) {
       console.error(e)
     } finally {
@@ -44,6 +58,7 @@ export default function AnimalPerfil() {
   useEffect(() => {
     loadData()
   }, [id])
+
   useRealtime('pesagens_diarias', loadData)
   useRealtime('animais', loadData)
 
@@ -95,6 +110,42 @@ export default function AnimalPerfil() {
           <Edit className="w-4 h-4 mr-2" /> Editar Animal
         </Button>
       </div>
+
+      {animal.status === 'Vendido' && saleItem && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-5 mb-2">
+          <h3 className="text-orange-900 font-bold mb-3 flex items-center gap-2">
+            <InfoIcon className="w-5 h-5" /> Histórico de Venda
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm text-orange-800">
+            <div>
+              <p className="font-semibold text-orange-900">Data da Venda</p>
+              <p>
+                {saleItem.expand?.venda_id?.data_venda
+                  ? format(new Date(saleItem.expand.venda_id.data_venda), 'dd/MM/yyyy')
+                  : 'N/A'}
+              </p>
+            </div>
+            <div className="col-span-2">
+              <p className="font-semibold text-orange-900">Comprador</p>
+              <p>{saleItem.expand?.venda_id?.expand?.cliente_id?.nome_razao_social || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="font-semibold text-orange-900">Valor Final</p>
+              <p>
+                R$ {((saleItem.valor_unitario || 0) - (saleItem.desconto_aplicado || 0)).toFixed(2)}
+              </p>
+            </div>
+            <div>
+              <p className="font-semibold text-orange-900">Lote Origem</p>
+              <p>{saleItem.expand?.lote_id_origem?.nome_lote || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="font-semibold text-orange-900">Pasto Origem</p>
+              <p>{saleItem.expand?.pastagem_id_origem?.nome || 'N/A'}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Tabs defaultValue="kpis" className="w-full">
         <TabsList className="mb-4 flex flex-wrap h-auto gap-1">

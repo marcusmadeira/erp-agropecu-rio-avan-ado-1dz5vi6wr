@@ -18,14 +18,21 @@ routerAdd(
         const recItem = new Record(itensCol)
         Object.keys(item).forEach((k) => recItem.set(k, item[k]))
         recItem.set('venda_id', record.id)
-        txApp.save(recItem)
 
         if (item.tipo_item === 'Animal' && item.animal_id) {
           const animal = txApp.findRecordById('animais', item.animal_id)
+          recItem.set('lote_id_origem', animal.get('lote_atual_id'))
+          recItem.set('pastagem_id_origem', animal.get('piquete_atual_id'))
+          recItem.set('peso_momento_venda', animal.get('peso_atual_kg'))
+          recItem.set('status_anterior', animal.get('status'))
+
           animal.set('status', 'Vendido')
           txApp.save(animal)
         } else if (item.tipo_item === 'Lote' && item.lote_id) {
           const lote = txApp.findRecordById('lotes', item.lote_id)
+          recItem.set('lote_id_origem', lote.id)
+          recItem.set('pastagem_id_origem', lote.get('piquete_atual_id'))
+
           const animaisNoLote = txApp.findRecordsByFilter(
             'animais',
             `lote_atual_id = '${item.lote_id}' && status != 'Vendido'`,
@@ -39,6 +46,8 @@ routerAdd(
           }
           txApp.save(lote)
         }
+
+        txApp.save(recItem)
       }
 
       const parcelasCol = txApp.findCollectionByNameOrId('parcelas_venda')

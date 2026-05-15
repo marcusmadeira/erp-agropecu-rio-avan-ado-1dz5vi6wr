@@ -1,29 +1,72 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, Loader2, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { getVenda, getItensVenda } from '@/services/financeiro_vendas'
 import ParcelasTab from './components/ParcelasTab'
+import pb from '@/lib/pocketbase/client'
+import { useToast } from '@/hooks/use-toast'
 
 export default function VendaDetalhes() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { toast } = useToast()
   const [venda, setVenda] = useState<any>(null)
   const [itens, setItens] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const loadData = () => {
     if (!id) return
+    setLoading(true)
     Promise.all([getVenda(id), getItensVenda(id)])
       .then(([v, i]) => {
         setVenda(v)
         setItens(i)
       })
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadData()
   }, [id])
+
+  const handleCancelSale = async () => {
+    if (!venda) return
+    try {
+      const parcelas = await pb
+        .collection('parcelas_venda')
+        .getFullList({ filter: `venda_id='${venda.id}'` })
+      const hasPaid = parcelas.some((p) => p.status_parcela === 'Paga')
+
+      if (hasPaid) {
+        if (
+          !window.confirm(
+            'Atenção: Esta venda possui parcelas pagas! O cancelamento irá reverter os animais e cancelar parcelas pendentes, mas o estorno financeiro deverá ser feito manualmente. Deseja continuar?',
+          )
+        )
+          return
+      } else {
+        if (
+          !window.confirm(
+            'Deseja realmente cancelar esta venda? O status e a localização dos animais serão revertidos.',
+          )
+        )
+          return
+      }
+
+      await pb.send(`/backend/v1/vendas/${venda.id}/cancelar`, { method: 'POST' })
+      toast({
+        title: 'Venda Cancelada',
+        description: 'Os animais retornaram aos seus lotes de origem.',
+      })
+      loadData()
+    } catch (err: any) {
+      toast({ title: 'Erro ao cancelar venda', description: err.message, variant: 'destructive' })
+    }
+  }
 
   if (loading) {
     return (
@@ -44,7 +87,27 @@ export default function VendaDetalhes() {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Detalhes da Venda</h1>
-        <Badge className="bg-emerald-100 text-emerald-800 border-0">{venda.status_venda}</Badge>
+        <Badge
+          className={
+            venda.status_venda === 'Cancelada'
+              ? 'bg-red-100 text-red-800'
+              : 'bg-emerald-100 text-emerald-800 border-0'
+          }
+        >
+          {venda.status_venda}
+        </Badge>
+        <div className="ml-auto">
+          {venda.status_venda !== 'Cancelada' && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleCancelSale}
+              className="flex items-center gap-2"
+            >
+              <XCircle className="w-4 h-4" /> Cancelar Venda
+            </Button>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="financeiro" className="w-full">
