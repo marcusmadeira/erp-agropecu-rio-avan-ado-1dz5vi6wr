@@ -38,6 +38,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Label } from '@/components/ui/label'
+import { BillingAlertsWidget } from '@/components/cobrancas/BillingAlertsWidget'
 
 const formatCurrency = (val: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
@@ -278,6 +279,8 @@ export default function Dashboard() {
           </Popover>
         </div>
       </div>
+
+      <BillingAlertsWidget />
 
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
         <Card className="shadow-sm border-l-4 border-l-[#16a34a]">

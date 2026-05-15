@@ -11,6 +11,7 @@ import ReguaCobranca from './recebimentos/ReguaCobranca'
 import PrevisaoBenchmarking from './recebimentos/PrevisaoBenchmarking'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
+import { BillingAlertsWidget } from '@/components/cobrancas/BillingAlertsWidget'
 
 export default function RecebimentoBoletos() {
   const [boletos, setBoletos] = useState<any[]>([])
@@ -55,6 +56,8 @@ export default function RecebimentoBoletos() {
           Gestão centralizada de recebíveis, inadimplência e previsão de fluxo de caixa.
         </p>
       </div>
+
+      <BillingAlertsWidget />
 
       <Tabs defaultValue="listagem" className="w-full">
         <TabsList className="grid grid-cols-1 md:grid-cols-4 w-full h-auto gap-2 bg-transparent">
