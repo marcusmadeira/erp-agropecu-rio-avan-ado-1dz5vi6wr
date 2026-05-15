@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils'
 import { updateDespesa } from '@/services/despesas'
 import pb from '@/lib/pocketbase/client'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 export default function DespesaFormDialog({ open, onOpenChange, initialData, onSuccess }: any) {
   const [fornecedores, setFornecedores] = useState<any[]>([])
@@ -91,28 +92,43 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!fornecedorId) {
+      toast.error('Selecione um fornecedor.')
+      return
+    }
+
     setLoading(true)
     const formData = new FormData(e.currentTarget)
 
-    formData.set('valor_total', valorTotal.toString())
-    formData.set('valor', valorTotal.toString())
-    formData.set('quantidade_parcelas', qtdParcelas.toString())
-    formData.set('valor_parcela', (Number(valorTotal) / qtdParcelas).toFixed(2))
-
-    const dataObj = Object.fromEntries(formData.entries()) as any
-    dataObj.vencimentos_parcelas = vencimentos
+    const dataObj: any = {
+      fornecedor_id: fornecedorId,
+      data_despesa: formData.get('data_despesa'),
+      tipo_despesa: formData.get('tipo_despesa'),
+      valor_total: Number(valorTotal),
+      valor: Number(valorTotal),
+      quantidade_parcelas: qtdParcelas,
+      valor_parcela: Number((Number(valorTotal) / qtdParcelas).toFixed(2)),
+      centro_custo: formData.get('centro_custo'),
+      classificacao_custo: formData.get('classificacao_custo'),
+      descricao: formData.get('descricao'),
+      vencimentos_parcelas: vencimentos,
+    }
 
     try {
-      if (initialData) await updateDespesa(initialData.id, dataObj)
-      else await pb.collection('despesas').create(dataObj)
-      toast.success('Salvo com sucesso!')
+      if (initialData) {
+        await updateDespesa(initialData.id, dataObj)
+        toast.success('Despesa atualizada com sucesso!')
+      } else {
+        await pb.collection('despesas').create(dataObj)
+        toast.success('Despesa criada com sucesso!')
+      }
       onSuccess()
       onOpenChange(false)
     } catch (err: any) {
       if (err.status === 0 || err.message === 'Failed to fetch' || err.name === 'TypeError') {
         toast.error('Erro de conexão: Não foi possível salvar a despesa. Verifique sua internet.')
       } else {
-        toast.error(err.message || 'Erro inesperado ao salvar despesa.')
+        toast.error(getErrorMessage(err) || 'Erro inesperado ao salvar despesa.')
       }
     } finally {
       setLoading(false)
@@ -138,10 +154,18 @@ export default function DespesaFormDialog({ open, onOpenChange, initialData, onS
         </div>
         <ScrollArea className="flex-1 px-6">
           <form id="despesa-form" onSubmit={onSubmit} className="space-y-4 py-2">
+            {initialData && (
+              <div className="bg-amber-50 text-amber-900 p-3 rounded-md text-sm border border-amber-200">
+                <strong>Atenção:</strong> A edição desta despesa não atualizará as parcelas já
+                geradas. Gerencie os pagamentos individualmente na seção de contas a pagar.
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2 flex flex-col">
-                <Label>Fornecedor</Label>
-                <input type="hidden" name="fornecedor_id" value={fornecedorId} required />
+                <Label>
+                  Fornecedor <span className="text-red-500">*</span>
+                </Label>
+                <input type="hidden" name="fornecedor_id" value={fornecedorId} />
                 <Popover open={openFornecedor} onOpenChange={setOpenFornecedor}>
                   <PopoverTrigger asChild>
                     <Button
