@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Loader2 } from 'lucide-react'
 import { RebanhoTab } from '@/components/desempenho/RebanhoTab'
 import { EstoqueTab } from '@/components/desempenho/EstoqueTab'
+import { ConsumoDesempenhoTab } from '@/components/desempenho/ConsumoDesempenhoTab'
 import { useAuth } from '@/hooks/use-auth'
 import { ExportButtons } from '@/components/ExportButtons'
 import { exportToPDF, exportToExcel } from '@/lib/export'
@@ -47,6 +48,7 @@ export default function Desempenho() {
   }
 
   const handleExportPDF = () => {
+    if (activeTab === 'consumo') return
     if (activeTab === 'rebanho') {
       exportToPDF({
         title: 'Desempenho - Rebanho',
@@ -74,6 +76,7 @@ export default function Desempenho() {
   }
 
   const handleExportExcel = () => {
+    if (activeTab === 'consumo') return
     if (activeTab === 'rebanho') {
       exportToExcel({
         title: 'Desempenho - Rebanho',
@@ -109,11 +112,13 @@ export default function Desempenho() {
             Monitoramento em tempo real do Rebanho e Estoque.
           </p>
         </div>
-        <ExportButtons onExportPDF={handleExportPDF} onExportExcel={handleExportExcel} />
+        {activeTab !== 'consumo' && (
+          <ExportButtons onExportPDF={handleExportPDF} onExportExcel={handleExportExcel} />
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-white border mb-4">
+        <TabsList className="bg-white border mb-4 flex flex-wrap h-auto">
           <TabsTrigger
             value="rebanho"
             className="data-[state=active]:bg-[#0f172a] data-[state=active]:text-white"
@@ -126,6 +131,12 @@ export default function Desempenho() {
           >
             Estoque
           </TabsTrigger>
+          <TabsTrigger
+            value="consumo"
+            className="data-[state=active]:bg-[#0f172a] data-[state=active]:text-white"
+          >
+            Consumo vs Desempenho
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="rebanho">
@@ -134,6 +145,10 @@ export default function Desempenho() {
 
         <TabsContent value="estoque">
           <EstoqueTab estoque={estoque} />
+        </TabsContent>
+
+        <TabsContent value="consumo">
+          <ConsumoDesempenhoTab />
         </TabsContent>
       </Tabs>
     </div>
