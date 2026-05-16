@@ -275,11 +275,11 @@ export default function PontoOtimoVenda() {
         <Alert className="bg-rose-50 border-rose-200 text-rose-800 mb-6">
           <AlertTriangle className="h-4 w-4 text-rose-600" />
           <AlertTitle className="font-semibold text-rose-900">
-            Preço de Referência Ausente
+            Aguardando atualização do preço da arroba
           </AlertTitle>
           <AlertDescription>
-            Não há preço de arroba registrado no mercado. Atualize o painel de mercado para
-            projeções corretas.
+            Não há preço de arroba registrado no mercado. Atualize a Carga Inicial de Implantação ou
+            o painel de mercado para habilitar as projeções.
           </AlertDescription>
         </Alert>
       )}

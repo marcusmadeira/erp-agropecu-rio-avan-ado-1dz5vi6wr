@@ -29,18 +29,20 @@ import { RelatorioSimuladorDialog } from './RelatorioSimuladorDialog'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import pb from '@/lib/pocketbase/client'
 import { useAuth } from '@/hooks/use-auth'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { AlertTriangle } from 'lucide-react'
 
 const defaultInputs: SimInputs = {
   tipo_operacao: 'TIP',
   quantidade_animais: 100,
   peso_entrada: 300,
-  preco_compra: 220,
+  preco_compra: 0,
   custo_acao: 5,
   custo_mao_obra: 1,
   custo_adicionais: 0.5,
   gmd_estimado: 1.2,
   dias_duracao: 90,
-  preco_venda: 230,
+  preco_venda: 0,
 }
 
 export function SimuladorTab() {
@@ -191,8 +193,25 @@ export function SimuladorTab() {
     setLoading(false)
   }
 
+  const precoPendente = !inputs.preco_venda || !inputs.preco_compra
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      {precoPendente && !loading && (
+        <div className="xl:col-span-3">
+          <Alert className="bg-amber-50 border-amber-200 text-amber-800">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="font-semibold text-amber-900">
+              Aguardando atualização do preço da arroba
+            </AlertTitle>
+            <AlertDescription>
+              Os cálculos projetados estão bloqueados pois não há referência de preço válida.
+              Atualize na Carga Inicial ou no Painel de Mercado para habilitar a simulação.
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+
       <div className="xl:col-span-3 mb-2 bg-emerald-50/50 p-4 border border-emerald-100 rounded-lg">
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="flex-1 space-y-2 w-full max-w-sm">
@@ -361,124 +380,128 @@ export function SimuladorTab() {
           </div>
           <Button
             onClick={handleSave}
-            disabled={loading}
-            className="w-full mt-4 bg-[#094016] hover:bg-[#094016]/90 text-white"
+            disabled={loading || precoPendente}
+            className="w-full mt-4 bg-[#094016] hover:bg-[#094016]/90 text-white disabled:opacity-50"
           >
             Salvar Simulação
           </Button>
         </CardContent>
       </Card>
 
-      <div className="xl:col-span-2 space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-[#094016] text-white md:col-span-2">
-            <CardContent className="pt-6">
-              <div className="text-sm text-emerald-100">
-                Resultado Incremental (Espera de {inputs.dias_duracao} dias)
-              </div>
-              <div className="text-3xl font-bold">
-                R${' '}
-                {res.resultado_incremental.toLocaleString('pt-BR', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </div>
-              <div className="text-xs text-emerald-200 mt-2">
-                Lucro Hoje: R${' '}
-                {res.lucro_hoje.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} → Lucro
-                Projetado: R${' '}
-                {res.lucro_bruto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </div>
-            </CardContent>
-          </Card>
+      {!precoPendente && (
+        <div className="xl:col-span-2 space-y-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="bg-[#094016] text-white md:col-span-2">
+              <CardContent className="pt-6">
+                <div className="text-sm text-emerald-100">
+                  Resultado Incremental (Espera de {inputs.dias_duracao} dias)
+                </div>
+                <div className="text-3xl font-bold">
+                  R${' '}
+                  {res.resultado_incremental.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
+                <div className="text-xs text-emerald-200 mt-2">
+                  Lucro Hoje: R${' '}
+                  {res.lucro_hoje.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} → Lucro
+                  Projetado: R${' '}
+                  {res.lucro_bruto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-sm text-muted-foreground">ROI Projetado</div>
+                <div className="text-2xl font-bold">{res.roi.toFixed(2)}%</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-sm text-muted-foreground">Margem de Lucro</div>
+                <div className="text-2xl font-bold">{res.margem_lucro.toFixed(2)}%</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-sm text-muted-foreground">Ponto de Equilíbrio</div>
+                <div className="text-2xl font-bold">R$ {res.ponto_equilibrio.toFixed(2)} /@</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-sm text-muted-foreground">Custo @ Produzida</div>
+                <div className="text-2xl font-bold">R$ {res.custo_arroba_produzida.toFixed(2)}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-sm text-muted-foreground">Peso Final Estimado</div>
+                <div className="text-2xl font-bold">{res.peso_final.toFixed(1)} kg</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-sm text-muted-foreground">Arrobas Produzidas</div>
+                <div className="text-2xl font-bold">
+                  {res.arrobas_produzidas_total.toFixed(1)} @
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <RelatorioSimuladorDialog
+            sim={ultimaSimulacao}
+            open={reportOpen}
+            onOpenChange={setReportOpen}
+          />
 
           <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">ROI Projetado</div>
-              <div className="text-2xl font-bold">{res.roi.toFixed(2)}%</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">Margem de Lucro</div>
-              <div className="text-2xl font-bold">{res.margem_lucro.toFixed(2)}%</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">Ponto de Equilíbrio</div>
-              <div className="text-2xl font-bold">R$ {res.ponto_equilibrio.toFixed(2)} /@</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">Custo @ Produzida</div>
-              <div className="text-2xl font-bold">R$ {res.custo_arroba_produzida.toFixed(2)}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">Peso Final Estimado</div>
-              <div className="text-2xl font-bold">{res.peso_final.toFixed(1)} kg</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">Arrobas Produzidas</div>
-              <div className="text-2xl font-bold">{res.arrobas_produzidas_total.toFixed(1)} @</div>
+            <CardHeader>
+              <CardTitle>Análise de Sensibilidade (Lucro vs Preço de Venda)</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              <ChartContainer
+                config={{ lucro: { label: 'Lucro Projetado (R$)', color: 'hsl(var(--chart-1))' } }}
+                className="h-full w-full"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={res.sensibilidade}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="cenario" />
+                    <YAxis />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ReferenceLine
+                      y={res.lucro_hoje}
+                      stroke="#f59e0b"
+                      strokeDasharray="3 3"
+                      label={{
+                        position: 'insideTopLeft',
+                        value: 'Lucro Hoje',
+                        fill: '#f59e0b',
+                        fontSize: 12,
+                      }}
+                    />
+                    <ReferenceLine y={0} stroke="red" strokeDasharray="3 3" />
+                    <Line
+                      type="monotone"
+                      dataKey="lucro"
+                      stroke="#094016"
+                      strokeWidth={3}
+                      dot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         </div>
-
-        <RelatorioSimuladorDialog
-          sim={ultimaSimulacao}
-          open={reportOpen}
-          onOpenChange={setReportOpen}
-        />
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Análise de Sensibilidade (Lucro vs Preço de Venda)</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            <ChartContainer
-              config={{ lucro: { label: 'Lucro Projetado (R$)', color: 'hsl(var(--chart-1))' } }}
-              className="h-full w-full"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={res.sensibilidade}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="cenario" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <ReferenceLine
-                    y={res.lucro_hoje}
-                    stroke="#f59e0b"
-                    strokeDasharray="3 3"
-                    label={{
-                      position: 'insideTopLeft',
-                      value: 'Lucro Hoje',
-                      fill: '#f59e0b',
-                      fontSize: 12,
-                    }}
-                  />
-                  <ReferenceLine y={0} stroke="red" strokeDasharray="3 3" />
-                  <Line
-                    type="monotone"
-                    dataKey="lucro"
-                    stroke="#094016"
-                    strokeWidth={3}
-                    dot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
+      )}
     </div>
   )
 }
