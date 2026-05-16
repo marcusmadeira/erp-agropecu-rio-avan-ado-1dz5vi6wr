@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-16T13:09:02.595Z",
+  "generatedAt": "2026-05-16T13:20:32.292Z",
   "collections": [
     {
       "name": "users",
@@ -421,6 +421,19 @@
             "comercial",
             "PO"
           ]
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Ativo", "Finalizado"]
+        },
+        {
+          "name": "data_fechamento",
+          "type": "date",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [

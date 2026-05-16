@@ -75,6 +75,7 @@ import Reclassificacao from './pages/rebanho/Reclassificacao'
 import Reproducao from './pages/reproducao/Reproducao'
 import MetasKPIs from './pages/estrategia/MetasKPIs'
 import SimuladorCenarios from './pages/estrategia/SimuladorCenarios'
+import FechamentoLotes from './pages/estrategia/FechamentoLotes'
 import DashboardEstoque from './pages/estoque/DashboardEstoque'
 import PlanejamentoCompras from './pages/estoque/PlanejamentoCompras'
 import CadastroManual from './pages/estoque/CadastroManual'
@@ -396,6 +397,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute>
             <SimuladorCenarios />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/fechamento-lotes"
+        element={
+          <AuthorizeRoute>
+            <FechamentoLotes />
           </AuthorizeRoute>
         }
       />
