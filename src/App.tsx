@@ -187,7 +187,7 @@ const AppRoutes = () => (
         }
       />
       <Route
-        path="/admin/carga-inicial"
+        path="/admin/setup-inicial"
         element={
           <AuthorizeRoute>
             <CargaInicial />

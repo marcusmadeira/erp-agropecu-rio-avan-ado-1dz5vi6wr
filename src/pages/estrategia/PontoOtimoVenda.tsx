@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import {
   Target,
   TrendingUp,
@@ -275,11 +275,15 @@ export default function PontoOtimoVenda() {
         <Alert className="bg-rose-50 border-rose-200 text-rose-800 mb-6">
           <AlertTriangle className="h-4 w-4 text-rose-600" />
           <AlertTitle className="font-semibold text-rose-900">
-            Aguardando atualização do preço da arroba
+            Acesso Bloqueado: Realize a carga inicial do preço da arroba no Setup Inicial.
           </AlertTitle>
           <AlertDescription>
-            Não há preço de arroba registrado no mercado. Atualize a Carga Inicial de Implantação ou
-            o painel de mercado para habilitar as projeções.
+            Não há preço de arroba registrado no mercado. Atualize o Setup Inicial para habilitar as
+            projeções.
+            <br />
+            <Link to="/admin/setup-inicial" className="underline font-medium hover:text-rose-900">
+              Ir para o Setup Inicial
+            </Link>
           </AlertDescription>
         </Alert>
       )}
@@ -303,6 +307,10 @@ export default function PontoOtimoVenda() {
               <Skeleton className="h-10 w-full rounded-md" />
               <Skeleton className="h-10 w-full rounded-md" />
               <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+          ) : precoArrobaRef === 0 ? (
+            <div className="p-8 text-center text-slate-500">
+              O acesso a este módulo requer um preço de arroba válido.
             </div>
           ) : analises.length === 0 ? (
             <div className="p-8 text-center text-slate-500">

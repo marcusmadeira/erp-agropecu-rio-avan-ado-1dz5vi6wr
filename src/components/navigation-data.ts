@@ -121,7 +121,7 @@ export const navigationMenu = [
       },
       { title: 'Auditoria', url: '/auditoria', icon: ShieldCheck, roles: [1, 2, 3] },
       { title: 'Sanitização Técnica', url: '/sanitizacao', icon: FileText, roles: [1] },
-      { title: 'Carga Inicial', url: '/admin/carga-inicial', icon: PackagePlus, roles: [1, 2] },
+      { title: 'Setup Inicial', url: '/admin/setup-inicial', icon: PackagePlus, roles: [1, 2] },
       { title: 'Novo Usuário', url: '/usuarios/novo', icon: Users, roles: [1, 2, 3] },
     ],
   },

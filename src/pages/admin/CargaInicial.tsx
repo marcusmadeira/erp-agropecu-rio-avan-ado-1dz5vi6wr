@@ -139,11 +139,12 @@ export default function CargaInicial() {
       await createAuditoria({
         usuario_id: user?.id || '',
         tipo_acao: 'UPDATE',
-        tabela_afetada: 'estoque_insumos_carga_inicial',
+        tabela_afetada: 'estoque_insumos',
         registro_id: insumo.id,
         dados_anteriores: JSON.stringify({ quantidade_atual: insumo.quantidade_atual }),
         dados_novos: JSON.stringify({ quantidade_atual: saldoFisico }),
-        description: `Ajuste de Carga Inicial. Diferença: ${diff}. Justificativa: ${justificativa}`,
+        description: `Setup Inicial: Ajuste de estoque. Diferença: ${diff}. Justificativa: ${justificativa}`,
+        status: 'SUCCESS',
       })
 
       toast({ title: 'Sucesso', description: 'Estoque ajustado com sucesso!' })
@@ -199,10 +200,11 @@ export default function CargaInicial() {
       await createAuditoria({
         usuario_id: user?.id || '',
         tipo_acao: 'CREATE',
-        tabela_afetada: 'precos_mercado_carga_inicial',
+        tabela_afetada: 'precos_mercado',
         registro_id: record.id,
         dados_novos: JSON.stringify({ preco_arroba: val, data: precoData }),
-        description: `Registro de preço base (Carga Inicial). Valor: R$ ${val}`,
+        description: `Setup Inicial: Registro de preço base. Valor: R$ ${val}`,
+        status: 'SUCCESS',
       })
 
       toast({ title: 'Sucesso', description: 'Preço de mercado registrado com sucesso!' })
@@ -222,8 +224,7 @@ export default function CargaInicial() {
           <ShieldAlert className="h-5 w-5 text-rose-600" />
           <AlertTitle className="font-semibold text-rose-900">Acesso Restrito</AlertTitle>
           <AlertDescription>
-            A Carga Inicial de Implantação é restrita a usuários com perfil de Gerente ou
-            Administrador.
+            O Setup Inicial é restrito a usuários com perfil de Gerente ou Administrador.
           </AlertDescription>
         </Alert>
       </div>
@@ -237,9 +238,7 @@ export default function CargaInicial() {
           <Package className="w-6 h-6 text-indigo-600" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-            Carga Inicial de Implantação
-          </h1>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Setup Inicial</h1>
           <p className="text-slate-500 mt-1">
             Insira a contagem física e preços de referência para liberar os cálculos do ERP.
           </p>

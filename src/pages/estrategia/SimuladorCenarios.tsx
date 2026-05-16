@@ -3,13 +3,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SimuladorTab } from './components/SimuladorTab'
 import { ComparativoTab } from './components/ComparativoTab'
 import { HistoricoTab } from './components/HistoricoTab'
-import { Calculator, Info } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Calculator, Info, AlertTriangle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import pb from '@/lib/pocketbase/client'
 
 export default function SimuladorCenarios() {
   const [hasPrefill, setHasPrefill] = useState(false)
   const [mercadoData, setMercadoData] = useState<{ preco: number; data: string } | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadMercado = async () => {
@@ -25,6 +27,8 @@ export default function SimuladorCenarios() {
         }
       } catch {
         /* intentionally ignored */
+      } finally {
+        setLoading(false)
       }
     }
     loadMercado()
@@ -56,33 +60,51 @@ export default function SimuladorCenarios() {
         </div>
       </div>
 
-      {hasPrefill && (
-        <Alert className="bg-indigo-50 border-indigo-200 text-indigo-800">
-          <Info className="h-4 w-4 text-indigo-600" />
-          <AlertTitle className="font-semibold text-indigo-900">Dados Integrados</AlertTitle>
+      {loading ? (
+        <div className="h-64 flex items-center justify-center text-slate-500">Carregando...</div>
+      ) : !mercadoData || mercadoData.preco === 0 ? (
+        <Alert className="bg-rose-50 border-rose-200 text-rose-800">
+          <AlertTriangle className="h-4 w-4 text-rose-600" />
+          <AlertTitle className="font-semibold text-rose-900">
+            Acesso Bloqueado: Realize a carga inicial do preço da arroba no Setup Inicial.
+          </AlertTitle>
           <AlertDescription>
-            Dados carregados do Semáforo de Ponto Ótimo de Venda. Os valores foram pré-preenchidos
-            no simulador.
+            <Link to="/admin/setup-inicial" className="underline font-medium hover:text-rose-900">
+              Ir para o Setup Inicial
+            </Link>
           </AlertDescription>
         </Alert>
-      )}
+      ) : (
+        <>
+          {hasPrefill && (
+            <Alert className="bg-indigo-50 border-indigo-200 text-indigo-800 mb-6">
+              <Info className="h-4 w-4 text-indigo-600" />
+              <AlertTitle className="font-semibold text-indigo-900">Dados Integrados</AlertTitle>
+              <AlertDescription>
+                Dados carregados do Semáforo de Ponto Ótimo de Venda. Os valores foram
+                pré-preenchidos no simulador.
+              </AlertDescription>
+            </Alert>
+          )}
 
-      <Tabs defaultValue="simulador" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="simulador">Simulador Interativo</TabsTrigger>
-          <TabsTrigger value="comparativo">Comparativo</TabsTrigger>
-          <TabsTrigger value="historico">Histórico & Auditoria</TabsTrigger>
-        </TabsList>
-        <TabsContent value="simulador">
-          <SimuladorTab />
-        </TabsContent>
-        <TabsContent value="comparativo">
-          <ComparativoTab />
-        </TabsContent>
-        <TabsContent value="historico">
-          <HistoricoTab />
-        </TabsContent>
-      </Tabs>
+          <Tabs defaultValue="simulador" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="simulador">Simulador Interativo</TabsTrigger>
+              <TabsTrigger value="comparativo">Comparativo</TabsTrigger>
+              <TabsTrigger value="historico">Histórico & Auditoria</TabsTrigger>
+            </TabsList>
+            <TabsContent value="simulador">
+              <SimuladorTab />
+            </TabsContent>
+            <TabsContent value="comparativo">
+              <ComparativoTab />
+            </TabsContent>
+            <TabsContent value="historico">
+              <HistoricoTab />
+            </TabsContent>
+          </Tabs>
+        </>
+      )}
     </div>
   )
 }
