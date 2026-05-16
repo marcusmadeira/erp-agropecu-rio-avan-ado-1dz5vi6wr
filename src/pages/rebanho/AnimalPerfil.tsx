@@ -1,20 +1,20 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { getAnimal } from '@/services/animais'
-import { getPesagens } from '@/services/pesagens'
-import { ArrowLeft, Edit, InfoIcon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { useParams } from 'react-router-dom'
+import { getAnimal, getRentabilidadeAnimal } from '@/services/animais'
+import { getHistoricoPesagem } from '@/services/pesagens'
+import { createAuditoria } from '@/services/auditoria'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AnimalHeader } from '@/components/animais/AnimalHeader'
+import { AnimalTimeline } from '@/components/animais/AnimalTimeline'
+import { AnimalGenetica } from '@/components/animais/AnimalGenetica'
+import { AnimalSanitario } from '@/components/animais/AnimalSanitario'
+import { AnimalFinanceiro } from '@/components/animais/AnimalFinanceiro'
 import { AnimalKPIs } from '@/components/animais/AnimalKPIs'
-import { AnimalReclassificacao } from '@/components/animais/AnimalReclassificacao'
 import { AnimalHistory } from '@/components/animais/AnimalHistory'
 import { AnimalReproducao } from '@/components/animais/AnimalReproducao'
+import { AnimalReclassificacao } from '@/components/animais/AnimalReclassificacao'
 import AnimalForm from '@/pages/cadastros/AnimalForm'
 import { useRealtime } from '@/hooks/use-realtime'
-import { getRentabilidadeAnimal } from '@/services/animais'
-import { getHistoricoPesagem } from '@/services/pesagens'
-import { format } from 'date-fns'
 import pb from '@/lib/pocketbase/client'
 
 export default function AnimalPerfil() {
@@ -30,9 +30,9 @@ export default function AnimalPerfil() {
     if (!id) return
     try {
       const [aData, pData, rData] = await Promise.all([
-        getAnimal(id),
+        getAnimal(id, { expand: 'lote_atual_id,piquete_atual_id,pai_id,mae_id' }),
         getHistoricoPesagem(id),
-        getRentabilidadeAnimal(id),
+        getRentabilidadeAnimal(id).catch(() => null),
       ])
       setAnimal(aData)
       setPesagens(pData)
@@ -41,7 +41,7 @@ export default function AnimalPerfil() {
       if (aData.status === 'Vendido') {
         const vendas = await pb.collection('itens_venda').getFullList({
           filter: `animal_id='${id}'`,
-          expand: 'venda_id,venda_id.cliente_id,lote_id_origem,pastagem_id_origem',
+          expand: 'venda_id,venda_id.cliente_id',
           sort: '-created',
         })
         if (vendas.length > 0) setSaleItem(vendas[0])
@@ -57,6 +57,15 @@ export default function AnimalPerfil() {
 
   useEffect(() => {
     loadData()
+    if (id && pb.authStore.record?.id) {
+      createAuditoria({
+        usuario_id: pb.authStore.record.id,
+        tipo_acao: 'READ',
+        tabela_afetada: 'animais',
+        registro_id: id,
+        description: 'Visualização da ficha completa do animal',
+      }).catch(() => {}) // Ignore audit errors to not break UX
+    }
   }, [id])
 
   useRealtime('pesagens_diarias', loadData)
@@ -73,132 +82,44 @@ export default function AnimalPerfil() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" asChild>
-            <Link to="/animais">
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-          </Button>
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-[#094016] flex items-center gap-3">
-              {animal.nome || `Brinco ${animal.id_manejo_brinco}`}
-              <Badge variant="secondary" className="bg-[#094016]/10 text-[#094016]">
-                {animal.categoria}
-              </Badge>
-              <Badge variant="outline" className="border-slate-300">
-                {animal.status}
-              </Badge>
-            </h2>
-            <p className="text-muted-foreground mt-1">
-              Brinco:{' '}
-              <span className="font-semibold text-slate-700">
-                {animal.id_manejo_brinco || 'N/A'}
-              </span>{' '}
-              | Lote Atual:{' '}
-              <span className="font-semibold text-slate-700">
-                {animal.expand?.lote_atual?.nome_lote || 'Nenhum'}
-              </span>{' '}
-              | Sexo: <span className="font-semibold text-slate-700">{animal.sexo || 'N/A'}</span>
-            </p>
-          </div>
-        </div>
-        <Button
-          onClick={() => setFormOpen(true)}
-          className="bg-[#094016] hover:bg-[#094016]/90 text-white"
-        >
-          <Edit className="w-4 h-4 mr-2" /> Editar Animal
-        </Button>
-      </div>
+      <AnimalHeader animal={animal} pesagens={pesagens} onEdit={() => setFormOpen(true)} />
 
-      {animal.status === 'Vendido' && saleItem && (
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-5 mb-2">
-          <h3 className="text-orange-900 font-bold mb-3 flex items-center gap-2">
-            <InfoIcon className="w-5 h-5" /> Histórico de Venda
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm text-orange-800">
-            <div>
-              <p className="font-semibold text-orange-900">Data da Venda</p>
-              <p>
-                {saleItem.expand?.venda_id?.data_venda
-                  ? format(new Date(saleItem.expand.venda_id.data_venda), 'dd/MM/yyyy')
-                  : 'N/A'}
-              </p>
-            </div>
-            <div className="col-span-2">
-              <p className="font-semibold text-orange-900">Comprador</p>
-              <p>{saleItem.expand?.venda_id?.expand?.cliente_id?.nome_razao_social || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="font-semibold text-orange-900">Valor Final</p>
-              <p>
-                R$ {((saleItem.valor_unitario || 0) - (saleItem.desconto_aplicado || 0)).toFixed(2)}
-              </p>
-            </div>
-            <div>
-              <p className="font-semibold text-orange-900">Lote Origem</p>
-              <p>{saleItem.expand?.lote_id_origem?.nome_lote || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="font-semibold text-orange-900">Pasto Origem</p>
-              <p>{saleItem.expand?.pastagem_id_origem?.nome || 'N/A'}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <Tabs defaultValue="kpis" className="w-full">
+      <Tabs defaultValue="overview" className="w-full">
         <TabsList className="mb-4 flex flex-wrap h-auto gap-1">
-          <TabsTrigger value="kpis">Rentabilidade & KPIs</TabsTrigger>
-          <TabsTrigger value="history">Histórico de Pesagem</TabsTrigger>
-          {animal.sexo === 'Fêmea' && (
-            <TabsTrigger value="reproducao">Histórico Reprodutivo</TabsTrigger>
-          )}
-          <TabsTrigger value="reclass">Reclassificação & Descarte</TabsTrigger>
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="performance">Desempenho & Pesagens</TabsTrigger>
+          {animal.sexo === 'Fêmea' && <TabsTrigger value="repro">Reprodução</TabsTrigger>}
+          <TabsTrigger value="finance">Financeiro</TabsTrigger>
+          <TabsTrigger value="reclass">Reclassificação</TabsTrigger>
         </TabsList>
-        <TabsContent value="kpis">
-          {rentabilidade && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                <p className="text-sm font-bold text-slate-500 uppercase">Custo Total</p>
-                <p className="text-2xl font-bold text-slate-800">
-                  R$ {rentabilidade.custo_total?.toFixed(2) || '0.00'}
-                </p>
-              </div>
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                <p className="text-sm font-bold text-slate-500 uppercase">Receita Estimada</p>
-                <p className="text-2xl font-bold text-slate-800">
-                  R$ {rentabilidade.receita_estimada?.toFixed(2) || '0.00'}
-                </p>
-              </div>
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                <p className="text-sm font-bold text-slate-500 uppercase">Lucro</p>
-                <p
-                  className={`text-2xl font-bold ${rentabilidade.lucro >= 0 ? 'text-green-600' : 'text-red-600'}`}
-                >
-                  R$ {rentabilidade.lucro?.toFixed(2) || '0.00'}
-                </p>
-              </div>
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                <p className="text-sm font-bold text-slate-500 uppercase">ROI</p>
-                <p
-                  className={`text-2xl font-bold ${rentabilidade.roi >= 0 ? 'text-green-600' : 'text-red-600'}`}
-                >
-                  {rentabilidade.roi?.toFixed(2) || '0.00'}%
-                </p>
-              </div>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <AnimalTimeline animal={animal} pesagens={pesagens} />
             </div>
-          )}
-          <AnimalKPIs animal={animal} pesagens={pesagens} />
+            <div className="space-y-6">
+              <AnimalGenetica animal={animal} />
+              <AnimalSanitario pesagens={pesagens} />
+            </div>
+          </div>
         </TabsContent>
-        <TabsContent value="history">
+
+        <TabsContent value="performance" className="space-y-6">
+          <AnimalKPIs animal={animal} pesagens={pesagens} />
           <AnimalHistory pesagens={pesagens} animalId={animal.id} />
         </TabsContent>
+
         {animal.sexo === 'Fêmea' && (
-          <TabsContent value="reproducao">
+          <TabsContent value="repro">
             <AnimalReproducao animalId={animal.id} />
           </TabsContent>
         )}
+
+        <TabsContent value="finance">
+          <AnimalFinanceiro rentabilidade={rentabilidade} saleItem={saleItem} />
+        </TabsContent>
+
         <TabsContent value="reclass">
           <AnimalReclassificacao animal={animal} onReclassified={loadData} />
         </TabsContent>
