@@ -122,6 +122,18 @@ routerAdd(
       racaoRecord.set('usuario_id', authRecord.id)
       txApp.save(racaoRecord)
 
+      const audit = new Record(txApp.findCollectionByNameOrId('auditoria_movimentacoes'))
+      audit.set('usuario_id', authRecord.id)
+      audit.set('tipo_acao', 'CREATE')
+      audit.set('tabela_afetada', 'producao_racao')
+      audit.set('registro_id', racaoRecord.id)
+      audit.set(
+        'description',
+        `Produção de ${quantidade_kg} kg da receita ${formulacao.get('nome_formulacao')}`,
+      )
+      audit.set('status', 'SUCCESS')
+      txApp.save(audit)
+
       result = {
         sucesso: true,
         racao_id: racaoRecord.id,

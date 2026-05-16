@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-16T12:51:44.589Z",
+  "generatedAt": "2026-05-16T12:57:02.848Z",
   "collections": [
     {
       "name": "users",
@@ -1407,6 +1407,13 @@
           "required": false,
           "system": false,
           "collectionRef": "users"
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Ativo", "Inativo"]
         }
       ],
       "indexes": []
@@ -1578,6 +1585,12 @@
           "required": false,
           "system": false,
           "collectionRef": "users"
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -3382,7 +3395,13 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["ENTRADA_NOTA_FISCAL", "ENTRADA_MANUAL", "SAIDA_RACAO", "PRODUCAO_RACAO"]
+          "selectValues": [
+            "ENTRADA_NOTA_FISCAL",
+            "ENTRADA_MANUAL",
+            "SAIDA_RACAO",
+            "PRODUCAO_RACAO",
+            "SAIDA_MANUAL"
+          ]
         },
         {
           "name": "produto_id",
@@ -3454,6 +3473,12 @@
           "required": false,
           "system": false,
           "collectionRef": "formulacoes_racao"
+        },
+        {
+          "name": "motivo_ajuste",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []

@@ -12,6 +12,7 @@ export interface FormulacaoRacao {
   ingredientes: IngredienteReceita[]
   custo_kg_produzido: number
   usuario_id: string
+  status?: string
   created: string
   updated: string
 }

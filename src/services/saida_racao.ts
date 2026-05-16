@@ -5,6 +5,7 @@ export interface SaidaRacaoData {
   formulacao_id: string
   quantidade_kg: number
   data: string
+  observacoes?: string
 }
 
 export const registrarSaidaRacao = async (data: SaidaRacaoData) => {

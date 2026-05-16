@@ -13,6 +13,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { getErrorMessage, extractFieldErrors } from '@/lib/pocketbase/errors'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -28,6 +29,7 @@ const schema = z.object({
   formulacao_id: z.string().min(1, 'Formulação é obrigatória'),
   quantidade_kg: z.coerce.number().positive('Quantidade deve ser maior que zero'),
   data: z.string().min(1, 'Data é obrigatória'),
+  observacoes: z.string().optional(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -42,7 +44,11 @@ export default function SaidaRacao() {
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { data: new Date().toISOString().split('T')[0], quantidade_kg: 0 },
+    defaultValues: {
+      data: new Date().toISOString().split('T')[0],
+      quantidade_kg: 0,
+      observacoes: '',
+    },
   })
 
   const selectedLoteId = form.watch('lote_id')
@@ -198,6 +204,15 @@ export default function SaidaRacao() {
                 {form.formState.errors.data && (
                   <p className="text-sm text-destructive">{form.formState.errors.data.message}</p>
                 )}
+              </div>
+              <div className="space-y-2">
+                <Label>Observações</Label>
+                <Textarea
+                  placeholder="Opcional..."
+                  {...form.register('observacoes')}
+                  className="resize-none"
+                  rows={2}
+                />
               </div>
               <Button type="submit" className="w-full" disabled={submitting}>
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Registrar Saída
