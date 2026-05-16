@@ -64,6 +64,7 @@ export const navigationMenu = [
     title: 'Gestão Estratégica',
     items: [
       { title: 'Diagnóstico', url: '/diagnostico-inicial', icon: Target, roles: [1, 2, 3] },
+      { title: 'Ponto Ótimo de Venda', url: '/ponto-otimo', icon: Target, roles: [1, 2, 3] },
       { title: 'Metas', url: '/metas-kpis', icon: BarChart, roles: [1, 2, 3] },
       { title: 'Simulador', url: '/simulador-cenarios', icon: LineChart, roles: [1, 2, 3] },
       { title: 'Fechamento de Lotes', url: '/fechamento-lotes', icon: FileText, roles: [1, 2] },
