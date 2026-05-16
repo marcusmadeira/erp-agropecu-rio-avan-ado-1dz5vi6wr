@@ -1,217 +1,206 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
-import { AlertTriangle, ShieldAlert, Package, TrendingUp, CheckCircle2 } from 'lucide-react'
+import {
+  AlertTriangle,
+  ShieldAlert,
+  Package,
+  CheckCircle2,
+  DollarSign,
+  ListChecks,
+} from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { createAuditoria } from '@/services/auditoria'
+import { format } from 'date-fns'
 
-interface Insumo {
+const STANDARD_ITEMS = ['Milho', 'Farelo de soja', 'Sal mineral', 'Núcleo', 'Ureia']
+
+interface InsumoRow {
   id: string
   produto: string
-  quantidade_atual: number
-  unidade_medida: string
-}
-
-interface PrecoMercado {
-  id: string
-  data_registro: string
-  preco_arroba: number
-  fonte: string
-  regiao: string
+  quantidade: string
+  unidade: string
+  exists: boolean
+  original?: any
 }
 
 export default function CargaInicial() {
   const { user } = useAuth()
   const { toast } = useToast()
 
-  const [insumos, setInsumos] = useState<Insumo[]>([])
-  const [precos, setPrecos] = useState<PrecoMercado[]>([])
   const [loading, setLoading] = useState(false)
-
-  // Estoque state
-  const [saldosFisicos, setSaldosFisicos] = useState<Record<string, string>>({})
-  const [justificativas, setJustificativas] = useState<Record<string, string>>({})
-  const [adjustingId, setAdjustingId] = useState<string | null>(null)
-
-  // Preço state
-  const [precoData, setPrecoData] = useState(new Date().toISOString().split('T')[0])
+  const [dataLevantamento, setDataLevantamento] = useState(new Date().toISOString().split('T')[0])
   const [precoArroba, setPrecoArroba] = useState('')
-  const [precoRegiao, setPrecoRegiao] = useState('')
-  const [precoFonte, setPrecoFonte] = useState('Manual/Carga Inicial')
+  const [justificativa, setJustificativa] = useState('')
+  const [insumos, setInsumos] = useState<InsumoRow[]>([])
 
   const isAuthorized = user?.role === 'Admin' || user?.nivel_acesso === 'Gerente'
 
   useEffect(() => {
     if (isAuthorized) {
       loadInsumos()
-      loadPrecos()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthorized])
 
   const loadInsumos = async () => {
     try {
-      const records = await pb.collection('estoque_insumos').getFullList<Insumo>({
-        sort: 'produto',
-      })
-      setInsumos(records)
+      const existing = await pb.collection('estoque_insumos').getFullList({ sort: 'produto' })
+      const mapped: InsumoRow[] = existing.map((e) => ({
+        id: e.id,
+        produto: e.produto,
+        quantidade: e.quantidade_atual.toString(),
+        unidade: e.unidade_medida,
+        exists: true,
+        original: e,
+      }))
+
+      const missing = STANDARD_ITEMS.filter(
+        (std) => !mapped.some((m) => m.produto.toLowerCase() === std.toLowerCase()),
+      )
+
+      const missingRows = missing.map((m) => ({
+        id: `novo-${m}`,
+        produto: m,
+        quantidade: '',
+        unidade: 'kg',
+        exists: false,
+      }))
+
+      setInsumos([...missingRows, ...mapped])
     } catch (e) {
       console.error(e)
     }
   }
 
-  const loadPrecos = async () => {
-    try {
-      const records = await pb.collection('precos_mercado').getFullList<PrecoMercado>({
-        sort: '-data_registro',
-      })
-      setPrecos(records)
-    } catch (e) {
-      console.error(e)
-    }
+  const handleInsumoChange = (id: string, field: keyof InsumoRow, value: string) => {
+    setInsumos((prev) => prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)))
   }
 
-  const handleAjusteEstoque = async (insumo: Insumo) => {
-    const saldoFisicoStr = saldosFisicos[insumo.id]
-    const justificativa = justificativas[insumo.id]
-
-    if (!saldoFisicoStr || saldoFisicoStr.trim() === '') {
-      toast({ title: 'Erro', description: 'Informe o Saldo Físico Real.', variant: 'destructive' })
-      return
-    }
-
-    const saldoFisico = Number(saldoFisicoStr)
-    if (saldoFisico < 0) {
+  const handleExecuteLoad = async () => {
+    if (!dataLevantamento || !precoArroba || !justificativa) {
       toast({
-        title: 'Erro',
-        description: 'O saldo físico não pode ser negativo.',
+        title: 'Campos Obrigatórios',
+        description: 'Data do levantamento, Preço da Arroba e Justificativa são obrigatórios.',
         variant: 'destructive',
       })
       return
     }
 
-    if (!justificativa || justificativa.trim() === '') {
+    const invalidInsumos = insumos.filter(
+      (i) => i.quantidade.trim() === '' || isNaN(Number(i.quantidade)) || !i.unidade,
+    )
+    if (invalidInsumos.length > 0) {
       toast({
-        title: 'Erro',
-        description: 'A justificativa é obrigatória para o ajuste.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    const diff = saldoFisico - insumo.quantidade_atual
-
-    if (diff === 0) {
-      toast({
-        title: 'Aviso',
-        description: 'O saldo físico é igual ao saldo do sistema.',
-        variant: 'default',
-      })
-      return
-    }
-
-    setAdjustingId(insumo.id)
-    try {
-      const tipoMovimento = diff > 0 ? 'ENTRADA_MANUAL' : 'SAIDA_MANUAL'
-      const quantidadeMovimento = Math.abs(diff)
-
-      // 1. Save movimento
-      await pb.collection('estoque_movimentacoes').create({
-        tipo: tipoMovimento,
-        produto_id: insumo.id,
-        quantidade: quantidadeMovimento,
-        data: new Date().toISOString(),
-        usuario_id: user?.id,
-        motivo_ajuste: `Carga Inicial: ${justificativa}`,
-      })
-
-      // 2. Update insumo
-      await pb.collection('estoque_insumos').update(insumo.id, {
-        quantidade_atual: saldoFisico,
-      })
-
-      // 3. Audit
-      await createAuditoria({
-        usuario_id: user?.id || '',
-        tipo_acao: 'UPDATE',
-        tabela_afetada: 'estoque_insumos',
-        registro_id: insumo.id,
-        dados_anteriores: JSON.stringify({ quantidade_atual: insumo.quantidade_atual }),
-        dados_novos: JSON.stringify({ quantidade_atual: saldoFisico }),
-        description: `Setup Inicial: Ajuste de estoque. Diferença: ${diff}. Justificativa: ${justificativa}`,
-        status: 'SUCCESS',
-      })
-
-      toast({ title: 'Sucesso', description: 'Estoque ajustado com sucesso!' })
-
-      // Clear inputs for this item
-      setSaldosFisicos((prev) => ({ ...prev, [insumo.id]: '' }))
-      setJustificativas((prev) => ({ ...prev, [insumo.id]: '' }))
-
-      loadInsumos()
-    } catch (e: any) {
-      toast({ title: 'Erro', description: e.message, variant: 'destructive' })
-    } finally {
-      setAdjustingId(null)
-    }
-  }
-
-  const handleSalvarPreco = async () => {
-    if (!precoData || !precoArroba) {
-      toast({
-        title: 'Erro',
-        description: 'Data e Preço da Arroba são obrigatórios.',
+        title: 'Valores Inválidos',
+        description:
+          'Todos os insumos devem ter uma quantidade numérica válida e unidade preenchida.',
         variant: 'destructive',
       })
       return
     }
 
     setLoading(true)
+
     try {
-      // Check for duplicates
-      const check = await pb.collection('precos_mercado').getFullList({
-        filter: `data_registro >= "${precoData} 00:00:00" && data_registro <= "${precoData} 23:59:59"`,
-      })
+      const dataFormatada = format(new Date(dataLevantamento + 'T12:00:00Z'), 'dd/MM/yyyy')
+      const auditDesc = `Carga inicial de inventário e preço de arroba baseada em levantamento físico realizado em ${dataFormatada}. Motivo/Justificativa: ${justificativa}`
 
-      if (check.length > 0) {
-        toast({
-          title: 'Atenção',
-          description: 'Já existe um preço registrado para esta data.',
-          variant: 'destructive',
-        })
-        setLoading(false)
-        return
-      }
-
-      const val = Number(precoArroba)
-
-      const record = await pb.collection('precos_mercado').create({
-        data_registro: new Date(precoData + 'T12:00:00Z').toISOString(),
-        preco_arroba: val,
-        fonte: precoFonte,
-        regiao: precoRegiao,
+      const valPreco = Number(precoArroba)
+      const precoRecord = await pb.collection('precos_mercado').create({
+        data_registro: new Date(dataLevantamento + 'T12:00:00Z').toISOString(),
+        preco_arroba: valPreco,
+        fonte: 'Carga Inicial (Levantamento Físico)',
       })
 
       await createAuditoria({
         usuario_id: user?.id || '',
-        tipo_acao: 'CREATE',
+        tipo_acao: 'Criação',
         tabela_afetada: 'precos_mercado',
-        registro_id: record.id,
-        dados_novos: JSON.stringify({ preco_arroba: val, data: precoData }),
-        description: `Setup Inicial: Registro de preço base. Valor: R$ ${val}`,
+        registro_id: precoRecord.id,
+        dados_novos: JSON.stringify({ preco_arroba: valPreco, data: dataLevantamento }),
+        description: auditDesc,
         status: 'SUCCESS',
       })
 
-      toast({ title: 'Sucesso', description: 'Preço de mercado registrado com sucesso!' })
+      for (const insumo of insumos) {
+        const qtde = Number(insumo.quantidade)
+        if (insumo.exists) {
+          await pb.collection('estoque_insumos').update(insumo.id, {
+            quantidade_atual: qtde,
+            unidade_medida: insumo.unidade,
+          })
+
+          const diff = qtde - (insumo.original?.quantidade_atual || 0)
+          if (diff !== 0) {
+            await pb.collection('estoque_movimentacoes').create({
+              tipo: diff > 0 ? 'ENTRADA_MANUAL' : 'SAIDA_MANUAL',
+              produto_id: insumo.id,
+              quantidade: Math.abs(diff),
+              data: new Date().toISOString(),
+              usuario_id: user?.id,
+              motivo_ajuste: `Carga Inicial: ${justificativa}`,
+            })
+          }
+
+          await createAuditoria({
+            usuario_id: user?.id || '',
+            tipo_acao: 'UPDATE',
+            tabela_afetada: 'estoque_insumos',
+            registro_id: insumo.id,
+            dados_anteriores: JSON.stringify({
+              quantidade_atual: insumo.original?.quantidade_atual,
+            }),
+            dados_novos: JSON.stringify({ quantidade_atual: qtde }),
+            description: auditDesc,
+            status: 'SUCCESS',
+          })
+        } else {
+          const created = await pb.collection('estoque_insumos').create({
+            produto: insumo.produto,
+            quantidade_atual: qtde,
+            unidade_medida: insumo.unidade,
+            categoria: 'Outros',
+          })
+
+          await pb.collection('estoque_movimentacoes').create({
+            tipo: 'ENTRADA_MANUAL',
+            produto_id: created.id,
+            quantidade: qtde,
+            data: new Date().toISOString(),
+            usuario_id: user?.id,
+            motivo_ajuste: `Carga Inicial: ${justificativa}`,
+          })
+
+          await createAuditoria({
+            usuario_id: user?.id || '',
+            tipo_acao: 'Criação',
+            tabela_afetada: 'estoque_insumos',
+            registro_id: created.id,
+            dados_novos: JSON.stringify({ quantidade_atual: qtde, produto: insumo.produto }),
+            description: auditDesc,
+            status: 'SUCCESS',
+          })
+        }
+      }
+
+      toast({
+        title: 'Status Final: Sucesso',
+        description:
+          'Carga inicial executada. Todos os simuladores e dashboards foram destravados.',
+      })
+
       setPrecoArroba('')
-      loadPrecos()
+      setJustificativa('')
+      loadInsumos()
     } catch (e: any) {
-      toast({ title: 'Erro', description: e.message, variant: 'destructive' })
+      toast({ title: 'Status Final: Erro', description: e.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -224,7 +213,7 @@ export default function CargaInicial() {
           <ShieldAlert className="h-5 w-5 text-rose-600" />
           <AlertTitle className="font-semibold text-rose-900">Acesso Restrito</AlertTitle>
           <AlertDescription>
-            O Setup Inicial é restrito a usuários com perfil de Gerente ou Administrador.
+            A Carga Inicial é restrita a usuários com perfil de Gerente ou Administrador.
           </AlertDescription>
         </Alert>
       </div>
@@ -232,206 +221,165 @@ export default function CargaInicial() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in">
+    <div className="p-6 max-w-5xl mx-auto space-y-8 animate-fade-in">
       <div className="flex items-center gap-3">
         <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100">
-          <Package className="w-6 h-6 text-indigo-600" />
+          <ListChecks className="w-6 h-6 text-indigo-600" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Setup Inicial</h1>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Setup: Carga Inicial</h1>
           <p className="text-slate-500 mt-1">
-            Insira a contagem física e preços de referência para liberar os cálculos do ERP.
+            Execute o levantamento físico e libere as travas do sistema para simulações e
+            dashboards.
           </p>
         </div>
       </div>
 
       <Alert className="bg-amber-50 border-amber-200 text-amber-800">
         <AlertTriangle className="h-4 w-4 text-amber-600" />
-        <AlertTitle className="font-semibold text-amber-900">Atenção</AlertTitle>
+        <AlertTitle className="font-semibold text-amber-900">Atenção Crítica</AlertTitle>
         <AlertDescription>
-          Os dados inseridos aqui afetam diretamente as projeções, simuladores e custos do sistema.
-          Todas as alterações são registradas na trilha de auditoria.
+          A execução da Carga Inicial afeta diretamente as projeções financeiras, dashboards de
+          custos e cálculos de Ponto Ótimo de Venda. Todas as alterações geram registros permanentes
+          de auditoria.
         </AlertDescription>
       </Alert>
 
-      <Tabs defaultValue="estoque" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="estoque" className="gap-2">
-            <Package className="w-4 h-4" /> Estoque Físico (Insumos)
-          </TabsTrigger>
-          <TabsTrigger value="precos" className="gap-2">
-            <TrendingUp className="w-4 h-4" /> Preços de Mercado (Arroba)
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="estoque" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ajuste de Estoque Físico</CardTitle>
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <Card className="shadow-sm border-slate-200">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-emerald-600" />
+                Referência de Mercado
+              </CardTitle>
               <CardDescription>
-                Confronte o saldo atual do sistema com a contagem física real.
+                Defina o preço da arroba para habilitar os simuladores.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left border-collapse">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">
-                    <tr>
-                      <th className="px-4 py-3 font-semibold">Produto</th>
-                      <th className="px-4 py-3 font-semibold">Unidade</th>
-                      <th className="px-4 py-3 font-semibold text-right">Saldo Sistema</th>
-                      <th className="px-4 py-3 font-semibold">Saldo Físico Real</th>
-                      <th className="px-4 py-3 font-semibold">Justificativa do Ajuste</th>
-                      <th className="px-4 py-3 font-semibold text-center">Ações</th>
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-2">
+                <Label>Preço da Arroba (R$)</Label>
+                <Input
+                  type="number"
+                  placeholder="Ex: 230.00"
+                  value={precoArroba}
+                  onChange={(e) => setPrecoArroba(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Data de Vigência (Levantamento)</Label>
+                <Input
+                  type="date"
+                  value={dataLevantamento}
+                  onChange={(e) => setDataLevantamento(e.target.value)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm border-slate-200">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-indigo-600" />
+                Auditoria Operacional
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-2">
+                <Label>Justificativa / Motivo</Label>
+                <Textarea
+                  placeholder="Ex: Contagem inicial do estoque físico realizada pela equipe de pátio..."
+                  value={justificativa}
+                  onChange={(e) => setJustificativa(e.target.value)}
+                  className="min-h-[100px] resize-none"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="shadow-sm border-slate-200 h-full">
+          <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Package className="w-5 h-5 text-slate-600" />
+              Inventário Físico de Insumos
+            </CardTitle>
+            <CardDescription>Ajuste as quantidades reais encontradas na fazenda.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 overflow-hidden flex flex-col">
+            <div className="overflow-auto max-h-[500px]">
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-4 py-3 font-semibold">Produto</th>
+                    <th className="px-4 py-3 font-semibold">Quantidade</th>
+                    <th className="px-4 py-3 font-semibold">Unidade</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {insumos.map((insumo) => (
+                    <tr key={insumo.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3 font-medium text-slate-900">
+                        {insumo.produto}
+                        {!insumo.exists && (
+                          <span className="ml-2 text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded uppercase font-bold">
+                            Novo
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Input
+                          type="number"
+                          placeholder="0.00"
+                          className="w-28 h-8"
+                          value={insumo.quantidade}
+                          onChange={(e) =>
+                            handleInsumoChange(insumo.id, 'quantidade', e.target.value)
+                          }
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <Input
+                          type="text"
+                          className="w-20 h-8"
+                          value={insumo.unidade}
+                          onChange={(e) => handleInsumoChange(insumo.id, 'unidade', e.target.value)}
+                        />
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {insumos.map((insumo) => (
-                      <tr key={insumo.id} className="hover:bg-slate-50">
-                        <td className="px-4 py-3 font-medium text-slate-900">{insumo.produto}</td>
-                        <td className="px-4 py-3 text-slate-600">{insumo.unidade_medida}</td>
-                        <td className="px-4 py-3 text-right font-medium text-slate-700">
-                          {insumo.quantidade_atual.toLocaleString('pt-BR')}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Input
-                            type="number"
-                            placeholder="0.00"
-                            className="w-32"
-                            value={saldosFisicos[insumo.id] || ''}
-                            onChange={(e) =>
-                              setSaldosFisicos((prev) => ({ ...prev, [insumo.id]: e.target.value }))
-                            }
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <Input
-                            type="text"
-                            placeholder="Ex: Contagem inicial"
-                            className="min-w-[200px]"
-                            value={justificativas[insumo.id] || ''}
-                            onChange={(e) =>
-                              setJustificativas((prev) => ({
-                                ...prev,
-                                [insumo.id]: e.target.value,
-                              }))
-                            }
-                          />
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="bg-indigo-600 hover:bg-indigo-700"
-                            disabled={adjustingId === insumo.id}
-                            onClick={() => handleAjusteEstoque(insumo)}
-                          >
-                            {adjustingId === insumo.id ? 'Salvando...' : 'Ajustar'}
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                    {insumos.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
-                          Nenhum insumo cadastrado no sistema.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  ))}
+                  {insumos.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-8 text-center text-slate-500">
+                        Carregando insumos...
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-        <TabsContent value="precos" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Registro de Preço Base (Arroba)</CardTitle>
-              <CardDescription>
-                Defina a referência inicial de mercado para habilitar os simuladores e projeções.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end p-4 bg-slate-50 rounded-lg border border-slate-100">
-                <div className="space-y-2">
-                  <Label>Data de Referência</Label>
-                  <Input
-                    type="date"
-                    value={precoData}
-                    onChange={(e) => setPrecoData(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Preço Arroba (R$)</Label>
-                  <Input
-                    type="number"
-                    placeholder="Ex: 230.00"
-                    value={precoArroba}
-                    onChange={(e) => setPrecoArroba(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Região (Opcional)</Label>
-                  <Input
-                    type="text"
-                    placeholder="Ex: SP"
-                    value={precoRegiao}
-                    onChange={(e) => setPrecoRegiao(e.target.value)}
-                  />
-                </div>
-                <Button
-                  onClick={handleSalvarPreco}
-                  disabled={loading}
-                  className="bg-emerald-600 hover:bg-emerald-700"
-                >
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Registrar Preço
-                </Button>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-slate-800 mb-3">Histórico Recente</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left border-collapse">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">
-                      <tr>
-                        <th className="px-4 py-3 font-semibold">Data</th>
-                        <th className="px-4 py-3 font-semibold">Preço Arroba</th>
-                        <th className="px-4 py-3 font-semibold">Região</th>
-                        <th className="px-4 py-3 font-semibold">Fonte</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {precos.map((p) => (
-                        <tr key={p.id} className="hover:bg-slate-50">
-                          <td className="px-4 py-3">
-                            {new Date(p.data_registro).toLocaleDateString('pt-BR')}
-                          </td>
-                          <td className="px-4 py-3 font-medium text-emerald-700">
-                            R${' '}
-                            {p.preco_arroba.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </td>
-                          <td className="px-4 py-3 text-slate-600">{p.regiao || '-'}</td>
-                          <td className="px-4 py-3 text-slate-600">{p.fonte || '-'}</td>
-                        </tr>
-                      ))}
-                      {precos.length === 0 && (
-                        <tr>
-                          <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
-                            Nenhum preço registrado.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <div className="flex justify-end pt-4 border-t border-slate-200">
+        <Button
+          size="lg"
+          onClick={handleExecuteLoad}
+          disabled={loading}
+          className="bg-emerald-600 hover:bg-emerald-700 font-semibold"
+        >
+          {loading ? (
+            'Processando Carga...'
+          ) : (
+            <>
+              <CheckCircle2 className="w-5 h-5 mr-2" />
+              Executar Carga Inicial e Destravar Sistema
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   )
 }
