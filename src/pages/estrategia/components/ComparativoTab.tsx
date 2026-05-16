@@ -29,6 +29,19 @@ export function ComparativoTab() {
   const formatMoney = (v: number) =>
     `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
+  const recalcIncremental = (s: any) => {
+    if (!s) return 0
+    const lucro_hoje =
+      (s.peso_entrada / 15) * s.quantidade_animais * s.preco_venda -
+      (s.peso_entrada / 15) * s.quantidade_animais * s.preco_compra
+    return s.lucro_bruto - lucro_hoje
+  }
+
+  const recalcROI = (s: any) => {
+    if (!s) return 0
+    return s.custo_total > 0 ? (s.lucro_bruto / s.custo_total) * 100 : 0
+  }
+
   const getBestIndex = () => {
     let bestIdx = -1
     let maxLucro = -Infinity
@@ -40,6 +53,7 @@ export function ComparativoTab() {
     })
     return bestIdx
   }
+
   const bestIdx = getBestIndex()
 
   return (
@@ -66,13 +80,13 @@ export function ComparativoTab() {
                 </SelectContent>
               </Select>
               {bestIdx === i && selectedSims[i] && (
-                <Badge className="bg-[#094016] w-full justify-center">Melhor Cenário</Badge>
+                <Badge className="bg-[#094016] w-full justify-center">Maior Lucro Bruto</Badge>
               )}
             </div>
           ))}
         </div>
 
-        <div className="border rounded-md divide-y">
+        <div className="border rounded-md divide-y overflow-hidden">
           {[
             { label: 'Operação', key: 'tipo_operacao' },
             { label: 'Animais (cab)', key: 'quantidade_animais' },
@@ -81,29 +95,45 @@ export function ComparativoTab() {
             { label: 'Peso Final', key: 'peso_final', fmt: (v: number) => `${v?.toFixed(1)} kg` },
             { label: 'Custo Total', key: 'custo_total', fmt: formatMoney },
             { label: 'Receita Total', key: 'receita_total', fmt: formatMoney },
-            { label: 'Lucro Bruto', key: 'lucro_bruto', fmt: formatMoney },
+            { label: 'Lucro Bruto Projetado', key: 'lucro_bruto', fmt: formatMoney },
+            { label: 'Resultado Incremental', key: 'incremental', fmt: formatMoney },
             {
               label: 'Margem de Lucro',
               key: 'margem_lucro',
               fmt: (v: number) => `${v?.toFixed(2)}%`,
             },
+            {
+              label: 'ROI Projetado',
+              key: 'roi',
+              fmt: (v: number) => `${v?.toFixed(2)}%`,
+            },
           ].map((row, idx) => (
-            <div key={idx} className="grid grid-cols-4 gap-4 p-4 hover:bg-muted/50">
-              <div className="font-medium text-right pr-4">{row.label}</div>
+            <div
+              key={idx}
+              className="grid grid-cols-4 gap-4 p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="font-medium text-right pr-4 text-slate-700">{row.label}</div>
               {[0, 1, 2].map((i) => {
                 const s = selectedSims[i]
+
+                let val = s ? s[row.key] : undefined
+                if (row.key === 'incremental' && s) {
+                  val = recalcIncremental(s)
+                }
+                if (row.key === 'roi' && s) {
+                  val = recalcROI(s)
+                }
+
                 return (
                   <div
                     key={i}
                     className={
-                      bestIdx === i && row.key === 'lucro_bruto' ? 'font-bold text-[#094016]' : ''
+                      bestIdx === i && (row.key === 'lucro_bruto' || row.key === 'incremental')
+                        ? 'font-bold text-[#094016]'
+                        : 'text-slate-900'
                     }
                   >
-                    {s && s[row.key] !== undefined
-                      ? row.fmt
-                        ? row.fmt(s[row.key])
-                        : s[row.key]
-                      : '-'}
+                    {val !== undefined ? (row.fmt ? row.fmt(val) : val) : '-'}
                   </div>
                 )
               })}

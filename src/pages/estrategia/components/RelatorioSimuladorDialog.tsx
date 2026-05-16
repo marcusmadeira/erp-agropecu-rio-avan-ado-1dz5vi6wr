@@ -30,7 +30,7 @@ export function RelatorioSimuladorDialog({
         tipo_acao: 'READ',
         tabela_afetada: 'simulacoes_cenarios',
         registro_id: sim.id,
-        description: `Geração de Relatório TIP - Cenário ${sim.id}`,
+        description: `Geração de Relatório - Cenário ${sim.id}`,
       }).catch(console.error)
     }
   }, [open, sim, user?.id])
@@ -44,7 +44,7 @@ export function RelatorioSimuladorDialog({
         tipo_acao: 'EXPORT',
         tabela_afetada: 'simulacoes_cenarios',
         registro_id: sim.id,
-        description: `Exportação/Impressão de Relatório TIP - Cenário ${sim.id}`,
+        description: `Exportação/Impressão de Relatório - Cenário ${sim.id}`,
         dados_novos: JSON.stringify({
           taxa_oportunidade: sim.taxa_oportunidade_utilizada,
           investimento_base: sim.custo_total,
@@ -55,6 +55,12 @@ export function RelatorioSimuladorDialog({
     }
     await exportSimulacaoPDF(sim, user?.name || user?.email || 'Desconhecido')
   }
+
+  const lucro_hoje =
+    (sim.peso_entrada / 15) * sim.quantidade_animais * sim.preco_venda -
+    (sim.peso_entrada / 15) * sim.quantidade_animais * sim.preco_compra
+  const resultado_incremental = sim.lucro_bruto - lucro_hoje
+  const roi_calculado = sim.custo_total > 0 ? (sim.lucro_bruto / sim.custo_total) * 100 : 0
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -103,13 +109,13 @@ export function RelatorioSimuladorDialog({
                   <span className="font-medium">{sim.quantidade_animais}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Peso de Entrada:</span>{' '}
+                  <span className="text-slate-500">Peso Base/Entrada:</span>{' '}
                   <span className="font-medium">
                     {sim.peso_entrada ? sim.peso_entrada + ' kg' : 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Preço de Compra (@):</span>{' '}
+                  <span className="text-slate-500">Custo Base (@):</span>{' '}
                   <span className="font-medium">
                     {sim.preco_compra ? 'R$ ' + sim.preco_compra.toFixed(2) : 'N/A'}
                   </span>
@@ -239,20 +245,24 @@ export function RelatorioSimuladorDialog({
           </div>
 
           <div className="bg-[#094016]/5 p-6 rounded-lg border border-[#094016]/20">
-            {' '}
-            <h3 className="font-bold text-[#094016] mb-4">Resultado Final Projetado</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-sm text-slate-500 mb-1">Receita Total</p>
-                <p className="text-xl font-bold text-slate-900">
-                  {sim.receita_total
-                    ? 'R$ ' +
-                      sim.receita_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
-                    : 'N/A'}
+            <h3 className="font-bold text-[#094016] mb-4 text-lg">Resultado Final Projetado</h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="md:col-span-2 p-3 bg-white rounded border border-emerald-100 shadow-sm">
+                <p className="text-sm text-emerald-800 font-medium mb-1">Resultado Incremental</p>
+                <p
+                  className={`text-2xl font-bold ${resultado_incremental >= 0 ? 'text-[#094016]' : 'text-red-600'}`}
+                >
+                  R${' '}
+                  {resultado_incremental.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </p>
+                <p className="text-xs text-slate-500 mt-1">Lucro de Esperar x Vender Hoje</p>
               </div>
-              <div>
-                <p className="text-sm text-slate-500 mb-1">Lucro Bruto</p>
+
+              <div className="p-3">
+                <p className="text-sm text-slate-500 mb-1">Lucro Projetado</p>
                 <p
                   className={`text-xl font-bold ${sim.lucro_bruto >= 0 ? 'text-[#094016]' : 'text-red-600'}`}
                 >
@@ -261,20 +271,20 @@ export function RelatorioSimuladorDialog({
                     : 'N/A'}
                 </p>
               </div>
-              <div>
-                <p className="text-sm text-slate-500 mb-1">Margem de Lucro</p>
+              <div className="p-3">
+                <p className="text-sm text-slate-500 mb-1">Margem</p>
                 <p
                   className={`text-xl font-bold ${sim.margem_lucro >= 0 ? 'text-[#094016]' : 'text-red-600'}`}
                 >
                   {sim.margem_lucro ? sim.margem_lucro.toFixed(2) + '%' : 'N/A'}
                 </p>
               </div>
-              <div>
-                <p className="text-sm text-slate-500 mb-1">ROI</p>
+              <div className="p-3">
+                <p className="text-sm text-slate-500 mb-1">ROI Projetado</p>
                 <p
-                  className={`text-xl font-bold ${sim.roi >= 0 ? 'text-[#094016]' : 'text-red-600'}`}
+                  className={`text-xl font-bold ${roi_calculado >= 0 ? 'text-[#094016]' : 'text-red-600'}`}
                 >
-                  {sim.roi ? sim.roi.toFixed(2) + '%' : 'N/A'}
+                  {roi_calculado.toFixed(2)}%
                 </p>
               </div>
             </div>
