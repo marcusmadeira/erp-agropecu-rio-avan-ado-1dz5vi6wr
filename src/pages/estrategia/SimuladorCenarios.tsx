@@ -7,30 +7,30 @@ import { Link } from 'react-router-dom'
 import { Calculator, Info, AlertTriangle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import pb from '@/lib/pocketbase/client'
+import { useRealtime } from '@/hooks/use-realtime'
 
 export default function SimuladorCenarios() {
   const [hasPrefill, setHasPrefill] = useState(false)
   const [mercadoData, setMercadoData] = useState<{ preco: number; data: string } | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const loadMercado = async () => {
-      try {
-        const precos = await pb
-          .collection('precos_mercado')
-          .getList(1, 1, { sort: '-data_registro' })
-        if (precos.items.length > 0) {
-          setMercadoData({
-            preco: precos.items[0].preco_arroba,
-            data: new Date(precos.items[0].data_registro).toLocaleDateString('pt-BR'),
-          })
-        }
-      } catch {
-        /* intentionally ignored */
-      } finally {
-        setLoading(false)
+  const loadMercado = async () => {
+    try {
+      const precos = await pb.collection('precos_mercado').getList(1, 1, { sort: '-data_registro' })
+      if (precos.items.length > 0) {
+        setMercadoData({
+          preco: precos.items[0].preco_arroba,
+          data: new Date(precos.items[0].data_registro).toLocaleDateString('pt-BR'),
+        })
       }
+    } catch {
+      /* intentionally ignored */
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     loadMercado()
 
     const prefill = localStorage.getItem('SIMULADOR_PREFILL')
@@ -38,6 +38,10 @@ export default function SimuladorCenarios() {
       setHasPrefill(true)
     }
   }, [])
+
+  useRealtime('precos_mercado', () => {
+    loadMercado()
+  })
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto space-y-6 animate-fade-in">

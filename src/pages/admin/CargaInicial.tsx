@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   DollarSign,
   ListChecks,
+  RotateCcw,
 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { createAuditoria } from '@/services/auditoria'
@@ -30,6 +31,21 @@ interface InsumoRow {
   original?: any
 }
 
+interface SummaryReport {
+  preco: {
+    id: string
+    auditId: string
+    valor: number
+  }
+  insumos: {
+    id: string
+    produto: string
+    auditId: string
+    before: number
+    after: number
+  }[]
+}
+
 export default function CargaInicial() {
   const { user } = useAuth()
   const { toast } = useToast()
@@ -39,6 +55,7 @@ export default function CargaInicial() {
   const [precoArroba, setPrecoArroba] = useState('')
   const [justificativa, setJustificativa] = useState('')
   const [insumos, setInsumos] = useState<InsumoRow[]>([])
+  const [summaryReport, setSummaryReport] = useState<SummaryReport | null>(null)
 
   const isAuthorized = user?.role === 'Admin' || user?.nivel_acesso === 'Gerente'
 
@@ -116,10 +133,10 @@ export default function CargaInicial() {
       const precoRecord = await pb.collection('precos_mercado').create({
         data_registro: new Date(dataLevantamento + 'T12:00:00Z').toISOString(),
         preco_arroba: valPreco,
-        fonte: 'Carga Inicial (Levantamento Físico)',
+        fonte: 'Carga Inicial Real',
       })
 
-      await createAuditoria({
+      const auditPreco = await createAuditoria({
         usuario_id: user?.id || '',
         tipo_acao: 'Criação',
         tabela_afetada: 'precos_mercado',
@@ -128,6 +145,8 @@ export default function CargaInicial() {
         description: auditDesc,
         status: 'SUCCESS',
       })
+
+      const reportInsumos: SummaryReport['insumos'] = []
 
       for (const insumo of insumos) {
         const qtde = Number(insumo.quantidade)
@@ -149,7 +168,7 @@ export default function CargaInicial() {
             })
           }
 
-          await createAuditoria({
+          const auditInsumo = await createAuditoria({
             usuario_id: user?.id || '',
             tipo_acao: 'UPDATE',
             tabela_afetada: 'estoque_insumos',
@@ -160,6 +179,14 @@ export default function CargaInicial() {
             dados_novos: JSON.stringify({ quantidade_atual: qtde }),
             description: auditDesc,
             status: 'SUCCESS',
+          })
+
+          reportInsumos.push({
+            id: insumo.id,
+            produto: insumo.produto,
+            auditId: auditInsumo.id,
+            before: insumo.original?.quantidade_atual || 0,
+            after: qtde,
           })
         } else {
           const created = await pb.collection('estoque_insumos').create({
@@ -178,17 +205,35 @@ export default function CargaInicial() {
             motivo_ajuste: `Carga Inicial: ${justificativa}`,
           })
 
-          await createAuditoria({
+          const auditInsumo = await createAuditoria({
             usuario_id: user?.id || '',
             tipo_acao: 'Criação',
             tabela_afetada: 'estoque_insumos',
             registro_id: created.id,
+            dados_anteriores: JSON.stringify({ quantidade_atual: 0 }),
             dados_novos: JSON.stringify({ quantidade_atual: qtde, produto: insumo.produto }),
             description: auditDesc,
             status: 'SUCCESS',
           })
+
+          reportInsumos.push({
+            id: created.id,
+            produto: insumo.produto,
+            auditId: auditInsumo.id,
+            before: 0,
+            after: qtde,
+          })
         }
       }
+
+      setSummaryReport({
+        preco: {
+          id: precoRecord.id,
+          auditId: auditPreco.id,
+          valor: valPreco,
+        },
+        insumos: reportInsumos,
+      })
 
       toast({
         title: 'Status Final: Sucesso',
@@ -220,6 +265,118 @@ export default function CargaInicial() {
     )
   }
 
+  if (summaryReport) {
+    return (
+      <div className="p-6 max-w-5xl mx-auto space-y-8 animate-fade-in">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+            <ListChecks className="w-6 h-6 text-indigo-600" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+              Setup: Carga Inicial Real
+            </h1>
+            <p className="text-slate-500 mt-1">
+              Execute o levantamento físico e libere as travas do sistema para simulações e
+              dashboards.
+            </p>
+          </div>
+        </div>
+
+        <Card className="border-emerald-200 shadow-sm animate-fade-in">
+          <CardHeader className="bg-emerald-50/50 border-b border-emerald-100 pb-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+              <div>
+                <CardTitle className="text-xl text-emerald-900">
+                  Relatório de Carga Inicial
+                </CardTitle>
+                <CardDescription className="text-emerald-700 font-medium">
+                  Os módulos operacionais (Simulador e Ponto Ótimo de Venda) foram destravados com
+                  sucesso.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6 space-y-6">
+            <div className="space-y-3">
+              <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-slate-500" />
+                Referência de Mercado (Arroba)
+              </h3>
+              <div className="bg-slate-50 rounded-lg p-4 text-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <span className="text-slate-500 block text-xs uppercase tracking-wider mb-1">
+                    Valor Registrado
+                  </span>
+                  <span className="font-medium text-slate-900 text-lg">
+                    R$ {summaryReport.preco.valor.toFixed(2)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-xs uppercase tracking-wider mb-1">
+                    Registro (ID)
+                  </span>
+                  <span className="font-mono text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded">
+                    {summaryReport.preco.id}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-xs uppercase tracking-wider mb-1">
+                    Auditoria (ID)
+                  </span>
+                  <span className="font-mono text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded">
+                    {summaryReport.preco.auditId}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                <Package className="w-4 h-4 text-slate-500" />
+                Inventário Físico Atualizado
+              </h3>
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Produto</th>
+                      <th className="px-4 py-3 font-semibold">Anterior</th>
+                      <th className="px-4 py-3 font-semibold text-emerald-700">Atualizado</th>
+                      <th className="px-4 py-3 font-semibold">Insumo ID</th>
+                      <th className="px-4 py-3 font-semibold">Auditoria ID</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {summaryReport.insumos.map((item) => (
+                      <tr key={item.id} className="bg-white">
+                        <td className="px-4 py-3 font-medium text-slate-900">{item.produto}</td>
+                        <td className="px-4 py-3 text-slate-500">{item.before}</td>
+                        <td className="px-4 py-3 font-semibold text-emerald-600">{item.after}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-slate-500">{item.id}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-slate-500">
+                          {item.auditId}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-4">
+              <Button onClick={() => setSummaryReport(null)} variant="outline" className="gap-2">
+                <RotateCcw className="w-4 h-4" />
+                Nova Carga
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-8 animate-fade-in">
       <div className="flex items-center gap-3">
@@ -227,7 +384,9 @@ export default function CargaInicial() {
           <ListChecks className="w-6 h-6 text-indigo-600" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Setup: Carga Inicial</h1>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+            Setup: Carga Inicial Real
+          </h1>
           <p className="text-slate-500 mt-1">
             Execute o levantamento físico e libere as travas do sistema para simulações e
             dashboards.

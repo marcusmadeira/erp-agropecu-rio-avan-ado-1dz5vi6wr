@@ -17,6 +17,7 @@ import pb from '@/lib/pocketbase/client'
 import { createAuditoria } from '@/services/auditoria'
 import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
+import { useRealtime } from '@/hooks/use-realtime'
 
 interface LoteAnalise {
   id: string
@@ -46,6 +47,13 @@ export default function PontoOtimoVenda() {
     loadData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useRealtime('precos_mercado', () => {
+    loadData()
+  })
+  useRealtime('estoque_insumos', () => {
+    loadData()
+  })
 
   const loadData = async () => {
     setLoading(true)
