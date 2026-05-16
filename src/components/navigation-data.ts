@@ -120,6 +120,7 @@ export const navigationMenu = [
         roles: [1, 2, 3],
       },
       { title: 'Auditoria', url: '/auditoria', icon: ShieldCheck, roles: [1, 2, 3] },
+      { title: 'Sanitização Técnica', url: '/sanitizacao', icon: FileText, roles: [1] },
       { title: 'Novo Usuário', url: '/usuarios/novo', icon: Users, roles: [1, 2, 3] },
     ],
   },

@@ -5,11 +5,30 @@ import { ComparativoTab } from './components/ComparativoTab'
 import { HistoricoTab } from './components/HistoricoTab'
 import { Calculator, Info } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import pb from '@/lib/pocketbase/client'
 
 export default function SimuladorCenarios() {
   const [hasPrefill, setHasPrefill] = useState(false)
+  const [mercadoData, setMercadoData] = useState<{ preco: number; data: string } | null>(null)
 
   useEffect(() => {
+    const loadMercado = async () => {
+      try {
+        const precos = await pb
+          .collection('precos_mercado')
+          .getList(1, 1, { sort: '-data_registro' })
+        if (precos.items.length > 0) {
+          setMercadoData({
+            preco: precos.items[0].preco_arroba,
+            data: new Date(precos.items[0].data_registro).toLocaleDateString('pt-BR'),
+          })
+        }
+      } catch {
+        /* intentionally ignored */
+      }
+    }
+    loadMercado()
+
     const prefill = localStorage.getItem('SIMULADOR_PREFILL')
     if (prefill) {
       setHasPrefill(true)
@@ -22,10 +41,17 @@ export default function SimuladorCenarios() {
         <div className="p-3 bg-[#094016]/10 rounded-lg">
           <Calculator className="w-6 h-6 text-[#094016]" />
         </div>
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-            Simulador de Cenários
-          </h1>
+        <div className="flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+              Simulador de Cenários
+            </h1>
+            {mercadoData && (
+              <span className="inline-flex items-center rounded-md border border-slate-200 px-2.5 py-0.5 text-xs font-semibold text-slate-700 bg-white shadow-sm">
+                Mercado Ref: R$ {mercadoData.preco.toFixed(2)} ({mercadoData.data})
+              </span>
+            )}
+          </div>
           <p className="text-slate-500 mt-1">Viabilidade econômica de TIP e Confinamento</p>
         </div>
       </div>

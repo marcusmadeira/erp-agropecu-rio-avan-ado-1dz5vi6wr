@@ -50,6 +50,7 @@ import NotFound from './pages/NotFound'
 import Dashboard from './pages/Dashboard'
 import Desempenho from './pages/dashboard/Desempenho'
 import Auditoria from './pages/admin/Auditoria'
+import SanitizacaoTecnica from './pages/admin/SanitizacaoTecnica'
 import Importacao from './pages/rebanho/ImportarAnimais'
 import ImportadorFornecedores from './pages/admin/ImportadorFornecedores'
 import ImportadorNotasFiscais from './pages/admin/ImportadorNotasFiscais'
@@ -181,6 +182,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute>
             <Auditoria />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/sanitizacao"
+        element={
+          <AuthorizeRoute>
+            <SanitizacaoTecnica />
           </AuthorizeRoute>
         }
       />

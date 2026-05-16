@@ -38,6 +38,7 @@ export default function PontoOtimoVenda() {
   const [analises, setAnalises] = useState<LoteAnalise[]>([])
   const [loading, setLoading] = useState(true)
   const [precoArrobaRef, setPrecoArrobaRef] = useState(0)
+  const [dataReferenciaMercado, setDataReferenciaMercado] = useState<string | null>(null)
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -57,8 +58,9 @@ export default function PontoOtimoVenda() {
         pb.collection('trato_diario_lotes').getFullList({ sort: '-data' }),
       ])
 
-      const precoArroba = precos.items[0]?.preco_arroba || 250 // Fallback if no price available
+      const precoArroba = precos.items[0]?.preco_arroba || 0
       setPrecoArrobaRef(precoArroba)
+      setDataReferenciaMercado(precos.items[0]?.data_registro || null)
 
       const results: LoteAnalise[] = lotes
         .map((lote) => {
@@ -269,12 +271,31 @@ export default function PontoOtimoVenda() {
         </div>
       </div>
 
+      {precoArrobaRef === 0 && !loading && (
+        <Alert className="bg-rose-50 border-rose-200 text-rose-800 mb-6">
+          <AlertTriangle className="h-4 w-4 text-rose-600" />
+          <AlertTitle className="font-semibold text-rose-900">
+            Preço de Referência Ausente
+          </AlertTitle>
+          <AlertDescription>
+            Não há preço de arroba registrado no mercado. Atualize o painel de mercado para
+            projeções corretas.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card className="shadow-sm border-slate-200">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <CardTitle className="text-lg text-slate-800 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-slate-500" />
             Painel Operacional Comercial
           </CardTitle>
+          {dataReferenciaMercado && (
+            <Badge variant="outline" className="bg-white text-slate-600 shadow-sm">
+              Ref. Mercado: {new Date(dataReferenciaMercado).toLocaleDateString('pt-BR')} (R${' '}
+              {precoArrobaRef.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
+            </Badge>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
