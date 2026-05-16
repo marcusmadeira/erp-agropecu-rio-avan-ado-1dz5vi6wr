@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-16T12:13:49.154Z",
+  "generatedAt": "2026-05-16T12:51:44.589Z",
   "collections": [
     {
       "name": "users",
@@ -2543,6 +2543,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "taxa_oportunidade_padrao",
+          "type": "number",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []
@@ -3249,6 +3255,18 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "taxa_oportunidade_utilizada",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "valor_custo_oportunidade",
+          "type": "number",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []

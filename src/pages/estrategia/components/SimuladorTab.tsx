@@ -25,6 +25,7 @@ import {
 } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { RelatorioSimuladorDialog } from './RelatorioSimuladorDialog'
+import { useSystemConfig } from '@/hooks/use-system-config'
 
 const defaultInputs: SimInputs = {
   tipo_operacao: 'TIP',
@@ -42,6 +43,7 @@ const defaultInputs: SimInputs = {
 export function SimuladorTab() {
   const [inputs, setInputs] = useState<SimInputs>(defaultInputs)
   const [loading, setLoading] = useState(false)
+  const { config } = useSystemConfig()
   const [formulacoes, setFormulacoes] = useState<any[]>([])
   const [selectedFormulacao, setSelectedFormulacao] = useState<string>('none')
   const [consumoEstimado, setConsumoEstimado] = useState<string>('10')
@@ -65,6 +67,12 @@ export function SimuladorTab() {
       }
     })
   }, [])
+
+  useEffect(() => {
+    if (config && config.taxa_oportunidade_padrao !== undefined) {
+      setInputs((prev) => ({ ...prev, taxa_oportunidade: config.taxa_oportunidade_padrao }))
+    }
+  }, [config])
 
   const handleChange = (field: keyof SimInputs, val: string | number) => {
     setInputs((prev) => ({ ...prev, [field]: typeof val === 'string' ? Number(val) || 0 : val }))
@@ -97,6 +105,8 @@ export function SimuladorTab() {
         margem_lucro: res.margem_lucro,
         roi: res.roi,
         peso_final: res.peso_final,
+        taxa_oportunidade_utilizada: res.taxa_oportunidade_utilizada,
+        valor_custo_oportunidade: res.valor_custo_oportunidade,
       })
       toast({ title: 'Simulação salva com sucesso!' })
       setUltimaSimulacao(savedSim)
@@ -233,6 +243,16 @@ export function SimuladorTab() {
                 type="number"
                 value={inputs.preco_venda || ''}
                 onChange={(e) => handleChange('preco_venda', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Taxa Oportunidade (% a.m.)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={inputs.taxa_oportunidade ?? ''}
+                onChange={(e) => handleChange('taxa_oportunidade', e.target.value)}
+                placeholder="Ex: 1.0"
               />
             </div>
           </div>

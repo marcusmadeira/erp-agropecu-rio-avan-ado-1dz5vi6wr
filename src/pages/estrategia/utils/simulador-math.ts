@@ -9,6 +9,7 @@ export interface SimInputs {
   gmd_estimado: number
   dias_duracao: number
   preco_venda: number
+  taxa_oportunidade?: number
 }
 
 export function calcularCenario(data: SimInputs) {
@@ -42,6 +43,9 @@ export function calcularCenario(data: SimInputs) {
   const custo_arroba_produzida =
     arrobas_produzidas_total > 0 ? custo_total / arrobas_produzidas_total : 0
 
+  const taxa = data.taxa_oportunidade || 0
+  const valor_custo_oportunidade = custo_total * (taxa / 100 / 30) * data.dias_duracao
+
   const sensibilidade = [
     {
       cenario: '-10%',
@@ -70,5 +74,7 @@ export function calcularCenario(data: SimInputs) {
     sensibilidade,
     custo_compra,
     custo_operacao,
+    valor_custo_oportunidade,
+    taxa_oportunidade_utilizada: taxa,
   }
 }

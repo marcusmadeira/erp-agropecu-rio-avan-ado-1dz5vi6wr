@@ -45,6 +45,10 @@ export function RelatorioSimuladorDialog({
         tabela_afetada: 'simulacoes_cenarios',
         registro_id: sim.id,
         description: `Exportação/Impressão de Relatório TIP - Cenário ${sim.id}`,
+        dados_novos: JSON.stringify({
+          taxa_oportunidade: sim.taxa_oportunidade_utilizada,
+          investimento_base: sim.custo_total,
+        }),
       })
     } catch (e) {
       console.error('Falha ao registrar auditoria', e)
@@ -199,11 +203,43 @@ export function RelatorioSimuladorDialog({
                     {sim.preco_venda ? 'R$ ' + sim.preco_venda.toFixed(2) : 'N/A'}
                   </span>
                 </div>
+                <div className="flex justify-between items-start mt-2 pt-2 border-t">
+                  <span className="text-slate-500">Custo de Oportunidade do Capital:</span>{' '}
+                  <div className="text-right">
+                    {!sim.dias_duracao || !sim.custo_total ? (
+                      <span className="text-amber-600 text-xs">
+                        Dados insuficientes para cálculo
+                        <br />
+                        (Verificar custos e período)
+                      </span>
+                    ) : (
+                      <>
+                        <span className="font-medium text-slate-800">
+                          {sim.valor_custo_oportunidade
+                            ? 'R$ ' +
+                              sim.valor_custo_oportunidade.toLocaleString('pt-BR', {
+                                minimumFractionDigits: 2,
+                              })
+                            : 'R$ 0,00'}
+                        </span>
+                        <p
+                          className="text-[10px] text-slate-400 mt-0.5"
+                          title="Fórmula de Cálculo do Custo de Oportunidade"
+                        >
+                          {sim.taxa_oportunidade_utilizada}% a.m. sobre R${' '}
+                          {sim.custo_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}{' '}
+                          por {sim.dias_duracao} dias
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           <div className="bg-[#094016]/5 p-6 rounded-lg border border-[#094016]/20">
+            {' '}
             <h3 className="font-bold text-[#094016] mb-4">Resultado Final Projetado</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>

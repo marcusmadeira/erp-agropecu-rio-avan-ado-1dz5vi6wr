@@ -3,6 +3,7 @@ import pb from '@/lib/pocketbase/client'
 export interface SystemConfig {
   id: string
   logo: string
+  taxa_oportunidade_padrao?: number
 }
 
 export const getSystemConfig = async () => {

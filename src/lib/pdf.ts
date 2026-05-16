@@ -329,6 +329,15 @@ export async function exportSimulacaoPDF(sim: any, userName: string) {
         <p><strong>Custo Total Operacional:</strong> ${sim.custo_total ? 'R$ ' + sim.custo_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : 'N/A'}</p>
         <p><strong>Custo por @ Produzida:</strong> ${sim.custo_arroba ? 'R$ ' + sim.custo_arroba.toFixed(2) : 'N/A'}</p>
         <p><strong>Preço de Venda (@):</strong> ${sim.preco_venda ? 'R$ ' + sim.preco_venda.toFixed(2) : 'N/A'}</p>
+        <hr style="border-top: 1px dashed #cbd5e1; margin: 10px 0;" />
+        <p><strong>Custo de Oportunidade do Capital:</strong> 
+          ${
+            !sim.dias_duracao || !sim.custo_total
+              ? '<span style="color: #d97706; font-size: 12px;">Dados insuficientes para cálculo (Verificar custos e período)</span>'
+              : `<strong>${sim.valor_custo_oportunidade ? 'R$ ' + sim.valor_custo_oportunidade.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : 'R$ 0,00'}</strong>
+               <br/><span style="font-size: 10px; color: #64748b;">${sim.taxa_oportunidade_utilizada}% a.m. sobre R$ ${sim.custo_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} por ${sim.dias_duracao} dias</span>`
+          }
+        </p>
       </div>
     </div>
 
