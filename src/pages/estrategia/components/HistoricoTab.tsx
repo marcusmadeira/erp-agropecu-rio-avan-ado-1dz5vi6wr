@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { getSimulacoes, deleteSimulacao } from '@/services/simulacoes'
-import { Trash2, Scale } from 'lucide-react'
+import { Trash2, Scale, FileText } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -12,11 +12,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
+import { RelatorioSimuladorDialog } from './RelatorioSimuladorDialog'
 
 export function HistoricoTab() {
   const [sims, setSims] = useState<any[]>([])
   const { toast } = useToast()
   const [compareData, setCompareData] = useState<any>(null)
+  const [selectedSimForReport, setSelectedSimForReport] = useState<any>(null)
 
   const load = () => getSimulacoes().then(setSims)
   useEffect(() => {
@@ -72,6 +74,13 @@ export function HistoricoTab() {
                     </td>
                     <td className="px-4 py-3">{s.margem_lucro?.toFixed(2)}%</td>
                     <td className="px-4 py-3 text-right space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedSimForReport(s)}
+                      >
+                        <FileText className="w-4 h-4 mr-1" /> Relatório
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => handleCompareRealized(s)}>
                         <Scale className="w-4 h-4 mr-1" /> Comparar Real
                       </Button>
@@ -128,6 +137,12 @@ export function HistoricoTab() {
           </DialogContent>
         </Dialog>
       )}
+
+      <RelatorioSimuladorDialog
+        sim={selectedSimForReport}
+        open={!!selectedSimForReport}
+        onOpenChange={(o) => !o && setSelectedSimForReport(null)}
+      />
     </>
   )
 }

@@ -24,6 +24,7 @@ import {
   ReferenceLine,
 } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
+import { RelatorioSimuladorDialog } from './RelatorioSimuladorDialog'
 
 const defaultInputs: SimInputs = {
   tipo_operacao: 'TIP',
@@ -44,6 +45,8 @@ export function SimuladorTab() {
   const [formulacoes, setFormulacoes] = useState<any[]>([])
   const [selectedFormulacao, setSelectedFormulacao] = useState<string>('none')
   const [consumoEstimado, setConsumoEstimado] = useState<string>('10')
+  const [reportOpen, setReportOpen] = useState(false)
+  const [ultimaSimulacao, setUltimaSimulacao] = useState<any>(null)
   const { toast } = useToast()
   const res = calcularCenario(inputs)
 
@@ -84,7 +87,7 @@ export function SimuladorTab() {
   const handleSave = async () => {
     setLoading(true)
     try {
-      await createSimulacao({
+      const savedSim = await createSimulacao({
         ...inputs,
         custo_total: res.custo_total,
         arrobas_produzidas: res.arrobas_produzidas_total,
@@ -96,6 +99,8 @@ export function SimuladorTab() {
         peso_final: res.peso_final,
       })
       toast({ title: 'Simulação salva com sucesso!' })
+      setUltimaSimulacao(savedSim)
+      setReportOpen(true)
     } catch (e: any) {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' })
     }
@@ -280,6 +285,12 @@ export function SimuladorTab() {
             </CardContent>
           </Card>
         </div>
+
+        <RelatorioSimuladorDialog
+          sim={ultimaSimulacao}
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+        />
 
         <Card>
           <CardHeader>

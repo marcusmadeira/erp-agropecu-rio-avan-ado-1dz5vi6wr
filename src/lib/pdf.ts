@@ -286,6 +286,77 @@ export async function exportFinancialReportPDF(data: Record<string, number>, fil
   await printPDF('Relatorio_Financeiro_Resumo', html)
 }
 
+export async function exportSimulacaoPDF(sim: any, userName: string) {
+  const dataStr = new Date(sim.created || new Date()).toLocaleDateString('pt-BR')
+
+  const html = `
+    <div class="header">
+      <div class="logo">${logoSvg} TORIBA AGROPECUÁRIA</div>
+      <div style="margin-left: auto; text-align: right;">
+        <h2 style="margin:0;">Relatório Gerencial de Simulação (${sim.tipo_operacao || 'TIP'})</h2>
+        <p style="margin: 5px 0 0 0; color: #64748b; font-size: 12px;">Data da Simulação: ${dataStr}</p>
+        <p style="margin: 2px 0 0 0; color: #64748b; font-size: 12px;">Autor: ${userName}</p>
+        <p style="margin: 2px 0 0 0; color: #64748b; font-size: 12px;">ID Cenário: ${sim.id}</p>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-bottom: 20px;">
+      <div class="card">
+        <h3>Identificação & Premissas do Lote</h3>
+        <p><strong>Tipo de Operação:</strong> ${sim.tipo_operacao}</p>
+        <p><strong>Quantidade de Animais:</strong> ${sim.quantidade_animais}</p>
+        <p><strong>Peso de Entrada:</strong> ${sim.peso_entrada ? sim.peso_entrada + ' kg' : 'N/A'}</p>
+        <p><strong>Preço de Compra (@):</strong> ${sim.preco_compra ? 'R$ ' + sim.preco_compra.toFixed(2) : 'N/A'}</p>
+        <p><strong>Duração Estimada:</strong> ${sim.dias_duracao ? sim.dias_duracao + ' dias' : 'N/A'}</p>
+      </div>
+      <div class="card">
+        <h3>Indicadores Zootécnicos</h3>
+        <p><strong>GMD Estimado:</strong> ${sim.gmd_estimado ? sim.gmd_estimado.toFixed(3) + ' kg/dia' : 'N/A'}</p>
+        <p><strong>Peso Final Projetado:</strong> ${sim.peso_final ? sim.peso_final.toFixed(1) + ' kg' : 'N/A'}</p>
+        <p><strong>Arrobas Produzidas:</strong> ${sim.arrobas_produzidas ? sim.arrobas_produzidas.toFixed(2) + ' @' : 'N/A'}</p>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-bottom: 20px;">
+      <div class="card">
+        <h3>Custos Detalhados (Estimativa Diária/Animal)</h3>
+        <p><strong>Custo Ração/dia:</strong> ${sim.custo_acao ? 'R$ ' + sim.custo_acao.toFixed(2) : 'Não Informado'}</p>
+        <p><strong>Custo Mão de Obra/dia:</strong> ${sim.custo_mao_obra ? 'R$ ' + sim.custo_mao_obra.toFixed(2) : 'Não Informado'}</p>
+        <p><strong>Custos Adicionais/dia:</strong> ${sim.custo_adicionais ? 'R$ ' + sim.custo_adicionais.toFixed(2) : 'Não Informado'}</p>
+      </div>
+      <div class="card">
+        <h3>Indicadores Econômico-Financeiros</h3>
+        <p><strong>Custo Total Operacional:</strong> ${sim.custo_total ? 'R$ ' + sim.custo_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : 'N/A'}</p>
+        <p><strong>Custo por @ Produzida:</strong> ${sim.custo_arroba ? 'R$ ' + sim.custo_arroba.toFixed(2) : 'N/A'}</p>
+        <p><strong>Preço de Venda (@):</strong> ${sim.preco_venda ? 'R$ ' + sim.preco_venda.toFixed(2) : 'N/A'}</p>
+      </div>
+    </div>
+
+    <div class="card" style="background-color: #f1f5f9; border-left: 4px solid #094016;">
+      <h3>Resultado Final Projetado</h3>
+      <div class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px;">
+         <div>
+           <p style="margin:0; font-size: 12px; color: #64748b;">Receita Total</p>
+           <p style="margin:0; font-size: 18px; font-weight: bold; color: #0f172a;">${sim.receita_total ? 'R$ ' + sim.receita_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : 'N/A'}</p>
+         </div>
+         <div>
+           <p style="margin:0; font-size: 12px; color: #64748b;">Lucro Bruto</p>
+           <p style="margin:0; font-size: 18px; font-weight: bold; color: ${sim.lucro_bruto >= 0 ? '#094016' : '#dc2626'};">${sim.lucro_bruto ? 'R$ ' + sim.lucro_bruto.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : 'N/A'}</p>
+         </div>
+         <div>
+           <p style="margin:0; font-size: 12px; color: #64748b;">Margem de Lucro</p>
+           <p style="margin:0; font-size: 18px; font-weight: bold; color: ${sim.margem_lucro >= 0 ? '#094016' : '#dc2626'};">${sim.margem_lucro ? sim.margem_lucro.toFixed(2) + '%' : 'N/A'}</p>
+         </div>
+         <div>
+           <p style="margin:0; font-size: 12px; color: #64748b;">ROI</p>
+           <p style="margin:0; font-size: 18px; font-weight: bold; color: ${sim.roi >= 0 ? '#094016' : '#dc2626'};">${sim.roi ? sim.roi.toFixed(2) + '%' : 'N/A'}</p>
+         </div>
+      </div>
+    </div>
+  `
+  await printPDF('Relatorio_Simulacao_' + sim.id, html)
+}
+
 export async function exportLotePDF(lote: Lote, state: AppState) {
   const animaisLote = state.animais.filter((a) => a.loteId === lote.id && a.status === 'Ativo')
   const qtd = animaisLote.length
