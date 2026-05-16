@@ -281,6 +281,27 @@ export function InsumosTab() {
                 />
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Estoque Ideal</Label>
+                <Input
+                  type="number"
+                  step="any"
+                  value={form.estoque_ideal ?? ''}
+                  onChange={(e) => setForm({ ...form, estoque_ideal: Number(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Prazo de Reposição (Dias)</Label>
+                <Input
+                  type="number"
+                  value={form.prazo_reposicao_dias ?? ''}
+                  onChange={(e) =>
+                    setForm({ ...form, prazo_reposicao_dias: Number(e.target.value) })
+                  }
+                />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label>Consumo Médio Diário</Label>
               <Input

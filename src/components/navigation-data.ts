@@ -80,6 +80,12 @@ export const navigationMenu = [
     items: [
       { title: 'Dashboard', url: '/estoque/dashboard', icon: LayoutDashboard, roles: [1, 2, 3] },
       {
+        title: 'Planejamento de Compras',
+        url: '/estoque/planejamento-compras',
+        icon: ShoppingCart,
+        roles: [1, 2, 3],
+      },
+      {
         title: 'Cadastro Manual',
         url: '/estoque/cadastro-manual',
         icon: PackagePlus,

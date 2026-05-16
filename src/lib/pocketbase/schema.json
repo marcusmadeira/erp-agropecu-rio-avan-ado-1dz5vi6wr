@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-16T12:57:02.848Z",
+  "generatedAt": "2026-05-16T13:03:50.961Z",
   "collections": [
     {
       "name": "users",
@@ -666,6 +666,18 @@
             "DDG",
             "Outros"
           ]
+        },
+        {
+          "name": "estoque_ideal",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "prazo_reposicao_dias",
+          "type": "number",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": ["CREATE INDEX idx_estoque_insumos_produto ON estoque_insumos (produto)"]
@@ -4033,6 +4045,83 @@
         }
       ],
       "indexes": []
+    },
+    {
+      "name": "planejamento_compras",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "insumo_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "estoque_insumos"
+        },
+        {
+          "name": "quantidade_sugerida",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "prioridade",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Crítico", "Atenção", "Normal"]
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Sugerido", "Em Cotação", "Comprado", "Recebido"]
+        },
+        {
+          "name": "valor_estimado",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "usuario_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_plan_compras_insumo ON planejamento_compras (insumo_id)",
+        "CREATE INDEX idx_plan_compras_status ON planejamento_compras (status)"
+      ]
     }
   ]
 }

@@ -76,6 +76,7 @@ import Reproducao from './pages/reproducao/Reproducao'
 import MetasKPIs from './pages/estrategia/MetasKPIs'
 import SimuladorCenarios from './pages/estrategia/SimuladorCenarios'
 import DashboardEstoque from './pages/estoque/DashboardEstoque'
+import PlanejamentoCompras from './pages/estoque/PlanejamentoCompras'
 import CadastroManual from './pages/estoque/CadastroManual'
 import ReceitasRacao from './pages/estoque/ReceitasRacao'
 import ReceitaForm from './pages/estoque/ReceitaForm'
@@ -403,6 +404,14 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute>
             <DashboardEstoque />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/estoque/planejamento-compras"
+        element={
+          <AuthorizeRoute>
+            <PlanejamentoCompras />
           </AuthorizeRoute>
         }
       />

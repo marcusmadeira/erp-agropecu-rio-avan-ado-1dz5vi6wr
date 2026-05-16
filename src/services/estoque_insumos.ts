@@ -7,6 +7,10 @@ export interface EstoqueInsumo {
   unidade_medida: string
   custo_medio_unitario: number
   categoria: string
+  estoque_minimo_critico?: number
+  consumo_medio_diario?: number
+  estoque_ideal?: number
+  prazo_reposicao_dias?: number
 }
 
 export const getInsumos = () => {
