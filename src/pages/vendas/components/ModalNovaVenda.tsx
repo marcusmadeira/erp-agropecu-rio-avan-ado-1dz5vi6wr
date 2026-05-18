@@ -67,7 +67,7 @@ export function ModalNovaVenda({ open, onOpenChange, onSuccess }: any) {
         ...form,
         data_venda: new Date().toISOString(),
         status_venda: 'Confirmada',
-        numero_parcelas: form.forma_pagamento === 'Parcelado' ? Number(parcelas) : 1,
+        numero_parcelas: form.forma_pagamento === 'Parcelado' ? Number(parcelas) || 1 : 1,
         valor_entrada: form.valor_entrada ? Number(form.valor_entrada) : 0,
       }
       if (payload.evento_id === 'none') delete payload.evento_id

@@ -27,7 +27,7 @@ export const createVenda = async (venda: any, itens: any[], parcelas: any[]) => 
         0,
       ),
       quantidade_animais: itens.reduce((acc, item) => acc + Number(item.quantidade || 1), 0),
-      numero_parcelas: parcelas.length || 1,
+      numero_parcelas: venda.numero_parcelas ? Number(venda.numero_parcelas) : parcelas.length || 1,
     },
     itens,
     parcelas,
@@ -50,6 +50,7 @@ export const updateVenda = async (id: string, venda: any, itens: any[], parcelas
     ...venda,
     quantidade_animais: itens.length,
     valor_total_venda,
+    numero_parcelas: venda.numero_parcelas ? Number(venda.numero_parcelas) : parcelas.length || 1,
   })
 
   try {

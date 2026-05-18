@@ -61,7 +61,7 @@ export default function VendaForm() {
     tipo_gado: 'Comercial',
     forma_pagamento: 'AVista',
     status_venda: 'Pendente',
-    numero_parcelas: 1,
+    numero_parcelas: 1 as string | number,
     centro_custo: 'CC02',
     valor_entrada: '',
     data_vencimento_entrada: new Date().toISOString().split('T')[0],
@@ -351,6 +351,8 @@ export default function VendaForm() {
         ...formData,
         data_venda: new Date(formData.data_venda).toISOString(),
         data_vencimento_entrada: new Date(formData.data_vencimento_entrada).toISOString(),
+        numero_parcelas:
+          formData.forma_pagamento === 'AVista' ? 1 : Number(formData.numero_parcelas) || 1,
       }
       if (!dataToSave.evento_id || dataToSave.evento_id === 'none')
         delete (dataToSave as any).evento_id
@@ -818,7 +820,8 @@ export default function VendaForm() {
                     setFormData({
                       ...formData,
                       forma_pagamento: v,
-                      numero_parcelas: v === 'AVista' ? 1 : Math.max(2, formData.numero_parcelas),
+                      numero_parcelas:
+                        v === 'AVista' ? 1 : Math.max(2, Number(formData.numero_parcelas) || 2),
                     })
                   }
                 >
@@ -841,7 +844,10 @@ export default function VendaForm() {
                       max="40"
                       value={formData.numero_parcelas}
                       onChange={(e) =>
-                        setFormData({ ...formData, numero_parcelas: parseInt(e.target.value) || 1 })
+                        setFormData({
+                          ...formData,
+                          numero_parcelas: e.target.value === '' ? '' : parseInt(e.target.value),
+                        })
                       }
                       required
                     />
