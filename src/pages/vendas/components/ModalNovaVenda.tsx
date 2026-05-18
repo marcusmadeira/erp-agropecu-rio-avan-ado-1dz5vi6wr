@@ -33,6 +33,7 @@ export function ModalNovaVenda({ open, onOpenChange, onSuccess }: any) {
     forma_pagamento: 'AVista',
     valor_total_venda: '',
     valor_entrada: '',
+    centro_custo: 'CC02',
   })
   const [parcelas, setParcelas] = useState('1')
 
@@ -124,15 +125,33 @@ export function ModalNovaVenda({ open, onOpenChange, onSuccess }: any) {
               +
             </Button>
           </div>
-          <Select value={form.tipo_gado} onValueChange={(v) => setForm({ ...form, tipo_gado: v })}>
-            <SelectTrigger className="border-gray-300">
-              <SelectValue placeholder="Tipo Gado" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Comercial">Comercial</SelectItem>
-              <SelectItem value="PO">PO</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select
+              value={form.tipo_gado}
+              onValueChange={(v) => setForm({ ...form, tipo_gado: v })}
+            >
+              <SelectTrigger className="border-gray-300">
+                <SelectValue placeholder="Tipo Gado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Comercial">Comercial</SelectItem>
+                <SelectItem value="PO">PO</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={form.centro_custo}
+              onValueChange={(v) => setForm({ ...form, centro_custo: v })}
+            >
+              <SelectTrigger className="border-gray-300">
+                <SelectValue placeholder="Centro de Custo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CC01">CC01 - Nelore PO</SelectItem>
+                <SelectItem value="CC02">CC02 - Comercial TIP</SelectItem>
+                <SelectItem value="CC03">CC03 - Estrutural/Rateio</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex gap-2 col-span-2 sm:col-span-1">
             <Input
               type="number"

@@ -62,7 +62,7 @@ export default function VendaForm() {
     forma_pagamento: 'AVista',
     status_venda: 'Pendente',
     numero_parcelas: 1,
-    centro_custo: 'CC02-Comercial TIP',
+    centro_custo: 'CC02',
     valor_entrada: '',
     data_vencimento_entrada: new Date().toISOString().split('T')[0],
   })
@@ -109,7 +109,7 @@ export default function VendaForm() {
           forma_pagamento: venda.forma_pagamento,
           status_venda: venda.status_venda,
           numero_parcelas: venda.numero_parcelas || 1,
-          centro_custo: 'CC02-Comercial TIP',
+          centro_custo: venda.centro_custo || 'CC02',
           valor_entrada: venda.valor_entrada || '',
           data_vencimento_entrada: venda.data_vencimento_entrada
             ? venda.data_vencimento_entrada.split('T')[0]
@@ -354,7 +354,6 @@ export default function VendaForm() {
       }
       if (!dataToSave.evento_id || dataToSave.evento_id === 'none')
         delete (dataToSave as any).evento_id
-      delete (dataToSave as any).centro_custo
 
       if (dataToSave.valor_entrada === '') {
         delete (dataToSave as any).valor_entrada
@@ -525,6 +524,22 @@ export default function VendaForm() {
                 }
                 required
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Centro de Custo *</Label>
+              <Select
+                value={formData.centro_custo}
+                onValueChange={(v) => setFormData({ ...formData, centro_custo: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CC01">CC01 - Nelore PO</SelectItem>
+                  <SelectItem value="CC02">CC02 - Comercial TIP</SelectItem>
+                  <SelectItem value="CC03">CC03 - Estrutural/Rateio</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Tipo de Gado *</Label>
