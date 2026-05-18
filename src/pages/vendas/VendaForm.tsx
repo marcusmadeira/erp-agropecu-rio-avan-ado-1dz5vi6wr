@@ -108,8 +108,8 @@ export default function VendaForm() {
           tipo_gado: venda.tipo_gado,
           forma_pagamento: venda.forma_pagamento,
           status_venda: venda.status_venda,
-          numero_parcelas: venda.numero_parcelas ?? 1,
-          centro_custo: venda.centro_custo || 'CC02',
+          numero_parcelas: venda.numero_parcelas ?? (venda.forma_pagamento === 'AVista' ? 1 : ''),
+          centro_custo: 'CC02',
           valor_entrada: venda.valor_entrada || '',
           data_vencimento_entrada: venda.data_vencimento_entrada
             ? venda.data_vencimento_entrada.split('T')[0]
@@ -332,39 +332,22 @@ export default function VendaForm() {
       if (
         formData.numero_parcelas === '' ||
         formData.numero_parcelas === undefined ||
-        formData.numero_parcelas === null
+        formData.numero_parcelas === null ||
+        Number(formData.numero_parcelas) === 0
       ) {
         toast({
           title: 'Erro de Validação',
-          description: 'Preencha o número de parcelas',
+          description: 'Preencha o número de parcelas (maior que zero).',
           variant: 'destructive',
         })
         return
       }
 
       const parcelasParsed = Number(formData.numero_parcelas)
-      if (isNaN(parcelasParsed)) {
+      if (isNaN(parcelasParsed) || parcelasParsed <= 0 || !Number.isInteger(parcelasParsed)) {
         toast({
           title: 'Erro de Validação',
-          description: 'O número de parcelas deve ser um valor numérico válido',
-          variant: 'destructive',
-        })
-        return
-      }
-
-      if (parcelasParsed <= 0) {
-        toast({
-          title: 'Erro de Validação',
-          description: 'O número de parcelas deve ser maior que 0',
-          variant: 'destructive',
-        })
-        return
-      }
-
-      if (!Number.isInteger(parcelasParsed)) {
-        toast({
-          title: 'Erro de Validação',
-          description: 'O número de parcelas deve ser um número inteiro',
+          description: 'O número de parcelas deve ser um número inteiro maior que zero.',
           variant: 'destructive',
         })
         return
@@ -437,6 +420,7 @@ export default function VendaForm() {
       })
 
       if (id) {
+        delete (dataToSave as any).centro_custo
         await updateVenda(id, dataToSave, itemsToSave, parcelasToSave)
         toast({ title: 'Venda atualizada com sucesso!' })
       } else {

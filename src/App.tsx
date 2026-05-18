@@ -124,6 +124,11 @@ const AuthorizeRoute = ({ children }: { children: React.ReactNode }) => {
   if (serverError) return <ServiceUnavailable onRetry={retryConnection} />
   if (!user) return <Navigate to="/login" replace />
 
+  const isOperacional = user.role === 'Operacional' || user.nivel_acesso === 'Operacional'
+  if (isOperacional) {
+    return <Navigate to="/animais" replace />
+  }
+
   return <ErrorBoundary>{children}</ErrorBoundary>
 }
 
@@ -145,6 +150,8 @@ const AppRoutes = () => (
         </PublicRoute>
       }
     />
+
+    <Route path="/signup" element={<Navigate to="/login" replace />} />
 
     <Route path="/forgot-password" element={<Navigate to="/recuperar-senha" replace />} />
     <Route

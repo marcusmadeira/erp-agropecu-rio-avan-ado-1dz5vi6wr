@@ -37,6 +37,17 @@ routerAdd(
               record.set('status', 'Ativo')
               txApp.save(record)
               inseridos.push(record.id)
+
+              const auditCol = txApp.findCollectionByNameOrId('auditoria_movimentacoes')
+              const auditRec = new Record(auditCol)
+              auditRec.set('usuario_id', usuario_id)
+              auditRec.set('tipo_acao', 'CREATE')
+              auditRec.set('tabela_afetada', 'animais')
+              auditRec.set('registro_id', record.id)
+              auditRec.set('status', 'SUCCESS')
+              auditRec.set('description', 'Animal importado')
+              auditRec.set('user_email', e.auth.getString('email'))
+              txApp.save(auditRec)
             } else if (tipo_dado === 'parceiros') {
               if (!reg.numero_documento) throw new Error('Documento obrigatório')
               let record
@@ -67,6 +78,20 @@ routerAdd(
               }
               txApp.save(record)
               inseridos.push(record.id)
+
+              const auditCol = txApp.findCollectionByNameOrId('auditoria_movimentacoes')
+              const auditRec = new Record(auditCol)
+              auditRec.set('usuario_id', usuario_id)
+              auditRec.set('tipo_acao', isUpdate ? 'UPDATE' : 'CREATE')
+              auditRec.set('tabela_afetada', 'parceiros_negocios')
+              auditRec.set('registro_id', record.id)
+              auditRec.set('status', 'SUCCESS')
+              auditRec.set(
+                'description',
+                isUpdate ? 'Parceiro atualizado via importação' : 'Parceiro importado',
+              )
+              auditRec.set('user_email', e.auth.getString('email'))
+              txApp.save(auditRec)
             } else if (tipo_dado === 'transacoes') {
               if (!reg.descricao_lancamento) throw new Error('Descrição obrigatória')
               const col = txApp.findCollectionByNameOrId('transacoes_financeiras')
@@ -107,6 +132,17 @@ routerAdd(
 
               txApp.save(record)
               inseridos.push(record.id)
+
+              const auditCol = txApp.findCollectionByNameOrId('auditoria_movimentacoes')
+              const auditRec = new Record(auditCol)
+              auditRec.set('usuario_id', usuario_id)
+              auditRec.set('tipo_acao', 'CREATE')
+              auditRec.set('tabela_afetada', 'transacoes_financeiras')
+              auditRec.set('registro_id', record.id)
+              auditRec.set('status', 'SUCCESS')
+              auditRec.set('description', 'Transação importada')
+              auditRec.set('user_email', e.auth.getString('email'))
+              txApp.save(auditRec)
             }
           } catch (rowErr) {
             erros.push(`Linha ${i + 1}: ${rowErr.message}`)

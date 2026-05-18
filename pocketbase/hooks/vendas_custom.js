@@ -9,9 +9,27 @@ routerAdd(
     $app.runInTransaction((txApp) => {
       const vendasCol = txApp.findCollectionByNameOrId('vendas')
       const record = new Record(vendasCol)
-      Object.keys(venda).forEach((k) => record.set(k, venda[k]))
+      Object.keys(venda).forEach((k) => {
+        if (k !== 'centro_custo') record.set(k, venda[k])
+      })
       txApp.save(record)
       recordId = record.id
+
+      try {
+        const auditCol = txApp.findCollectionByNameOrId('auditoria_movimentacoes')
+        const auditRec = new Record(auditCol)
+        auditRec.set('usuario_id', e.auth.id)
+        auditRec.set('tipo_acao', 'CREATE')
+        auditRec.set('tabela_afetada', 'vendas')
+        auditRec.set('registro_id', record.id)
+        auditRec.set('status', 'SUCCESS')
+        auditRec.set('description', 'Venda registrada via API')
+        auditRec.set('user_email', e.auth.getString('email'))
+        auditRec.set('user_role', e.auth.getString('role') || e.auth.getString('nivel_acesso'))
+        txApp.save(auditRec)
+      } catch (err) {
+        console.log('Audit save error on venda:', err.message)
+      }
 
       const itensCol = txApp.findCollectionByNameOrId('itens_venda')
       for (let item of itens) {
@@ -96,10 +114,8 @@ routerAdd(
         transacao.set('parceiro_id', venda.cliente_id)
         transacao.set('tipo_movimento', 'Receita')
         transacao.set('classificacao_custo', 'VARIÁVEL')
-        transacao.set(
-          'centro_custo',
-          venda.tipo_gado === 'PO' ? 'CC01-Nelore PO' : 'CC02-Comercial TIP',
-        )
+        const cc = venda.centro_custo || (venda.tipo_gado === 'PO' ? 'CC01' : 'CC02')
+        transacao.set('centro_custo', cc.substring(0, 4))
         transacao.set('valor_total', venda.valor_total_venda)
         transacao.set(
           'status_pagamento',

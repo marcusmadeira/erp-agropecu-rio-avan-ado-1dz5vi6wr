@@ -65,32 +65,23 @@ export function ModalNovaVenda({ open, onOpenChange, onSuccess }: any) {
 
     let finalNumeroParcelas = 1
     if (form.forma_pagamento === 'Parcelado') {
-      if (parcelas === '' || parcelas === undefined || parcelas === null) {
+      if (
+        parcelas === '' ||
+        parcelas === undefined ||
+        parcelas === null ||
+        Number(parcelas) === 0
+      ) {
         return toast({
           title: 'Erro de Validação',
-          description: 'Preencha o número de parcelas',
+          description: 'Preencha o número de parcelas (maior que zero).',
           variant: 'destructive',
         })
       }
       const parcelasParsed = Number(parcelas)
-      if (isNaN(parcelasParsed)) {
+      if (isNaN(parcelasParsed) || parcelasParsed <= 0 || !Number.isInteger(parcelasParsed)) {
         return toast({
           title: 'Erro de Validação',
-          description: 'O número de parcelas deve ser um valor numérico válido',
-          variant: 'destructive',
-        })
-      }
-      if (parcelasParsed <= 0) {
-        return toast({
-          title: 'Erro de Validação',
-          description: 'O número de parcelas deve ser maior que 0',
-          variant: 'destructive',
-        })
-      }
-      if (!Number.isInteger(parcelasParsed)) {
-        return toast({
-          title: 'Erro de Validação',
-          description: 'O número de parcelas deve ser um número inteiro',
+          description: 'O número de parcelas deve ser um número inteiro maior que zero.',
           variant: 'destructive',
         })
       }
