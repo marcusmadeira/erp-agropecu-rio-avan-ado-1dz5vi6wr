@@ -35,7 +35,7 @@ export function ModalNovaVenda({ open, onOpenChange, onSuccess }: any) {
     valor_entrada: '',
     centro_custo: 'CC02',
   })
-  const [parcelas, setParcelas] = useState('1')
+  const [parcelas, setParcelas] = useState('')
 
   useEffect(() => {
     if (open) {
@@ -62,16 +62,51 @@ export function ModalNovaVenda({ open, onOpenChange, onSuccess }: any) {
         title: 'Preencha os campos obrigatórios e selecione animais',
         variant: 'destructive',
       })
+
+    let finalNumeroParcelas = 1
+    if (form.forma_pagamento === 'Parcelado') {
+      if (parcelas === '' || parcelas === undefined || parcelas === null) {
+        return toast({
+          title: 'Erro de Validação',
+          description: 'Preencha o número de parcelas',
+          variant: 'destructive',
+        })
+      }
+      const parcelasParsed = Number(parcelas)
+      if (isNaN(parcelasParsed)) {
+        return toast({
+          title: 'Erro de Validação',
+          description: 'O número de parcelas deve ser um valor numérico válido',
+          variant: 'destructive',
+        })
+      }
+      if (parcelasParsed <= 0) {
+        return toast({
+          title: 'Erro de Validação',
+          description: 'O número de parcelas deve ser maior que 0',
+          variant: 'destructive',
+        })
+      }
+      if (!Number.isInteger(parcelasParsed)) {
+        return toast({
+          title: 'Erro de Validação',
+          description: 'O número de parcelas deve ser um número inteiro',
+          variant: 'destructive',
+        })
+      }
+      finalNumeroParcelas = parcelasParsed
+    }
+
     try {
       const payload = {
         ...form,
         data_venda: new Date().toISOString(),
         status_venda: 'Confirmada',
-        numero_parcelas: form.forma_pagamento === 'Parcelado' ? Number(parcelas) || 1 : 1,
+        numero_parcelas: finalNumeroParcelas,
         valor_entrada: form.valor_entrada ? Number(form.valor_entrada) : 0,
       }
       if (payload.evento_id === 'none') delete payload.evento_id
-      await createVendaCompleta(payload, selected, Number(parcelas))
+      await createVendaCompleta(payload, selected, finalNumeroParcelas)
       toast({ title: 'Venda confirmada e parcelas geradas!' })
       onSuccess()
       onOpenChange(false)

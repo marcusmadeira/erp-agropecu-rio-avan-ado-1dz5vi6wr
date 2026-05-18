@@ -108,7 +108,7 @@ export default function VendaForm() {
           tipo_gado: venda.tipo_gado,
           forma_pagamento: venda.forma_pagamento,
           status_venda: venda.status_venda,
-          numero_parcelas: venda.numero_parcelas || 1,
+          numero_parcelas: venda.numero_parcelas ?? 1,
           centro_custo: venda.centro_custo || 'CC02',
           valor_entrada: venda.valor_entrada || '',
           data_vencimento_entrada: venda.data_vencimento_entrada
@@ -174,18 +174,20 @@ export default function VendaForm() {
 
       if (formData.forma_pagamento === 'Parcelado') {
         if (saldoDevedor > 0) {
-          const numParcelas = formData.numero_parcelas || 1
-          const val = saldoDevedor / numParcelas
-          const interval = parseInt(intervaloParcelas) || 30
-          for (let i = 1; i <= numParcelas; i++) {
-            const d = new Date(formData.data_venda)
-            d.setDate(d.getDate() + interval * i)
-            newParcelas.push({
-              numero: i,
-              valor: val.toFixed(2),
-              data_vencimento: d.toISOString().split('T')[0],
-              status_parcela: 'Pendente',
-            })
+          const numParcelas = Number(formData.numero_parcelas)
+          if (!isNaN(numParcelas) && numParcelas > 0 && Number.isInteger(numParcelas)) {
+            const val = saldoDevedor / numParcelas
+            const interval = parseInt(intervaloParcelas) || 30
+            for (let i = 1; i <= numParcelas; i++) {
+              const d = new Date(formData.data_venda)
+              d.setDate(d.getDate() + interval * i)
+              newParcelas.push({
+                numero: i,
+                valor: val.toFixed(2),
+                data_vencimento: d.toISOString().split('T')[0],
+                status_parcela: 'Pendente',
+              })
+            }
           }
         }
       } else if (formData.forma_pagamento === 'AVista') {
@@ -325,7 +327,51 @@ export default function VendaForm() {
       return
     }
 
+    let finalNumeroParcelas = 1
     if (formData.forma_pagamento === 'Parcelado') {
+      if (
+        formData.numero_parcelas === '' ||
+        formData.numero_parcelas === undefined ||
+        formData.numero_parcelas === null
+      ) {
+        toast({
+          title: 'Erro de Validação',
+          description: 'Preencha o número de parcelas',
+          variant: 'destructive',
+        })
+        return
+      }
+
+      const parcelasParsed = Number(formData.numero_parcelas)
+      if (isNaN(parcelasParsed)) {
+        toast({
+          title: 'Erro de Validação',
+          description: 'O número de parcelas deve ser um valor numérico válido',
+          variant: 'destructive',
+        })
+        return
+      }
+
+      if (parcelasParsed <= 0) {
+        toast({
+          title: 'Erro de Validação',
+          description: 'O número de parcelas deve ser maior que 0',
+          variant: 'destructive',
+        })
+        return
+      }
+
+      if (!Number.isInteger(parcelasParsed)) {
+        toast({
+          title: 'Erro de Validação',
+          description: 'O número de parcelas deve ser um número inteiro',
+          variant: 'destructive',
+        })
+        return
+      }
+
+      finalNumeroParcelas = parcelasParsed
+
       const selectedClient = clientes.find((c) => c.id === formData.cliente_id)
       if (selectedClient && !selectedClient.numero_documento) {
         toast({
@@ -351,8 +397,7 @@ export default function VendaForm() {
         ...formData,
         data_venda: new Date(formData.data_venda).toISOString(),
         data_vencimento_entrada: new Date(formData.data_vencimento_entrada).toISOString(),
-        numero_parcelas:
-          formData.forma_pagamento === 'AVista' ? 1 : Number(formData.numero_parcelas) || 1,
+        numero_parcelas: finalNumeroParcelas,
       }
       if (!dataToSave.evento_id || dataToSave.evento_id === 'none')
         delete (dataToSave as any).evento_id
@@ -821,7 +866,11 @@ export default function VendaForm() {
                       ...formData,
                       forma_pagamento: v,
                       numero_parcelas:
-                        v === 'AVista' ? 1 : Math.max(2, Number(formData.numero_parcelas) || 2),
+                        v === 'AVista'
+                          ? 1
+                          : formData.numero_parcelas === 1
+                            ? ''
+                            : formData.numero_parcelas,
                     })
                   }
                 >
@@ -846,7 +895,7 @@ export default function VendaForm() {
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          numero_parcelas: e.target.value === '' ? '' : parseInt(e.target.value),
+                          numero_parcelas: e.target.value,
                         })
                       }
                       required
