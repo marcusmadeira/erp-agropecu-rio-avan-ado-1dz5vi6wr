@@ -133,13 +133,14 @@ export default function VendaForm() {
     }
   }, [id])
 
-  const total = items.reduce(
-    (acc, item) =>
+  const total = items.reduce((acc, item) => {
+    const qtd =
+      item.quantidade !== undefined && item.quantidade !== '' ? Number(item.quantidade) : 1
+    return (
       acc +
-      (Number(item.valor_total || item.valor_unitario * (item.quantidade || 1)) -
-        Number(item.desconto_aplicado)),
-    0,
-  )
+      (Number(item.valor_total || item.valor_unitario * qtd) - Number(item.desconto_aplicado || 0))
+    )
+  }, 0)
 
   const totalCost = items.reduce(
     (acc, item) =>

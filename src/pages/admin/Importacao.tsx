@@ -68,6 +68,7 @@ export default function Importacao() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [history, setHistory] = useState<any[]>([])
   const [isUndoing, setIsUndoing] = useState<string | null>(null)
+  const [importErrors, setImportErrors] = useState<string[]>([])
 
   const loadHistory = async () => {
     try {
@@ -166,6 +167,7 @@ export default function Importacao() {
     setCsvHeaders([])
     setCsvRows([])
     setMapping({})
+    setImportErrors([])
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -191,18 +193,24 @@ export default function Importacao() {
       const res = await processarImportacao(dataType, registros, selectedFile.name, strategy)
 
       if (res.erros && res.erros.length > 0) {
+        setImportErrors(res.erros)
         toast({
           title: 'Importação com Avisos',
-          description: `Inseridos: ${res.inseridos} registros. Erros: ${res.erros.length}. Verifique o relatório.`,
+          description: `Inseridos: ${res.inseridos} registros. Erros: ${res.erros.length}. Verifique as falhas.`,
           variant: 'destructive',
         })
       } else {
+        setImportErrors([])
         toast({
           title: 'Importação Concluída!',
           description: `Inseridos: ${res.inseridos} registros com sucesso.`,
         })
       }
-      clearFile()
+      setSelectedFile(null)
+      setCsvHeaders([])
+      setCsvRows([])
+      setMapping({})
+      if (fileInputRef.current) fileInputRef.current.value = ''
     } catch (err: any) {
       toast({
         title: 'Falha na Importação',
@@ -355,6 +363,26 @@ export default function Importacao() {
               'Iniciar Importação'
             )}
           </Button>
+
+          {importErrors.length > 0 && (
+            <Card className="shadow-sm border-t-4 border-t-rose-500 bg-rose-50 mt-4 animate-fade-in-up">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-rose-700 text-sm">
+                  Falhas de Validação ({importErrors.length})
+                </CardTitle>
+                <CardDescription className="text-xs text-rose-600/80">
+                  Essas linhas não foram processadas e possuem erros críticos.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="text-xs text-rose-700 max-h-48 overflow-y-auto list-disc pl-4 space-y-1">
+                  {importErrors.map((err, i) => (
+                    <li key={i}>{err}</li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="md:col-span-8 space-y-6">

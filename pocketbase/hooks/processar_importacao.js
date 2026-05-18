@@ -45,7 +45,7 @@ routerAdd(
               auditRec.set('tabela_afetada', 'animais')
               auditRec.set('registro_id', record.id)
               auditRec.set('status', 'SUCCESS')
-              auditRec.set('description', 'Animal importado')
+              auditRec.set('description', `Animal importado via arquivo: ${arquivo_nome}`)
               auditRec.set('user_email', e.auth.getString('email'))
               txApp.save(auditRec)
             } else if (tipo_dado === 'parceiros') {
@@ -88,7 +88,9 @@ routerAdd(
               auditRec.set('status', 'SUCCESS')
               auditRec.set(
                 'description',
-                isUpdate ? 'Parceiro atualizado via importação' : 'Parceiro importado',
+                isUpdate
+                  ? `Parceiro atualizado via importação: ${arquivo_nome}`
+                  : `Parceiro importado via arquivo: ${arquivo_nome}`,
               )
               auditRec.set('user_email', e.auth.getString('email'))
               txApp.save(auditRec)
@@ -140,12 +142,26 @@ routerAdd(
               auditRec.set('tabela_afetada', 'transacoes_financeiras')
               auditRec.set('registro_id', record.id)
               auditRec.set('status', 'SUCCESS')
-              auditRec.set('description', 'Transação importada')
+              auditRec.set('description', `Transação importada via arquivo: ${arquivo_nome}`)
               auditRec.set('user_email', e.auth.getString('email'))
               txApp.save(auditRec)
             }
           } catch (rowErr) {
             erros.push(`Linha ${i + 1}: ${rowErr.message}`)
+
+            try {
+              const auditCol = txApp.findCollectionByNameOrId('auditoria_movimentacoes')
+              const auditRec = new Record(auditCol)
+              auditRec.set('usuario_id', usuario_id)
+              auditRec.set('tipo_acao', 'CREATE')
+              auditRec.set('tabela_afetada', tipo_dado)
+              auditRec.set('registro_id', 'FALHA_LINHA')
+              auditRec.set('status', 'FAILED')
+              auditRec.set('description', `Falha importação (Linha ${i + 1}): ${rowErr.message}`)
+              auditRec.set('user_email', e.auth.getString('email'))
+              txApp.save(auditRec)
+            } catch (_) {}
+
             if (estrategia === 'parar_falha') {
               throw new Error(`Abortado na linha ${i + 1}: ${rowErr.message}`)
             }
@@ -176,6 +192,20 @@ routerAdd(
         histRecord.set('status', 'Falha')
         histRecord.set('registros_ids', [])
         $app.save(histRecord)
+
+        const auditCol = $app.findCollectionByNameOrId('auditoria_movimentacoes')
+        const auditRec = new Record(auditCol)
+        auditRec.set('usuario_id', usuario_id)
+        auditRec.set('tipo_acao', 'CREATE')
+        auditRec.set('tabela_afetada', tipo_dado)
+        auditRec.set('registro_id', 'FALHA_GERAL')
+        auditRec.set('status', 'FAILED')
+        auditRec.set(
+          'description',
+          `Falha crítica na importação do arquivo ${arquivo_nome}: ${err.message}`,
+        )
+        auditRec.set('user_email', e.auth?.getString('email'))
+        $app.save(auditRec)
       } catch (_) {}
 
       throw new BadRequestError(err.message)

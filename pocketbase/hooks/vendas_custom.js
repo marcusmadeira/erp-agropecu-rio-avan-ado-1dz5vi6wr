@@ -5,6 +5,14 @@ routerAdd(
     const body = e.requestInfo().body
     const { venda, itens, parcelas } = body
 
+    if (
+      !venda.numero_parcelas ||
+      isNaN(Number(venda.numero_parcelas)) ||
+      Number(venda.numero_parcelas) < 1
+    ) {
+      throw new BadRequestError('Número de parcelas inválido. Deve ser um inteiro maior que zero.')
+    }
+
     let recordId
     $app.runInTransaction((txApp) => {
       const vendasCol = txApp.findCollectionByNameOrId('vendas')
@@ -114,8 +122,14 @@ routerAdd(
         transacao.set('parceiro_id', venda.cliente_id)
         transacao.set('tipo_movimento', 'Receita')
         transacao.set('classificacao_custo', 'VARIÁVEL')
-        const cc = venda.centro_custo || (venda.tipo_gado === 'PO' ? 'CC01' : 'CC02')
-        transacao.set('centro_custo', cc.substring(0, 4))
+
+        const cc = venda.centro_custo
+          ? venda.centro_custo.substring(0, 4)
+          : venda.tipo_gado === 'PO'
+            ? 'CC01'
+            : 'CC02'
+        transacao.set('centro_custo', cc)
+
         transacao.set('valor_total', venda.valor_total_venda)
         transacao.set(
           'status_pagamento',

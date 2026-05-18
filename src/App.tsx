@@ -151,7 +151,19 @@ const AppRoutes = () => (
       }
     />
 
-    <Route path="/signup" element={<Navigate to="/login" replace />} />
+    <Route
+      path="/signup"
+      element={
+        <Navigate
+          to="/login"
+          state={{
+            message:
+              'O registro automático está desabilitado. Por favor, solicite acesso ao administrador do sistema.',
+          }}
+          replace
+        />
+      }
+    />
 
     <Route path="/forgot-password" element={<Navigate to="/recuperar-senha" replace />} />
     <Route
