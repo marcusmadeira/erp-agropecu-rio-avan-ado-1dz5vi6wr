@@ -76,6 +76,8 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
     }
   })
 
+  const processedDespesaIds = new Set()
+
   boletosPagar.forEach((bp: any) => {
     if (dateFrom || dateTo) {
       if (!isDateInRange(bp.data_vencimento)) return
@@ -86,6 +88,16 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
     } else {
       pendingExpenses += val
     }
+    if (bp.despesa_id) processedDespesaIds.add(bp.despesa_id)
+  })
+
+  despesas.forEach((d: any) => {
+    if (processedDespesaIds.has(d.id)) return
+    if (dateFrom || dateTo) {
+      if (!isDateInRange(d.data_despesa)) return
+    }
+    const val = Number(d.valor) || 0
+    realizedExpenses += val
   })
 
   boletos.forEach((b: any) => {

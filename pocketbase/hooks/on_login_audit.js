@@ -2,6 +2,11 @@ onRecordAuthRequest((e) => {
   const record = e.record
   if (!record) return e.next()
 
+  const path = e.request.url.path || ''
+  if (path.endsWith('/auth-refresh')) {
+    return e.next()
+  }
+
   try {
     const auditCol = $app.findCollectionByNameOrId('auditoria_movimentacoes')
     const auditRec = new Record(auditCol)

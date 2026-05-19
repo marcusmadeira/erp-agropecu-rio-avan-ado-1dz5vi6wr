@@ -1,6 +1,15 @@
 import pb from '@/lib/pocketbase/client'
 
-export const getVendas = () => pb.send('/backend/v1/vendas', { method: 'GET' })
+export const getVendas = async () => {
+  try {
+    const vendas = await pb
+      .collection('vendas')
+      .getFullList({ expand: 'cliente_id,evento_id', sort: '-data_venda' })
+    return vendas
+  } catch (error) {
+    return pb.send('/backend/v1/vendas', { method: 'GET' })
+  }
+}
 
 export const getVenda = (id: string) =>
   pb.collection('vendas').getOne(id, { expand: 'cliente_id,evento_id' })

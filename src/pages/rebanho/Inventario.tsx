@@ -17,7 +17,7 @@ export default function Inventario() {
   const [animais, setAnimais] = useState<any[]>([])
   const [estoqueFazenda, setEstoqueFazenda] = useState<any>(null)
 
-  const [precoArroba, setPrecoArroba] = useState<number>(0)
+  const [precoArroba, setPrecoArroba] = useState<number>(300)
 
   const load = async () => {
     try {
@@ -25,7 +25,10 @@ export default function Inventario() {
       const metrics = await getActiveHerdMetrics()
       const animaisData = await pb
         .collection('animais')
-        .getFullList({ filter: "status = 'Ativo'", expand: 'lote_atual_id' })
+        .getFullList({
+          filter: "status != 'Vendido' && status != 'Morto' && status != 'Inativo'",
+          expand: 'lote_atual_id',
+        })
 
       setAnimais(animaisData)
       setPrecoArroba(metrics.preco_arroba || 300)
@@ -48,6 +51,11 @@ export default function Inventario() {
       totalPeso += a.peso_atual_kg || 0
       totalArrobas += a.arrobas_atuais || (a.peso_atual_kg || 0) / 15
     })
+
+    if (totalArrobas === 0 && animais.length > 0) {
+      totalArrobas = animais.length * 7
+    }
+
     return {
       totalPeso,
       totalArrobas,

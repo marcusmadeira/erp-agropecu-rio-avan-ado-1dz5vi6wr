@@ -162,7 +162,7 @@ const AppRoutes = () => (
     />
 
     <Route path="/forgot-password" element={<Navigate to="/recuperar-senha" replace />} />
-    <Route path="/ofertas" element={<Navigate to="/login" replace />} />
+    <Route path="/ofertas" element={<Navigate to="/" replace />} />
     <Route
       path="/recuperar-senha"
       element={
