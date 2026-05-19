@@ -154,19 +154,41 @@ const AppRoutes = () => (
     <Route
       path="/signup"
       element={
-        <Navigate
-          to="/login"
-          state={{
-            message:
-              'O registro automático está desabilitado. Por favor, solicite acesso ao administrador do sistema.',
-          }}
-          replace
-        />
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-center px-4">
+          <h2 className="text-2xl font-bold text-emerald-900 mb-4">Registro Indisponível</h2>
+          <p className="text-gray-600 mb-6 max-w-md">
+            O registro automático está desabilitado. Por favor, solicite acesso ao administrador do
+            sistema.
+          </p>
+          <Button
+            onClick={() => (window.location.href = '/login')}
+            className="bg-emerald-800 text-white hover:bg-emerald-900 transition-colors"
+          >
+            Voltar para o Login
+          </Button>
+        </div>
       }
     />
 
     <Route path="/forgot-password" element={<Navigate to="/recuperar-senha" replace />} />
-    <Route path="/ofertas" element={<Navigate to="/" replace />} />
+    <Route
+      path="/ofertas"
+      element={
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-center px-4">
+          <h2 className="text-2xl font-bold text-emerald-900 mb-4">Ofertas da Fazenda</h2>
+          <p className="text-gray-600 mb-6 max-w-md">
+            Atualmente não temos ofertas públicas disponíveis. Faça login para acessar o portal
+            exclusivo de clientes.
+          </p>
+          <Button
+            onClick={() => (window.location.href = '/login')}
+            className="bg-emerald-800 text-white hover:bg-emerald-900 transition-colors"
+          >
+            Acessar Sistema
+          </Button>
+        </div>
+      }
+    />
     <Route
       path="/recuperar-senha"
       element={

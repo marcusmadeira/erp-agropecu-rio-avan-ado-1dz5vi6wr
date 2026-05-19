@@ -23,14 +23,22 @@ export default function RecebimentoBoletos() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const [bol, hist, met] = await Promise.all([
+      const { getConsolidatedFinancials } = await import('@/services/financeService')
+      const [bol, hist, finData] = await Promise.all([
         getBoletosCompletos(),
         getHistoricoCobrancas(),
-        obterInadimplencia(),
+        getConsolidatedFinancials(),
       ])
       setBoletos(bol)
       setHistorico(hist)
-      if (met) setMetrics(met)
+      if (finData) {
+        setMetrics({
+          valorEmAberto: finData.delinquency,
+          previsao30Dias: finData.expected30d,
+          pieData: finData.pieData,
+          tableData: finData.overdueList,
+        })
+      }
     } catch (err) {
       toast({ title: 'Erro ao carregar dados', variant: 'destructive' })
     } finally {

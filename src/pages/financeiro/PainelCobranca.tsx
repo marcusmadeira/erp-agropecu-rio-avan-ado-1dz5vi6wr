@@ -38,8 +38,32 @@ export default function PainelCobranca() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const res = await getPainelCobrancaData()
-      setData(res)
+      // Custom implementation to sync with central financial logic
+      const { getConsolidatedFinancials } = await import('@/services/financeService')
+      const { default: pb } = await import('@/lib/pocketbase/client')
+
+      const finData = await getConsolidatedFinancials()
+      const parcelasPendentes = await pb.collection('boletos').getFullList({
+        filter: "status_boleto != 'Pago' && status_boleto != 'Cancelado'",
+        expand: 'venda_id.cliente_id',
+      })
+
+      const historicos = await pb
+        .collection('historico_cobrancas')
+        .getFullList()
+        .catch(() => [])
+
+      setData({
+        dashboard: {
+          recebido: finData.realizedRevenue,
+          aReceber: finData.pendingRevenue,
+          vencido: finData.delinquency,
+          vencendo7Dias: finData.expected30d, // simplified proxy
+        },
+        parcelas: parcelasPendentes,
+        itens: [],
+        historicos: historicos,
+      })
       setError(null)
     } catch (err: any) {
       setError(err.message)

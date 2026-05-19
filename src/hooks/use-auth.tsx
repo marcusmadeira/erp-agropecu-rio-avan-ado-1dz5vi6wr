@@ -49,12 +49,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
 
-      if (pb.authStore.isValid) {
+      if (pb.authStore.isValid && pb.authStore.token) {
         try {
-          await Promise.race([
-            pb.collection('users').authRefresh(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
-          ])
+          let needsRefresh = true
+          try {
+            const tokenStr = pb.authStore.token.split('.')[1]
+            const base64 = tokenStr.replace(/-/g, '+').replace(/_/g, '/')
+            const jsonPayload = decodeURIComponent(
+              atob(base64)
+                .split('')
+                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                .join(''),
+            )
+            const payload = JSON.parse(jsonPayload)
+            // Refresh if expiring in less than 3 days
+            needsRefresh = payload.exp * 1000 - Date.now() < 3 * 24 * 60 * 60 * 1000
+          } catch (e) {
+            needsRefresh = true
+          }
+
+          if (needsRefresh) {
+            await Promise.race([
+              pb.collection('users').authRefresh(),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
+            ])
+          }
         } catch (err: any) {
           if (
             err.status === 0 ||

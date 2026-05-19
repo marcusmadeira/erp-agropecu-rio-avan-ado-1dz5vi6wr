@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import pb from '@/lib/pocketbase/client'
+import { useRealtime } from '@/hooks/use-realtime'
 
 interface Diagnostico {
   id: string
@@ -60,25 +61,28 @@ export default function DiagnosticoInicial() {
       const hist = await getDiagnosticos()
       setHistorico(hist as Diagnostico[])
 
-      // Real-time calculation
-      const animais = await pb.collection('animais').getFullList({ filter: "status = 'Ativo'" })
-      const total_animais = animais.length
-      const peso_total = animais.reduce((acc, a) => acc + (a.peso_atual_kg || 0), 0)
-      const arrobas_produzidas = peso_total / 15
+      // Real-time calculation using shared services
+      const { getActiveHerdMetrics } = await import('@/services/herdService')
+      const { getConsolidatedFinancials } = await import('@/services/financeService')
 
-      const despesas = await pb.collection('pagamentos_realizados').getFullList()
-      const recebimentos = await pb.collection('recebimentos_vendas').getFullList()
+      const [herdMetrics, finData, pastos] = await Promise.all([
+        getActiveHerdMetrics(),
+        getConsolidatedFinancials(),
+        pb.collection('pastos_e_piquetes').getFullList(),
+      ])
 
-      const custos = despesas.reduce((acc, d) => acc + (d.valor_pago || 0), 0)
-      const receitas = recebimentos.reduce((acc, r) => acc + (r.valor_recebido || 0), 0)
+      const total_animais = herdMetrics.animais_ativos
+      const arrobas_produzidas = herdMetrics.total_arrobas
 
-      const pastos = await pb.collection('pastos_e_piquetes').getFullList()
+      const custos = finData.realizedExpenses
+      const receitas = finData.realizedRevenue
+
       const tamanho_ha = pastos.reduce((acc, p) => acc + (p.area_hectares || 0), 0) || 1
 
       const custo_arroba = arrobas_produzidas > 0 ? custos / arrobas_produzidas : 0
       const lotacao = total_animais / tamanho_ha
       const produtividade_ha = arrobas_produzidas / tamanho_ha
-      const margem_lucro = receitas > 0 ? ((receitas - custos) / receitas) * 100 : 0
+      const margem_lucro = finData.margin
       const roi = custos > 0 ? ((receitas - custos) / custos) * 100 : 0
 
       setRealtimeData({
@@ -107,6 +111,11 @@ export default function DiagnosticoInicial() {
   useEffect(() => {
     loadData()
   }, [])
+
+  useRealtime('animais', () => loadData())
+  useRealtime('transacoes_financeiras', () => loadData())
+  useRealtime('despesas', () => loadData())
+  useRealtime('boletos', () => loadData())
 
   const handleSaveSnapshot = async () => {
     setSaving(true)

@@ -20,74 +20,35 @@ const formatCurrency = (val: number) => {
   return _formatCurrency(val)
 }
 import { format, differenceInDays } from 'date-fns'
+import { getConsolidatedFinancials } from '@/services/financeService'
 
 export default function FinanceSummary({ transactions }: { transactions: Transacao[] }) {
   const { state } = useAppStore()
 
-  const [dashboardStats, setDashboardStats] = useState({
+  const [dashboardStats, setDashboardStats] = useState<any>({
     realizedRevenue: 0,
+    realizedExpenses: 0,
+    balance: 0,
     pendingRevenue: 0,
     delinquency: 0,
+    expected30d: 0,
+    pieData: [],
+    overdueList: [],
   })
 
   useEffect(() => {
-    import('@/lib/pocketbase/client').then((m) => {
-      m.default
-        .send('/backend/v1/obter_dashboard_financeiro_vendas', { method: 'GET' })
-        .then((data: any) => setDashboardStats(data))
-        .catch(console.error)
-    })
-  }, [])
+    getConsolidatedFinancials().then(setDashboardStats).catch(console.error)
+  }, [transactions]) // refresh when transactions update
 
-  const { despesas, overdueAmount, expected30d, pieData, overdueList } = useMemo(() => {
-    const today = new Date()
-    const in30d = new Date()
-    in30d.setDate(today.getDate() + 30)
-
-    let des = 0,
-      exp30 = 0
-    const list: any[] = []
-
-    transactions.forEach((t) => {
-      const val = t.Valor_Total || 0
-      const vDate = new Date(t.Data_Vencimento)
-      const isPast = vDate < today
-
-      if (t.Tipo_Movimento === 'Receita') {
-        if (t.Status_Pagamento !== 'Efetivado' && t.Status_Pagamento !== 'Recebido') {
-          if (isPast || t.Status_Pagamento === 'Atrasado') {
-            list.push(t)
-          } else if (vDate <= in30d) {
-            exp30 += val
-          }
-        }
-      } else {
-        if (
-          t.Status_Pagamento === 'Efetivado' ||
-          t.Status_Pagamento === 'Pago' ||
-          t.Status_Pagamento === 'Realizado'
-        )
-          des += val
-      }
-    })
-
-    return {
-      despesas: des,
-      overdueAmount: dashboardStats.delinquency,
-      expected30d: dashboardStats.pendingRevenue,
-      pieData: [
-        { name: 'Recebido', value: dashboardStats.realizedRevenue, color: '#16a34a' },
-        { name: 'A Receber', value: dashboardStats.pendingRevenue, color: '#eab308' },
-        { name: 'Atrasado', value: dashboardStats.delinquency, color: '#dc2626' },
-      ].filter((d) => d.value > 0),
-      overdueList: list.sort(
-        (a, b) => new Date(a.Data_Vencimento).getTime() - new Date(b.Data_Vencimento).getTime(),
-      ),
-    }
-  }, [transactions, dashboardStats])
-
-  const receitas = dashboardStats.realizedRevenue
-  const saldo = receitas - despesas
+  const {
+    realizedRevenue: receitas,
+    realizedExpenses: despesas,
+    balance: saldo,
+    delinquency: overdueAmount,
+    expected30d,
+    pieData,
+    overdueList,
+  } = dashboardStats
 
   const openWhatsApp = (phone?: string, text?: string) => {
     if (!phone) return

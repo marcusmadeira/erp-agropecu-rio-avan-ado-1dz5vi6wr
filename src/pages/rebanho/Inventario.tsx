@@ -21,14 +21,14 @@ export default function Inventario() {
 
   const load = async () => {
     try {
-      const [animaisData, precosData] = await Promise.all([
-        pb.collection('animais').getFullList({ filter: 'status="Ativo"', expand: 'lote_atual_id' }),
-        pb.collection('precos_mercado').getList(1, 1, { sort: '-data_registro' }),
-      ])
+      const { getActiveHerdMetrics } = await import('@/services/herdService')
+      const metrics = await getActiveHerdMetrics()
+      const animaisData = await pb
+        .collection('animais')
+        .getFullList({ filter: "status = 'Ativo'", expand: 'lote_atual_id' })
+
       setAnimais(animaisData)
-      if (precosData.items.length > 0) {
-        setPrecoArroba(precosData.items[0].preco_arroba || 0)
-      }
+      setPrecoArroba(metrics.preco_arroba || 0)
     } catch (error) {
       console.error('Erro ao carregar inventário:', error)
     }

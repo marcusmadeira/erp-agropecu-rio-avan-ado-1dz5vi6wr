@@ -39,6 +39,9 @@ import {
 } from '@/components/ui/table'
 import { Label } from '@/components/ui/label'
 import { BillingAlertsWidget } from '@/components/cobrancas/BillingAlertsWidget'
+import { getConsolidatedFinancials } from '@/services/financeService'
+import { getActiveHerdMetrics } from '@/services/herdService'
+import { useRealtime } from '@/hooks/use-realtime'
 
 const formatCurrency = (val: number) => {
   if (val === undefined || val === null || isNaN(val)) return 'R$ 0,00'
@@ -66,39 +69,67 @@ export default function Dashboard() {
   const [kpiData, setKpiData] = useState<any>(null)
   const [chartFilter, setChartFilter] = useState<'ALL' | 'FIXA' | 'VARIÁVEL'>('ALL')
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true)
-      try {
-        const dStart = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : ''
-        const dEnd = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : ''
+  const loadData = async () => {
+    setLoading(true)
+    try {
+      const dStart = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : ''
+      const dEnd = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : ''
 
-        let qs = ''
-        if (dStart && dEnd) {
-          qs = `?data_inicio=${dStart}&data_fim=${dEnd}`
-        } else if (dStart) {
-          qs = `?data_inicio=${dStart}`
-        }
-
-        const [rFinanceiro, rInadimplencia, rCalendario, rKpis] = await Promise.all([
-          pb.send(`/backend/v1/obter_resumo_financeiro${qs}`, { method: 'GET' }),
-          pb.send(`/backend/v1/obter_inadimplencia${qs}`, { method: 'GET' }),
-          pb.send(`/backend/v1/obter_despesas_calendario${qs}`, { method: 'GET' }),
-          pb.send(`/backend/v1/obter_kpis_saude${qs}`, { method: 'GET' }),
-        ])
-
-        setResumoData(rFinanceiro)
-        setInadimplenciaData(rInadimplencia)
-        setCalendarioData(rCalendario)
-        setKpiData(rKpis)
-      } catch (e) {
-        console.error(e)
-      } finally {
-        setLoading(false)
+      let qs = ''
+      if (dStart && dEnd) {
+        qs = `?data_inicio=${dStart}&data_fim=${dEnd}`
+      } else if (dStart) {
+        qs = `?data_inicio=${dStart}`
       }
+
+      const [rFinanceiro, rCalendario, rKpis, herdMetrics] = await Promise.all([
+        getConsolidatedFinancials(dStart, dEnd),
+        pb.send(`/backend/v1/obter_despesas_calendario${qs}`, { method: 'GET' }).catch(() => []),
+        pb.send(`/backend/v1/obter_kpis_saude${qs}`, { method: 'GET' }).catch(() => ({})),
+        getActiveHerdMetrics(),
+      ])
+
+      setResumoData({
+        receitas: rFinanceiro.realizedRevenue,
+        despesas: rFinanceiro.realizedExpenses,
+        saldo: rFinanceiro.balance,
+        margem: rFinanceiro.margin,
+        transacoes: rFinanceiro.allTransactions,
+      })
+      setInadimplenciaData({
+        valorEmAberto: rFinanceiro.delinquency,
+        previsao30Dias: rFinanceiro.expected30d,
+        pieData: rFinanceiro.pieData,
+        tableData: rFinanceiro.overdueList,
+      })
+      setCalendarioData(rCalendario)
+      setKpiData({
+        ...rKpis,
+        totalAnimais: herdMetrics.animais_ativos,
+      })
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     loadData()
   }, [dateRange])
+
+  useRealtime('transacoes_financeiras', () => {
+    loadData()
+  })
+  useRealtime('despesas', () => {
+    loadData()
+  })
+  useRealtime('boletos', () => {
+    loadData()
+  })
+  useRealtime('animais', () => {
+    loadData()
+  })
 
   // Summary KPIs
   const receitas = Number(resumoData?.receitas) || 0
