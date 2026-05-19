@@ -2,7 +2,7 @@ import pb from '@/lib/pocketbase/client'
 import { parseISO, startOfDay, endOfDay, differenceInDays } from 'date-fns'
 
 export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: string) => {
-  const [transacoes, despesas, boletos] = await Promise.all([
+  const [transacoes, despesas, boletos, boletosPagar] = await Promise.all([
     pb
       .collection('transacoes_financeiras')
       .getFullList()
@@ -13,13 +13,21 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
       .catch(() => []),
     pb
       .collection('boletos')
-      .getFullList({ expand: 'venda_id,venda_id.cliente_id' })
+      .getFullList({
+        expand:
+          'venda_id,venda_id.cliente_id,parcela_id,parcela_id.venda_id,parcela_id.venda_id.cliente_id',
+      })
+      .catch(() => []),
+    pb
+      .collection('boletos_pagar')
+      .getFullList({ expand: 'despesa_id' })
       .catch(() => []),
   ])
 
   let realizedRevenue = 0
   let pendingRevenue = 0
   let realizedExpenses = 0
+  let pendingExpenses = 0
   let delinquency = 0
 
   const isDateInRange = (dateStr: string) => {
@@ -43,7 +51,11 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
     }
     const val = Number(t.valor_total) || 0
     if (t.tipo_movimento === 'Receita') {
-      if (t.status_pagamento === 'Recebido' || t.status_pagamento === 'Efetivado')
+      if (
+        t.status_pagamento === 'Recebido' ||
+        t.status_pagamento === 'Efetivado' ||
+        t.status_pagamento === 'Realizado'
+      )
         realizedRevenue += val
       else if (t.status_pagamento === 'Atrasado') delinquency += val
       else {
@@ -58,16 +70,22 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
         t.status_pagamento === 'Realizado'
       ) {
         realizedExpenses += val
+      } else {
+        pendingExpenses += val
       }
     }
   })
 
-  despesas.forEach((d: any) => {
+  boletosPagar.forEach((bp: any) => {
     if (dateFrom || dateTo) {
-      if (!isDateInRange(d.data_despesa)) return
+      if (!isDateInRange(bp.data_vencimento)) return
     }
-    const val = Number(d.valor_total || d.valor) || 0
-    realizedExpenses += val
+    const val = Number(bp.valor) || 0
+    if (bp.status === 'Pago') {
+      realizedExpenses += val
+    } else {
+      pendingExpenses += val
+    }
   })
 
   boletos.forEach((b: any) => {
@@ -80,9 +98,12 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
     } else if (b.status_boleto === 'Atrasado' || b.status_boleto === 'Vencido') {
       delinquency += val
 
-      const client = b.expand?.venda_id?.expand?.cliente_id
+      const client =
+        b.expand?.venda_id?.expand?.cliente_id ||
+        b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id
       overdueList.push({
         id: b.id,
+        boleto: b.numero_boleto || 'N/A',
         clienteNome: client?.nome_razao_social || 'Desconhecido',
         clientePhone: client?.contato_whatsapp || client?.contato_whatsapp_cobranca,
         vencimento: b.data_vencimento,
@@ -103,11 +124,11 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
       ...t,
       data_vencimento: t.data_vencimento || t.data_competencia,
     })),
-    ...despesas.map((d: any) => ({
+    ...boletosPagar.map((bp: any) => ({
       tipo_movimento: 'Despesa',
-      valor_total: d.valor_total || d.valor,
-      data_vencimento: d.data_despesa,
-      classificacao_custo: d.classificacao_custo,
+      valor_total: bp.valor,
+      data_vencimento: bp.data_vencimento,
+      classificacao_custo: bp.expand?.despesa_id?.classificacao_custo || 'FIXA',
     })),
     ...boletos.map((b: any) => ({
       tipo_movimento: 'Receita',
@@ -119,6 +140,7 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
   return {
     realizedRevenue,
     realizedExpenses,
+    pendingExpenses,
     balance,
     margin,
     pendingRevenue,

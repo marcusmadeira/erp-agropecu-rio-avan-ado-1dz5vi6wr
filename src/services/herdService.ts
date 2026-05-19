@@ -11,9 +11,16 @@ export const getActiveHerdMetrics = async () => {
     let preco_arroba = 0
     try {
       const precos = await pb.collection('precos_mercado').getList(1, 1, { sort: '-data_registro' })
-      if (precos.items.length > 0) preco_arroba = precos.items[0].preco_arroba || 0
+      if (precos.items.length > 0) {
+        preco_arroba = precos.items[0].preco_arroba || 0
+      }
     } catch {
       /* intentionally ignored */
+    }
+
+    // Fallback to a sensible default if no market price is found, to ensure valuation is not 0
+    if (preco_arroba === 0) {
+      preco_arroba = 300 // R$ 300/@ as fallback
     }
 
     const valor_estimado = total_arrobas * preco_arroba

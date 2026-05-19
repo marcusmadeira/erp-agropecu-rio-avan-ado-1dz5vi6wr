@@ -28,7 +28,7 @@ export default function Inventario() {
         .getFullList({ filter: "status = 'Ativo'", expand: 'lote_atual_id' })
 
       setAnimais(animaisData)
-      setPrecoArroba(metrics.preco_arroba || 0)
+      setPrecoArroba(metrics.preco_arroba || 300)
     } catch (error) {
       console.error('Erro ao carregar inventário:', error)
     }

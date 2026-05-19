@@ -16,14 +16,29 @@ export default function DashboardDespesas() {
   const [boletos, setBoletos] = useState<any[]>([])
   const [receitasRealizadas, setReceitasRealizadas] = useState<number>(0)
 
+  const [kpis, setKpis] = useState({
+    receitasRealizadas: 0,
+    despesasPagas: 0,
+    despesasAPagar: 0,
+    saldo: 0,
+    overdueCount: 0,
+  })
+
   const load = async () => {
     if (!pb.authStore.isValid) return
     try {
       setDespesas(await getDespesas())
       setBoletos(await getBoletosPagar())
 
-      const resumoData = await pb.send('/backend/v1/obter_resumo_financeiro', { method: 'GET' })
-      setReceitasRealizadas(Number(resumoData.receitasRealizadas) || 0)
+      const { getConsolidatedFinancials } = await import('@/services/financeService')
+      const data = await getConsolidatedFinancials()
+      setKpis({
+        receitasRealizadas: data.realizedRevenue,
+        despesasPagas: data.realizedExpenses,
+        despesasAPagar: data.pendingExpenses,
+        saldo: data.balance,
+        overdueCount: data.overdueList.length,
+      })
     } catch (e: any) {
       console.error(e)
       if (e?.status === 401) {
@@ -43,43 +58,7 @@ export default function DashboardDespesas() {
   useRealtime('boletos_pagar', load)
   useRealtime('parcelas_venda', load)
   useRealtime('transacoes_financeiras', load)
-
-  const kpis = useMemo(() => {
-    let despesasPagas = 0
-    let despesasAPagar = 0
-    let overdueCount = 0
-    let delaySum = 0
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    boletos.forEach((b) => {
-      const val = Number(b.valor) || 0
-      if (b.status === 'Pago') {
-        despesasPagas += val
-      } else if (b.status === 'Pendente' || b.status === 'Atrasado') {
-        despesasAPagar += val
-      }
-
-      if (
-        b.status === 'Atrasado' ||
-        (b.status === 'Pendente' && new Date(b.data_vencimento) < today)
-      ) {
-        overdueCount++
-        delaySum += differenceInDays(today, new Date(b.data_vencimento))
-      }
-    })
-
-    const saldo = receitasRealizadas - despesasPagas
-
-    return {
-      receitasRealizadas,
-      despesasPagas,
-      despesasAPagar,
-      saldo,
-      overdueCount,
-      delaySum,
-    }
-  }, [boletos, despesas, receitasRealizadas])
+  useRealtime('boletos', load)
 
   const charts = useMemo(() => {
     const suppMap: any = {}

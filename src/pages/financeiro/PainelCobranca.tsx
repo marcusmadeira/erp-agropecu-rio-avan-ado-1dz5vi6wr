@@ -45,7 +45,7 @@ export default function PainelCobranca() {
       const finData = await getConsolidatedFinancials()
       const parcelasPendentes = await pb.collection('boletos').getFullList({
         filter: "status_boleto != 'Pago' && status_boleto != 'Cancelado'",
-        expand: 'venda_id.cliente_id',
+        expand: 'venda_id.cliente_id,parcela_id.venda_id.cliente_id',
       })
 
       const historicos = await pb

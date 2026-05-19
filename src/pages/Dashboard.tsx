@@ -92,6 +92,7 @@ export default function Dashboard() {
       setResumoData({
         receitas: rFinanceiro.realizedRevenue,
         despesas: rFinanceiro.realizedExpenses,
+        despesasAPagar: rFinanceiro.pendingExpenses,
         saldo: rFinanceiro.balance,
         margem: rFinanceiro.margin,
         transacoes: rFinanceiro.allTransactions,
@@ -134,12 +135,14 @@ export default function Dashboard() {
   // Summary KPIs
   const receitas = Number(resumoData?.receitas) || 0
   const despesas = Number(resumoData?.despesas) || 0
+  const despesasAPagar = Number(resumoData?.despesasAPagar) || 0
   const saldo = Number(resumoData?.saldo) || 0
   const margem = Number(resumoData?.margem) || 0
 
   // Delinquency Panel
   const valorEmAberto = Number(inadimplenciaData?.valorEmAberto) || 0
   const previsao30Dias = Number(inadimplenciaData?.previsao30Dias) || 0
+  const boletosAtrasadosCount = inadimplenciaData?.tableData?.length || 0
 
   const pieData = (inadimplenciaData?.pieData || [])
     .filter((item: any) => item.value > 0)
@@ -315,7 +318,7 @@ export default function Dashboard() {
 
       <BillingAlertsWidget />
 
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
         <Card className="shadow-sm border-l-4 border-l-[#16a34a]">
           <CardHeader className="pb-2 flex flex-row justify-between items-center space-y-0">
             <CardTitle className="text-sm font-medium text-slate-600">Receita Total</CardTitle>
@@ -327,11 +330,22 @@ export default function Dashboard() {
         </Card>
         <Card className="shadow-sm border-l-4 border-l-[#dc2626]">
           <CardHeader className="pb-2 flex flex-row justify-between items-center space-y-0">
-            <CardTitle className="text-sm font-medium text-slate-600">Despesa Total</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-600">Despesa Paga</CardTitle>
             <TrendingDown className="h-4 w-4 text-[#dc2626]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[#dc2626]">{formatCurrency(despesas)}</div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm border-l-4 border-l-amber-500">
+          <CardHeader className="pb-2 flex flex-row justify-between items-center space-y-0">
+            <CardTitle className="text-sm font-medium text-slate-600">Despesas a Pagar</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">
+              {formatCurrency(despesasAPagar)}
+            </div>
           </CardContent>
         </Card>
         <Card className="shadow-sm border-l-4 border-l-[#094016]">
@@ -347,13 +361,14 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-l-4 border-l-blue-600">
+        <Card className="shadow-sm border-l-4 border-l-red-600">
           <CardHeader className="pb-2 flex flex-row justify-between items-center space-y-0">
-            <CardTitle className="text-sm font-medium text-slate-600">Margem de Lucro</CardTitle>
-            <Percent className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium text-slate-600">Inadimplência</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{margem.toFixed(2)}%</div>
+            <div className="text-2xl font-bold text-red-600">{boletosAtrasadosCount} boletos</div>
+            <p className="text-xs text-muted-foreground mt-1">Atrasados</p>
           </CardContent>
         </Card>
       </div>

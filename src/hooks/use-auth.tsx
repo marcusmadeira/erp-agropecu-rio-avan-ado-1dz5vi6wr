@@ -49,30 +49,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
 
-      if (pb.authStore.isValid && pb.authStore.token) {
+      if (pb.authStore.isValid && pb.authStore.token && pb.authStore.record?.id) {
         try {
-          let needsRefresh = true
-          try {
-            const tokenStr = pb.authStore.token.split('.')[1]
-            const base64 = tokenStr.replace(/-/g, '+').replace(/_/g, '/')
-            const jsonPayload = decodeURIComponent(
-              atob(base64)
-                .split('')
-                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                .join(''),
-            )
-            const payload = JSON.parse(jsonPayload)
-            // Refresh if expiring in less than 3 days
-            needsRefresh = payload.exp * 1000 - Date.now() < 3 * 24 * 60 * 60 * 1000
-          } catch (e) {
-            needsRefresh = true
-          }
+          // Simply fetch the user record to confirm it still exists and token is valid.
+          // This avoids calling authRefresh() which triggers the 'LOGIN' audit loop.
+          const record = await Promise.race([
+            pb.collection('users').getOne(pb.authStore.record.id),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
+          ])
 
-          if (needsRefresh) {
-            await Promise.race([
-              pb.collection('users').authRefresh(),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
-            ])
+          if (mounted && record) {
+            // Record exists, session is valid.
+            pb.authStore.save(pb.authStore.token, record)
           }
         } catch (err: any) {
           if (
@@ -86,6 +74,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             pb.authStore.clear()
           }
         }
+      } else {
+        pb.authStore.clear()
       }
       if (mounted) {
         setLoading(false)

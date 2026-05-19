@@ -41,7 +41,10 @@ export default function PainelInadimplencia({ boletos, externalMetrics }: any) {
   }
 
   const handleWhatsApp = (b: any) => {
-    const fone = b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id?.contato_whatsapp || ''
+    const fone =
+      b.clientePhone ||
+      b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id?.contato_whatsapp ||
+      ''
     const msg = `Olá! Notamos um pequeno atraso no boleto ${b.numero_boleto || ''} no valor de ${formatCurrency(b.valor_boleto)}. Por favor, entre em contato caso necessite de 2ª via ou tenha dúvidas. Obrigado!`
     window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`, '_blank')
   }
