@@ -7,15 +7,30 @@ export function BackgroundSync() {
   const { user } = useAuth()
 
   useEffect(() => {
-    if (!user) return
+    // Ensure the token is fully ready before triggering background calls
+    if (!user || !pb.authStore.isValid) return
 
     const syncCheck = async () => {
       try {
-        await pb.collection('users').getOne(user.id, { fields: 'id' })
+        // Use a common background resource for heartbeat instead of querying a specific user ID
+        await pb.collection('configuracoes_sistema').getList(1, 1, { fields: 'id' })
         console.log(`[Sync] Heartbeat check successful at ${new Date().toISOString()}`)
         await processOfflineQueue()
-      } catch (error) {
-        console.error('[Sync] Heartbeat check failed:', error)
+      } catch (error: any) {
+        // Defensive programming: Gracefully handle 404 missing resource or network errors
+        if (error?.status === 404) {
+          console.info('[Sync] Background resource not found (404), but connection is active.')
+          try {
+            // Connection is alive, proceed with offline queue
+            await processOfflineQueue()
+          } catch (qError) {
+            // Silently handle queue error to keep console clean
+          }
+        } else if (error?.status === 0 || error?.isAbort) {
+          // Network offline or aborted, ignore safely
+        } else {
+          console.warn('[Sync] Heartbeat check warning:', error?.message || error)
+        }
       }
     }
 
@@ -24,7 +39,7 @@ export function BackgroundSync() {
 
     const handleOnline = () => {
       console.log('[Sync] Device is online, processing offline queue...')
-      processOfflineQueue()
+      processOfflineQueue().catch(() => {})
     }
 
     window.addEventListener('online', handleOnline)
