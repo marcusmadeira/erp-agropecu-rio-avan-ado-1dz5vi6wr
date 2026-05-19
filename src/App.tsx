@@ -125,7 +125,7 @@ const AuthorizeRoute = ({ children }: { children: React.ReactNode }) => {
   if (serverError) return <ServiceUnavailable onRetry={retryConnection} />
   if (!isAuthenticated || !user) return <Navigate to="/login" replace />
 
-  const isOperacional = user.role === 'Operacional' || user.nivel_acesso === 'Operacional'
+  const isOperacional = user.nivel_acesso === 'Operacional'
   if (isOperacional) {
     return <Navigate to="/animais" replace />
   }

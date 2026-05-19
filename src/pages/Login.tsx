@@ -45,10 +45,10 @@ export default function Login() {
     e.preventDefault()
 
     let email = ''
-    if (selectedRole === 'Administração') email = 'admin@toriba.com'
-    else if (selectedRole === 'Gerente') email = 'gerente@toriba.com'
-    else if (selectedRole === 'Financeiro') email = 'financeiro@toriba.com'
-    else if (selectedRole === 'Operacional') email = 'operacional@toriba.com'
+    if (selectedRole === 'Administração') email = 'administrativo@toriba.com.br'
+    else if (selectedRole === 'Gerente') email = 'gerente@toriba.com.br'
+    else if (selectedRole === 'Financeiro') email = 'financeiro@toriba.com.br'
+    else if (selectedRole === 'Operacional') email = 'operacional@toriba.com.br'
     else if (selectedRole === 'Outro') email = customEmail
 
     if (!email) {
@@ -87,7 +87,7 @@ export default function Login() {
         title: 'Acesso Liberado',
         description: 'Bem-vindo ao sistema.',
       })
-      if (email === 'operacional@toriba.com') {
+      if (email === 'operacional@toriba.com.br') {
         navigate('/animais', { replace: true })
       } else {
         navigate('/', { replace: true })

@@ -37,18 +37,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let mounted = true
 
     const validateSession = async () => {
-      try {
-        await pb.send('/api/health', { method: 'GET' })
-      } catch (err: any) {
-        if (err.status === 0 || err.message === 'Failed to fetch' || err.name === 'TypeError') {
-          if (mounted) {
-            setServerError(true)
-            setLoading(false)
-          }
-          return
-        }
-      }
-
       if (pb.authStore.isValid && pb.authStore.token && pb.authStore.record?.id) {
         try {
           // Simply fetch the user record to confirm it still exists and token is valid.
@@ -138,6 +126,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     pb.authStore.clear()
+    setUser(null)
+    setIsAuthenticated(false)
     window.location.href = '/login'
   }
 
