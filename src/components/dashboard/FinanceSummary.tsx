@@ -13,7 +13,12 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recha
 import { ArrowUpRight, ArrowDownRight, Wallet, AlertTriangle, MessageSquare } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
 import { Transacao } from '@/stores/types'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency as _formatCurrency } from '@/lib/utils'
+
+const formatCurrency = (val: number) => {
+  if (val === undefined || val === null || isNaN(val)) return 'R$ 0,00'
+  return _formatCurrency(val)
+}
 import { format, differenceInDays } from 'date-fns'
 
 export default function FinanceSummary({ transactions }: { transactions: Transacao[] }) {

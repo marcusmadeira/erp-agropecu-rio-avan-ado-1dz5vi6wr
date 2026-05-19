@@ -180,6 +180,27 @@ routerAdd(
         )
         histRecord.set('registros_ids', inseridos)
         txApp.save(histRecord)
+
+        const auditCol = txApp.findCollectionByNameOrId('auditoria_movimentacoes')
+        const auditRec = new Record(auditCol)
+        auditRec.set('usuario_id', usuario_id)
+        auditRec.set('tipo_acao', 'IMPORTACAO')
+        auditRec.set('tabela_afetada', tipo_dado)
+        auditRec.set('registro_id', histRecord.id)
+        auditRec.set('status', erros.length === registros.length ? 'FAILED' : 'SUCCESS')
+        auditRec.set('description', `Importação processada: ${arquivo_nome}`)
+        auditRec.set('user_email', e.auth.getString('email'))
+        auditRec.set(
+          'dados_novos',
+          JSON.stringify({
+            arquivo_nome: arquivo_nome,
+            total_registros: registros.length,
+            sucessos: inseridos.length,
+            falhas: erros.length,
+            resumo_erros: erros.slice(0, 10),
+          }),
+        )
+        txApp.save(auditRec)
       })
     } catch (err) {
       try {

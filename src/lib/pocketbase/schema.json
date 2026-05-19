@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-18T23:38:50.982Z",
+  "generatedAt": "2026-05-19T10:52:15.357Z",
   "collections": [
     {
       "name": "users",
@@ -599,7 +599,8 @@
       ],
       "indexes": [
         "CREATE INDEX `idx_animais_id_manejo_brinco` ON `animais` (id_manejo_brinco)",
-        "CREATE UNIQUE INDEX `idx_animais_brinco_unique` ON `animais` (id_manejo_brinco)"
+        "CREATE UNIQUE INDEX `idx_animais_brinco_unique` ON `animais` (id_manejo_brinco)",
+        "CREATE INDEX `idx_animais_status` ON `animais` (status)"
       ]
     },
     {
@@ -2027,7 +2028,8 @@
       "indexes": [
         "CREATE INDEX idx_vendas_evento ON vendas (evento_id)",
         "CREATE INDEX idx_vendas_cliente ON vendas (cliente_id)",
-        "CREATE INDEX idx_vendas_data ON vendas (data_venda)"
+        "CREATE INDEX `idx_vendas_status` ON `vendas` (status_venda)",
+        "CREATE INDEX `idx_vendas_data` ON `vendas` (data_venda)"
       ]
     },
     {
@@ -2248,7 +2250,8 @@
       ],
       "indexes": [
         "CREATE INDEX idx_parcelas_venda_venda ON parcelas_venda (venda_id)",
-        "CREATE INDEX idx_parcelas_venda_vencimento ON parcelas_venda (data_vencimento)"
+        "CREATE INDEX idx_parcelas_venda_vencimento ON parcelas_venda (data_vencimento)",
+        "CREATE INDEX `idx_parcelas_status` ON `parcelas_venda` (status_parcela)"
       ]
     },
     {

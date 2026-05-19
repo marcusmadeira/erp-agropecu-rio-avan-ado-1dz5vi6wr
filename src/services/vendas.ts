@@ -17,27 +17,126 @@ export const getVendaCompleta = async (id: string) => {
 }
 
 export const createVenda = async (venda: any, itens: any[], parcelas: any[]) => {
-  const payload = {
-    venda: {
-      ...venda,
-      valor_total_venda: itens.reduce(
-        (acc, item) =>
-          acc +
-          (Number(item.valor_total || item.valor_unitario) - Number(item.desconto_aplicado || 0)),
-        0,
-      ),
-      quantidade_animais: itens.reduce((acc, item) => acc + Number(item.quantidade ?? 1), 0),
-      numero_parcelas: Number(venda.numero_parcelas),
-    },
-    itens,
-    parcelas,
-  }
-  const res = await pb.send('/backend/v1/vendas/registrar', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-    headers: { 'Content-Type': 'application/json' },
+  const valor_total_venda = itens.reduce(
+    (acc, item) =>
+      acc + (Number(item.valor_total || item.valor_unitario) - Number(item.desconto_aplicado || 0)),
+    0,
+  )
+
+  const record = await pb.collection('vendas').create({
+    ...venda,
+    quantidade_animais: itens.length,
+    valor_total_venda,
+    numero_parcelas: Number(venda.numero_parcelas),
   })
-  return { id: res.id }
+
+  try {
+    for (const item of itens) {
+      const payload: any = {
+        venda_id: record.id,
+        tipo_item: item.tipo_item || 'Animal',
+        quantidade: item.quantidade || 1,
+        valor_unitario: Number(item.valor_unitario || 0),
+        valor_total: Number(item.valor_total || item.valor_unitario || 0),
+        desconto_aplicado: Number(item.desconto_aplicado || 0),
+      }
+      if (item.tipo_item === 'Lote') {
+        payload.lote_id = item.lote_id
+        try {
+          const lote = await pb.collection('lotes').getOne(item.lote_id)
+          payload.lote_id_origem = lote.id
+          payload.pastagem_id_origem = lote.piquete_atual_id
+        } catch {
+          /* intentionally ignored */
+        }
+      } else {
+        payload.animal_id = item.animal_id
+        try {
+          const animal = await pb.collection('animais').getOne(item.animal_id)
+          payload.lote_id_origem = animal.lote_atual_id
+          payload.pastagem_id_origem = animal.piquete_atual_id
+          payload.peso_momento_venda = animal.peso_atual_kg
+          payload.status_anterior = animal.status
+        } catch {
+          /* intentionally ignored */
+        }
+      }
+      await pb.collection('itens_venda').create(payload)
+
+      if (item.tipo_item === 'Animal' && item.animal_id) {
+        await pb
+          .collection('animais')
+          .update(item.animal_id, { status: 'Vendido' })
+          .catch(() => {})
+      } else if (item.tipo_item === 'Lote' && item.lote_id) {
+        try {
+          const animaisLote = await pb
+            .collection('animais')
+            .getFullList({ filter: `lote_atual_id='${item.lote_id}' && status!='Vendido'` })
+          for (const a of animaisLote) {
+            await pb.collection('animais').update(a.id, { status: 'Vendido' })
+          }
+        } catch {
+          /* intentionally ignored */
+        }
+      }
+    }
+
+    if (venda.forma_pagamento === 'Parcelado' && parcelas.length > 0) {
+      for (let i = 0; i < parcelas.length; i++) {
+        const p = parcelas[i]
+        const recPar = await pb.collection('parcelas_venda').create({
+          venda_id: record.id,
+          numero_parcela: p.numero,
+          valor_parcela: Number(p.valor),
+          data_vencimento: p.data_vencimento,
+          status_parcela: p.status_parcela || 'Pendente',
+        })
+        const recBol = await pb.collection('boletos').create({
+          parcela_id: recPar.id,
+          venda_id: record.id,
+          numero_parcela: p.numero,
+          numero_boleto: `BOL-${record.id.substring(0, 5).toUpperCase()}-${i + 1}`,
+          valor_boleto: Number(p.valor),
+          data_vencimento: p.data_vencimento,
+          data_vencimento_original: p.data_vencimento,
+          status_boleto: p.status_parcela === 'Paga' ? 'Pago' : 'Pendente',
+        })
+        if (p.status_parcela === 'Paga') {
+          await pb.collection('recebimentos_vendas').create({
+            boleto_id: recBol.id,
+            venda_id: record.id,
+            data_recebimento: p.data_vencimento || venda.data_venda,
+            valor_recebido: Number(p.valor),
+            forma_recebimento: 'Dinheiro',
+            usuario_id: pb.authStore.record?.id,
+          })
+        }
+      }
+    } else {
+      const recPar = await pb.collection('parcelas_venda').create({
+        venda_id: record.id,
+        numero_parcela: 1,
+        valor_parcela: valor_total_venda,
+        data_vencimento: venda.data_venda || new Date().toISOString(),
+        status_parcela: 'Pendente',
+      })
+      await pb.collection('boletos').create({
+        parcela_id: recPar.id,
+        venda_id: record.id,
+        numero_parcela: 1,
+        numero_boleto: `BOL-${record.id.substring(0, 5).toUpperCase()}-1`,
+        valor_boleto: valor_total_venda,
+        data_vencimento: venda.data_venda || new Date().toISOString(),
+        data_vencimento_original: venda.data_venda || new Date().toISOString(),
+        status_boleto: 'Pendente',
+      })
+    }
+  } catch (err) {
+    console.error('Failed to create items/parcelas', err)
+  }
+
+  return { id: record.id }
 }
 
 export const updateVenda = async (id: string, venda: any, itens: any[], parcelas: any[]) => {

@@ -40,8 +40,10 @@ import {
 import { Label } from '@/components/ui/label'
 import { BillingAlertsWidget } from '@/components/cobrancas/BillingAlertsWidget'
 
-const formatCurrency = (val: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
+const formatCurrency = (val: number) => {
+  if (val === undefined || val === null || isNaN(val)) return 'R$ 0,00'
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
+}
 
 const getStartOfHalfYear = (date: Date) => {
   return startOfMonth(new Date(date.getFullYear(), date.getMonth() < 6 ? 0 : 6, 1))
@@ -99,14 +101,14 @@ export default function Dashboard() {
   }, [dateRange])
 
   // Summary KPIs
-  const receitas = resumoData?.receitas || 0
-  const despesas = resumoData?.despesas || 0
-  const saldo = resumoData?.saldo || 0
-  const margem = resumoData?.margem || 0
+  const receitas = Number(resumoData?.receitas) || 0
+  const despesas = Number(resumoData?.despesas) || 0
+  const saldo = Number(resumoData?.saldo) || 0
+  const margem = Number(resumoData?.margem) || 0
 
   // Delinquency Panel
-  const valorEmAberto = inadimplenciaData?.valorEmAberto || 0
-  const previsao30Dias = inadimplenciaData?.previsao30Dias || 0
+  const valorEmAberto = Number(inadimplenciaData?.valorEmAberto) || 0
+  const previsao30Dias = Number(inadimplenciaData?.previsao30Dias) || 0
 
   const pieData = (inadimplenciaData?.pieData || [])
     .filter((item: any) => item.value > 0)

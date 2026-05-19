@@ -120,6 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     pb.authStore.clear()
+    window.location.href = '/login'
   }
 
   return (

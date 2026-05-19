@@ -32,6 +32,7 @@ import pb from '@/lib/pocketbase/client'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts'
 import { useRealtime } from '@/hooks/use-realtime'
+import { useAuth } from '@/hooks/use-auth'
 
 const JsonDisplay = ({ dataStr }: { dataStr?: string }) => {
   if (!dataStr) return <span className="text-muted-foreground italic">Vazio</span>
@@ -68,7 +69,10 @@ export default function Auditoria() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
 
+  const { loading: authLoading, user } = useAuth()
+
   const loadData = async () => {
+    if (authLoading || !user) return
     setLoading(true)
     try {
       const filterArr = []
@@ -121,7 +125,18 @@ export default function Auditoria() {
 
   useEffect(() => {
     loadData()
-  }, [page, userEmail, actionType, tableName, statusFilter, searchTerm, dateFrom, dateTo])
+  }, [
+    page,
+    userEmail,
+    actionType,
+    tableName,
+    statusFilter,
+    searchTerm,
+    dateFrom,
+    dateTo,
+    authLoading,
+    user,
+  ])
   useRealtime('auditoria_movimentacoes', () => {
     loadData()
   })

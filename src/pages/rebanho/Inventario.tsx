@@ -17,15 +17,17 @@ export default function Inventario() {
   const [animais, setAnimais] = useState<any[]>([])
   const [estoqueFazenda, setEstoqueFazenda] = useState<any>(null)
 
+  const [precoArroba, setPrecoArroba] = useState<number>(0)
+
   const load = async () => {
     try {
-      const [animaisData, estoques] = await Promise.all([
+      const [animaisData, precosData] = await Promise.all([
         pb.collection('animais').getFullList({ filter: 'status="Ativo"', expand: 'lote_atual_id' }),
-        pb.collection('estoque_peso_fazenda').getFullList({ sort: '-data_calculo', limit: 1 }),
+        pb.collection('precos_mercado').getList(1, 1, { sort: '-data_registro' }),
       ])
       setAnimais(animaisData)
-      if (estoques.length > 0) {
-        setEstoqueFazenda(estoques[0])
+      if (precosData.items.length > 0) {
+        setPrecoArroba(precosData.items[0].preco_arroba || 0)
       }
     } catch (error) {
       console.error('Erro ao carregar inventário:', error)
@@ -37,7 +39,21 @@ export default function Inventario() {
   }, [])
 
   useRealtime('animais', () => load())
-  useRealtime('estoque_peso_fazenda', () => load())
+  useRealtime('precos_mercado', () => load())
+
+  const totaisCalculados = useMemo(() => {
+    let totalPeso = 0
+    let totalArrobas = 0
+    animais.forEach((a) => {
+      totalPeso += a.peso_atual_kg || 0
+      totalArrobas += a.arrobas_atuais || (a.peso_atual_kg || 0) / 15
+    })
+    return {
+      totalPeso,
+      totalArrobas,
+      valorEstimado: totalArrobas * precoArroba,
+    }
+  }, [animais, precoArroba])
 
   const grouped = useMemo(() => {
     const groups: Record<
@@ -93,14 +109,10 @@ export default function Inventario() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900">
-              {estoqueFazenda?.total_arrobas ? estoqueFazenda.total_arrobas.toFixed(2) : '0.00'} @
+              {totaisCalculados.totalArrobas.toFixed(2)} @
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              Peso total:{' '}
-              {estoqueFazenda?.total_peso_kg
-                ? (estoqueFazenda.total_peso_kg / 1000).toFixed(2)
-                : '0.00'}{' '}
-              toneladas
+              Peso total: {(totaisCalculados.totalPeso / 1000).toFixed(2)} toneladas
             </p>
           </CardContent>
         </Card>
@@ -114,11 +126,9 @@ export default function Inventario() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900">
-              {estoqueFazenda?.valor_total_rebanho
-                ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                    estoqueFazenda.valor_total_rebanho,
-                  )
-                : 'R$ 0,00'}
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                totaisCalculados.valorEstimado,
+              )}
             </div>
           </CardContent>
         </Card>

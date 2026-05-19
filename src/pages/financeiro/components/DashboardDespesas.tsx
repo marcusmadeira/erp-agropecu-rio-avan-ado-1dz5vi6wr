@@ -21,15 +21,8 @@ export default function DashboardDespesas() {
       setDespesas(await getDespesas())
       setBoletos(await getBoletosPagar())
 
-      const parcelasPagas = await pb.collection('parcelas_venda').getFullList({
-        filter: "status_parcela='Paga'",
-      })
-      const totalReceitas = parcelasPagas.reduce((acc, p) => acc + (p.valor_parcela || 0), 0)
-
-      const recebimentos = await pb.collection('recebimentos_vendas').getFullList()
-      const totalRecebimentos = recebimentos.reduce((acc, r) => acc + (r.valor_recebido || 0), 0)
-
-      setReceitasRealizadas(Math.max(totalReceitas, totalRecebimentos))
+      const resumoData = await pb.send('/backend/v1/obter_resumo_financeiro', { method: 'GET' })
+      setReceitasRealizadas(Number(resumoData.receitasRealizadas) || 0)
     } catch (e) {
       console.error(e)
     }
@@ -38,10 +31,11 @@ export default function DashboardDespesas() {
   useEffect(() => {
     load()
   }, [])
+
   useRealtime('despesas', load)
   useRealtime('boletos_pagar', load)
   useRealtime('parcelas_venda', load)
-  useRealtime('recebimentos_vendas', load)
+  useRealtime('transacoes_financeiras', load)
 
   const kpis = useMemo(() => {
     let despesasPagas = 0
@@ -52,10 +46,11 @@ export default function DashboardDespesas() {
     today.setHours(0, 0, 0, 0)
 
     boletos.forEach((b) => {
+      const val = Number(b.valor) || 0
       if (b.status === 'Pago') {
-        despesasPagas += b.valor || 0
+        despesasPagas += val
       } else if (b.status === 'Pendente' || b.status === 'Atrasado') {
-        despesasAPagar += b.valor || 0
+        despesasAPagar += val
       }
 
       if (
@@ -68,7 +63,6 @@ export default function DashboardDespesas() {
     })
 
     const saldo = receitasRealizadas - despesasPagas
-    const totalExp = despesas.reduce((acc, d) => acc + (d.valor || 0), 0)
 
     return {
       receitasRealizadas,
@@ -84,7 +78,7 @@ export default function DashboardDespesas() {
     const suppMap: any = {}
     despesas.forEach((d) => {
       const name = d.expand?.fornecedor_id?.nome_razao_social || 'Desconhecido'
-      suppMap[name] = (suppMap[name] || 0) + (d.valor || 0)
+      suppMap[name] = (suppMap[name] || 0) + (Number(d.valor) || 0)
     })
     const topSuppliers = Object.entries(suppMap)
       .map(([name, value]) => ({ name, value }))
@@ -94,12 +88,17 @@ export default function DashboardDespesas() {
     const catMap: any = {}
     despesas.forEach((d) => {
       const c = d.classificacao_custo || 'Outros'
-      catMap[c] = (catMap[c] || 0) + (d.valor || 0)
+      catMap[c] = (catMap[c] || 0) + (Number(d.valor) || 0)
     })
     const byCategory = Object.entries(catMap).map(([name, value]) => ({ name, value }))
 
     return { topSuppliers, byCategory }
   }, [despesas])
+
+  const formatCurrency = (val: number) => {
+    if (val === undefined || val === null || isNaN(val)) return 'R$ 0,00'
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
+  }
 
   return (
     <div className="space-y-4">
@@ -111,9 +110,7 @@ export default function DashboardDespesas() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-700">
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                kpis.receitasRealizadas,
-              )}
+              {formatCurrency(kpis.receitasRealizadas)}
             </div>
           </CardContent>
         </Card>
@@ -125,9 +122,7 @@ export default function DashboardDespesas() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-700">
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                kpis.despesasPagas,
-              )}
+              {formatCurrency(kpis.despesasPagas)}
             </div>
           </CardContent>
         </Card>
@@ -139,25 +134,21 @@ export default function DashboardDespesas() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-amber-600">
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                kpis.despesasAPagar,
-              )}
+              {formatCurrency(kpis.despesasAPagar)}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium">Saldo</CardTitle>
+            <CardTitle className="text-sm font-medium">Saldo Realizado</CardTitle>
             <WalletIcon className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div
               className={`text-2xl font-bold ${kpis.saldo >= 0 ? 'text-blue-600' : 'text-red-600'}`}
             >
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                kpis.saldo,
-              )}
+              {formatCurrency(kpis.saldo)}
             </div>
           </CardContent>
         </Card>
@@ -184,11 +175,7 @@ export default function DashboardDespesas() {
               <BarChart data={charts.topSuppliers} layout="vertical" margin={{ left: 50 }}>
                 <XAxis type="number" />
                 <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} />
-                <Tooltip
-                  formatter={(v: number) =>
-                    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
-                  }
-                />
+                <Tooltip formatter={(v: number) => formatCurrency(v)} />
                 <Bar dataKey="value" fill="var(--color-value)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ChartContainer>
@@ -215,11 +202,7 @@ export default function DashboardDespesas() {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip
-                  formatter={(v: number) =>
-                    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
-                  }
-                />
+                <Tooltip formatter={(v: number) => formatCurrency(v)} />
               </PieChart>
             </ChartContainer>
           </CardContent>
