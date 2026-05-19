@@ -23,12 +23,10 @@ export default function Inventario() {
     try {
       const { getActiveHerdMetrics } = await import('@/services/herdService')
       const metrics = await getActiveHerdMetrics()
-      const animaisData = await pb
-        .collection('animais')
-        .getFullList({
-          filter: "status != 'Vendido' && status != 'Morto' && status != 'Inativo'",
-          expand: 'lote_atual_id',
-        })
+      const animaisData = await pb.collection('animais').getFullList({
+        filter: "status != 'Vendido' && status != 'Morto' && status != 'Inativo'",
+        expand: 'lote_atual_id',
+      })
 
       setAnimais(animaisData)
       setPrecoArroba(metrics.preco_arroba || 300)

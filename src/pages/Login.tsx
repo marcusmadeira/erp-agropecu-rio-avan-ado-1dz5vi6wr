@@ -86,7 +86,7 @@ export default function Login() {
       if (email === 'operacional@toriba.com') {
         navigate('/animais', { replace: true })
       } else {
-        navigate('/vendas/geral', { replace: true })
+        navigate('/', { replace: true })
       }
     }
   }
