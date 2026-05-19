@@ -113,7 +113,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (loginOrEmail: string, password: string) => {
     try {
       setServerError(false)
-      await pb.collection('users').authWithPassword(loginOrEmail, password)
+      const authData = await pb.collection('users').authWithPassword(loginOrEmail, password)
+
+      if (authData.record) {
+        setUser(authData.record)
+        setIsAuthenticated(true)
+      }
+
       return { error: null }
     } catch (error: any) {
       if (error.status === 0 || error.message === 'Failed to fetch') {

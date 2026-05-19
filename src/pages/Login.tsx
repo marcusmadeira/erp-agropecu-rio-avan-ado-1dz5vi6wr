@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
-import { Loader2, ShieldCheck, Briefcase, Landmark, Tractor, ArrowLeft } from 'lucide-react'
+import { Loader2, ShieldCheck, Briefcase, Landmark, Tractor, ArrowLeft, Key } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 
 export default function Login() {
   const [selectedRole, setSelectedRole] = useState<
-    'Administração' | 'Gerente' | 'Financeiro' | 'Operacional' | null
+    'Administração' | 'Gerente' | 'Financeiro' | 'Operacional' | 'Outro' | null
   >(null)
   const [masterKey, setMasterKey] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -34,20 +34,36 @@ export default function Login() {
   }, [location.state, toast])
 
   const handleRoleSelect = async (
-    role: 'Administração' | 'Gerente' | 'Financeiro' | 'Operacional',
+    role: 'Administração' | 'Gerente' | 'Financeiro' | 'Operacional' | 'Outro',
   ) => {
     if (role === 'Operacional') {
       await authenticate('operacional@toriba.com', 'Toriba123@')
     } else {
       setSelectedRole(role)
       setMasterKey('')
+      setCustomEmail('')
     }
   }
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (masterKey !== 'Toriba123@') {
+    let email = ''
+    if (selectedRole === 'Administração') email = 'admin@toriba.com'
+    else if (selectedRole === 'Gerente') email = 'gerente@toriba.com'
+    else if (selectedRole === 'Financeiro') email = 'financeiro@toriba.com'
+    else if (selectedRole === 'Outro') email = customEmail
+
+    if (!email) {
+      toast({
+        title: 'Acesso Negado',
+        description: 'E-mail não informado.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (selectedRole !== 'Outro' && masterKey !== 'Toriba123@') {
       toast({
         title: 'Acesso Negado',
         description: 'Chave mestra incorreta.',
@@ -55,11 +71,6 @@ export default function Login() {
       })
       return
     }
-
-    let email = ''
-    if (selectedRole === 'Administração') email = 'admin@toriba.com'
-    if (selectedRole === 'Gerente') email = 'gerente@toriba.com'
-    if (selectedRole === 'Financeiro') email = 'financeiro@toriba.com'
 
     await authenticate(email, masterKey)
   }
@@ -96,7 +107,10 @@ export default function Login() {
     { id: 'Financeiro', title: 'Financeiro', icon: Landmark, color: 'bg-emerald-600' },
     { id: 'Administração', title: 'Administração', icon: ShieldCheck, color: 'bg-purple-600' },
     { id: 'Operacional', title: 'Operacional', icon: Tractor, color: 'bg-amber-600' },
+    { id: 'Outro', title: 'Outro Acesso', icon: Key, color: 'bg-slate-600' },
   ] as const
+
+  const [customEmail, setCustomEmail] = useState('')
 
   return (
     <div
@@ -160,9 +174,25 @@ export default function Login() {
               </div>
 
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                {selectedRole === 'Outro' && (
+                  <div className="space-y-2 text-left animate-fade-in-down">
+                    <Label htmlFor="customEmail" className="font-bold text-slate-700">
+                      E-mail
+                    </Label>
+                    <Input
+                      id="customEmail"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={customEmail}
+                      onChange={(e) => setCustomEmail(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
+                )}
+
                 <div className="space-y-2 text-left">
                   <Label htmlFor="masterKey" className="font-bold text-slate-700">
-                    Chave Mestra
+                    {selectedRole === 'Outro' ? 'Senha' : 'Chave Mestra'}
                   </Label>
                   <Input
                     id="masterKey"
@@ -170,7 +200,7 @@ export default function Login() {
                     placeholder="***"
                     value={masterKey}
                     onChange={(e) => setMasterKey(e.target.value)}
-                    autoFocus
+                    autoFocus={selectedRole !== 'Outro'}
                   />
                 </div>
 
