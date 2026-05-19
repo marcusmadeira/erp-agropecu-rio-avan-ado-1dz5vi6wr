@@ -3,6 +3,7 @@ import pb from '@/lib/pocketbase/client'
 
 interface AuthContextType {
   user: any
+  isAuthenticated: boolean
   signUp: (data: any) => Promise<{ error: any }>
   signIn: (loginOrEmail: string, password: string) => Promise<{ error: any }>
   signOut: () => void
@@ -20,7 +21,8 @@ export const useAuth = () => {
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<any>(pb.authStore.record)
+  const [user, setUser] = useState<any>(pb.authStore.isValid ? pb.authStore.record : null)
+  const [isAuthenticated, setIsAuthenticated] = useState(pb.authStore.isValid)
   const [loading, setLoading] = useState(true)
   const [serverError, setServerError] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
@@ -75,7 +77,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const unsubscribe = pb.authStore.onChange((_token, record) => {
       if (mounted) {
-        setUser(record)
+        setUser(pb.authStore.isValid ? record : null)
+        setIsAuthenticated(pb.authStore.isValid)
       }
     })
 
@@ -125,7 +128,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, signUp, signIn, signOut, loading, serverError, retryConnection }}
+      value={{
+        user,
+        isAuthenticated,
+        signUp,
+        signIn,
+        signOut,
+        loading,
+        serverError,
+        retryConnection,
+      }}
     >
       {children}
     </AuthContext.Provider>

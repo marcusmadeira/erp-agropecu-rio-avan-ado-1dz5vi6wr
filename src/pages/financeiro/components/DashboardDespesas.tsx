@@ -17,19 +17,26 @@ export default function DashboardDespesas() {
   const [receitasRealizadas, setReceitasRealizadas] = useState<number>(0)
 
   const load = async () => {
+    if (!pb.authStore.isValid) return
     try {
       setDespesas(await getDespesas())
       setBoletos(await getBoletosPagar())
 
       const resumoData = await pb.send('/backend/v1/obter_resumo_financeiro', { method: 'GET' })
       setReceitasRealizadas(Number(resumoData.receitasRealizadas) || 0)
-    } catch (e) {
+    } catch (e: any) {
       console.error(e)
+      if (e?.status === 401) {
+        pb.authStore.clear()
+        window.location.href = '/login'
+      }
     }
   }
 
   useEffect(() => {
-    load()
+    if (pb.authStore.isValid) {
+      load()
+    }
   }, [])
 
   useRealtime('despesas', load)

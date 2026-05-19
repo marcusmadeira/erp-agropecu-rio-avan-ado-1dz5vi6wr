@@ -111,18 +111,18 @@ const LoadingScreen = () => (
 )
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading, serverError, retryConnection } = useAuth()
+  const { user, isAuthenticated, loading, serverError, retryConnection } = useAuth()
   if (loading) return <LoadingScreen />
   if (serverError) return <ServiceUnavailable onRetry={retryConnection} />
-  if (!user) return <Navigate to="/login" replace />
+  if (!isAuthenticated || !user) return <Navigate to="/login" replace />
   return <>{children}</>
 }
 
 const AuthorizeRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading, serverError, retryConnection } = useAuth()
+  const { user, isAuthenticated, loading, serverError, retryConnection } = useAuth()
   if (loading) return <LoadingScreen />
   if (serverError) return <ServiceUnavailable onRetry={retryConnection} />
-  if (!user) return <Navigate to="/login" replace />
+  if (!isAuthenticated || !user) return <Navigate to="/login" replace />
 
   const isOperacional = user.role === 'Operacional' || user.nivel_acesso === 'Operacional'
   if (isOperacional) {
@@ -133,10 +133,10 @@ const AuthorizeRoute = ({ children }: { children: React.ReactNode }) => {
 }
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading, serverError, retryConnection } = useAuth()
+  const { isAuthenticated, loading, serverError, retryConnection } = useAuth()
   if (loading) return <LoadingScreen />
   if (serverError) return <ServiceUnavailable onRetry={retryConnection} />
-  if (user) return <Navigate to="/" replace />
+  if (isAuthenticated) return <Navigate to="/" replace />
   return <>{children}</>
 }
 
