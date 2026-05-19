@@ -33,16 +33,12 @@ export default function Login() {
     }
   }, [location.state, toast])
 
-  const handleRoleSelect = async (
+  const handleRoleSelect = (
     role: 'Administração' | 'Gerente' | 'Financeiro' | 'Operacional' | 'Outro',
   ) => {
-    if (role === 'Operacional') {
-      await authenticate('operacional@toriba.com', 'Toriba123@')
-    } else {
-      setSelectedRole(role)
-      setMasterKey('')
-      setCustomEmail('')
-    }
+    setSelectedRole(role)
+    setMasterKey('')
+    setCustomEmail('')
   }
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
@@ -52,21 +48,13 @@ export default function Login() {
     if (selectedRole === 'Administração') email = 'admin@toriba.com'
     else if (selectedRole === 'Gerente') email = 'gerente@toriba.com'
     else if (selectedRole === 'Financeiro') email = 'financeiro@toriba.com'
+    else if (selectedRole === 'Operacional') email = 'operacional@toriba.com'
     else if (selectedRole === 'Outro') email = customEmail
 
     if (!email) {
       toast({
         title: 'Acesso Negado',
         description: 'E-mail não informado.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    if (selectedRole !== 'Outro' && masterKey !== 'Toriba123@') {
-      toast({
-        title: 'Acesso Negado',
-        description: 'Chave mestra incorreta.',
         variant: 'destructive',
       })
       return
@@ -82,11 +70,16 @@ export default function Login() {
 
     if (error) {
       const isAuthError = error?.status === 400 || error?.status === 401
+      const isServerError = error?.status === 0 || error?.status === 500
+
+      let description = getErrorMessage(error) || 'E-mail ou senha incorretos.'
+      if (isAuthError) description = 'E-mail ou senha incorretos.'
+      if (isServerError)
+        description = 'Erro de conexão com o servidor. Tente novamente em instantes.'
+
       toast({
         title: 'Erro de autenticação',
-        description: isAuthError
-          ? 'Credenciais inválidas.'
-          : getErrorMessage(error) || 'Usuário ou senha inválidos.',
+        description,
         variant: 'destructive',
       })
     } else {
@@ -167,62 +160,69 @@ export default function Login() {
           ) : (
             <div className="max-w-sm mx-auto space-y-6 animate-fade-in">
               <div className="text-center">
-                <h3 className="text-xl font-bold text-slate-800 mb-2">
-                  Acesso Restrito: {selectedRole}
-                </h3>
-                <p className="text-slate-500 text-sm">Insira a chave mestra para continuar.</p>
+                <h3 className="text-xl font-bold text-slate-800 mb-2">Acesso: {selectedRole}</h3>
+                <p className="text-slate-500 text-sm">Insira sua senha para continuar.</p>
               </div>
 
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                {selectedRole === 'Outro' && (
-                  <div className="space-y-2 text-left animate-fade-in-down">
-                    <Label htmlFor="customEmail" className="font-bold text-slate-700">
-                      E-mail
+                <fieldset disabled={isLoading} className="space-y-4 border-0 p-0 m-0 min-w-0">
+                  {selectedRole === 'Outro' && (
+                    <div className="space-y-2 text-left animate-fade-in-down">
+                      <Label htmlFor="customEmail" className="font-bold text-slate-700">
+                        E-mail ou Login
+                      </Label>
+                      <Input
+                        id="customEmail"
+                        type="text"
+                        placeholder="email@exemplo.com ou login"
+                        value={customEmail}
+                        onChange={(e) => setCustomEmail(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-2 text-left">
+                    <Label htmlFor="masterKey" className="font-bold text-slate-700">
+                      Senha
                     </Label>
                     <Input
-                      id="customEmail"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={customEmail}
-                      onChange={(e) => setCustomEmail(e.target.value)}
-                      autoFocus
+                      id="masterKey"
+                      type="password"
+                      placeholder="***"
+                      value={masterKey}
+                      onChange={(e) => setMasterKey(e.target.value)}
+                      autoFocus={selectedRole !== 'Outro'}
                     />
                   </div>
-                )}
 
-                <div className="space-y-2 text-left">
-                  <Label htmlFor="masterKey" className="font-bold text-slate-700">
-                    {selectedRole === 'Outro' ? 'Senha' : 'Chave Mestra'}
-                  </Label>
-                  <Input
-                    id="masterKey"
-                    type="password"
-                    placeholder="***"
-                    value={masterKey}
-                    onChange={(e) => setMasterKey(e.target.value)}
-                    autoFocus={selectedRole !== 'Outro'}
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setSelectedRole(null)}
-                    disabled={isLoading}
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Voltar
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="flex-1 bg-brand hover:bg-brand/90 text-white font-bold"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : 'Entrar'}
-                  </Button>
-                </div>
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setSelectedRole(null)}
+                      disabled={isLoading}
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Voltar
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="flex-1 bg-brand hover:bg-brand/90 text-white font-bold"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Autenticando...
+                        </>
+                      ) : (
+                        'Entrar'
+                      )}
+                    </Button>
+                  </div>
+                </fieldset>
               </form>
             </div>
           )}
