@@ -249,8 +249,9 @@ export default function RegisterUser() {
               <div className="pt-2 border-t">
                 <h4 className="font-bold text-slate-800 mb-1">Operacional</h4>
                 <p>
-                  Acesso restrito. Visualização e modificação permitida apenas nos módulos de Manejo
-                  do Rebanho, Clima e Lotes.
+                  Acesso restrito. Visualização e modificação permitida apenas nos módulos: Animais,
+                  Lotes, Pastos, Apartação, Reprodução, Pesagem, Clima, Mercado, Receitas de Ração,
+                  Produção de Ração e Saída de Ração. O restante do sistema fica oculto e bloqueado.
                 </p>
               </div>
               <div className="pt-2 border-t">

@@ -1,117 +1,68 @@
-import { useEffect } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import TabEventos from './components/TabEventos'
-import TabVendas from './components/TabVendas'
-import TabBoletos from './components/TabBoletos'
-import TabOperacoes from './components/TabOperacoes'
-import TabClientesCRM from './components/TabClientesCRM'
+import { useState, useEffect } from 'react'
+import pb from '@/lib/pocketbase/client'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+
+const formatCurrency = (val: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
 
 export default function GestaoVendas() {
+  const [vendas, setVendas] = useState<any[]>([])
+
   useEffect(() => {
-    // Intercept fetch to prevent html-to-image from crashing on missing Vite CSS assets
-    const originalFetch = window.fetch
-    window.fetch = async (...args) => {
-      let requestUrl = ''
-      if (typeof args[0] === 'string') {
-        requestUrl = args[0]
-      } else if (args[0] instanceof Request) {
-        requestUrl = args[0].url
-      } else if (args[0] instanceof URL) {
-        requestUrl = args[0].toString()
-      } else if (args[0] && typeof (args[0] as any).toString === 'function') {
-        requestUrl = (args[0] as any).toString()
-      }
-
-      try {
-        const response = await originalFetch(...args)
-        if (!response.ok && requestUrl.includes('/assets/') && requestUrl.endsWith('.css')) {
-          return new Response('', {
-            status: 200,
-            statusText: 'OK',
-            headers: new Headers({ 'Content-Type': 'text/css' }),
-          })
-        }
-        return response
-      } catch (error) {
-        if (requestUrl.includes('/assets/') && requestUrl.endsWith('.css')) {
-          return new Response('', {
-            status: 200,
-            statusText: 'OK',
-            headers: new Headers({ 'Content-Type': 'text/css' }),
-          })
-        }
-        throw error
-      }
-    }
-
-    return () => {
-      window.fetch = originalFetch
-    }
+    pb.collection('vendas').getFullList({ expand: 'cliente_id' }).then(setVendas)
   }, [])
 
   return (
-    <div className="p-6 bg-white min-h-screen text-black">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-emerald-900 tracking-tight">Gestão de Vendas</h1>
-        <p className="text-gray-600 mt-1">
-          Acompanhe eventos, vendas e cobranças do rebanho em um só lugar.
-        </p>
-      </div>
-
-      <Tabs defaultValue="eventos" className="w-full">
-        <TabsList className="bg-gray-100 p-1 rounded-md mb-6 w-full sm:w-auto inline-flex shadow-sm">
-          <TabsTrigger
-            value="dashboard"
-            className="data-[state=active]:bg-emerald-800 data-[state=active]:text-white font-medium px-6 py-2 text-gray-700 transition-colors"
-          >
-            Dashboard
-          </TabsTrigger>
-          <TabsTrigger
-            value="eventos"
-            className="data-[state=active]:bg-emerald-800 data-[state=active]:text-white font-medium px-6 py-2 text-gray-700 transition-colors"
-          >
-            Eventos & Lotes
-          </TabsTrigger>
-          <TabsTrigger
-            value="vendas"
-            className="data-[state=active]:bg-emerald-800 data-[state=active]:text-white font-medium px-6 py-2 text-gray-700 transition-colors"
-          >
-            Operações de Venda
-          </TabsTrigger>
-          <TabsTrigger
-            value="boletos"
-            className="data-[state=active]:bg-emerald-800 data-[state=active]:text-white font-medium px-6 py-2 text-gray-700 transition-colors"
-          >
-            Cobranças & Recebimentos
-          </TabsTrigger>
-          <TabsTrigger
-            value="clientes"
-            className="data-[state=active]:bg-emerald-800 data-[state=active]:text-white font-medium px-6 py-2 text-gray-700 transition-colors"
-          >
-            Clientes CRM
-          </TabsTrigger>
-        </TabsList>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 min-h-[500px]">
-          <TabsContent value="dashboard" className="mt-0">
-            <TabVendas />
-          </TabsContent>
-          <TabsContent value="eventos" className="mt-0">
-            <TabEventos />
-          </TabsContent>
-          <TabsContent value="vendas" className="mt-0">
-            <div className="flex justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-800">Operações de Venda</h2>
-            </div>
-            <TabOperacoes />
-          </TabsContent>
-          <TabsContent value="boletos" className="mt-0">
-            <TabBoletos />
-          </TabsContent>
-          <TabsContent value="clientes" className="mt-0">
-            <TabClientesCRM />
-          </TabsContent>
-        </div>
-      </Tabs>
+    <div className="p-6 space-y-6">
+      <h1 className="text-3xl font-bold text-emerald-900">Gestão de Vendas</h1>
+      <Card>
+        <CardContent className="pt-6">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data da Venda</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Valor Total</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {vendas.map((v) => (
+                <TableRow key={v.id}>
+                  <TableCell>
+                    {v.data_venda ? new Date(v.data_venda).toLocaleDateString() : '-'}
+                  </TableCell>
+                  <TableCell>{v.expand?.cliente_id?.nome_razao_social || 'Desconhecido'}</TableCell>
+                  <TableCell className="font-mono">
+                    {formatCurrency(v.valor_total_venda || 0)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={v.status_venda === 'Confirmada' ? 'default' : 'secondary'}>
+                      {v.status_venda}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {vendas.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-6">
+                    Nenhuma venda registrada.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   )
 }

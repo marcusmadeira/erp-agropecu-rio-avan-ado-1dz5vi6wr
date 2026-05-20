@@ -125,9 +125,22 @@ const AuthorizeRoute = ({ children }: { children: React.ReactNode }) => {
   if (serverError) return <ServiceUnavailable onRetry={retryConnection} />
   if (!isAuthenticated || !user) return <Navigate to="/login" replace />
 
-  const isOperacional = user.nivel_acesso === 'Operacional'
+  const isOperacional = user.nivel_acesso === 'Operacional' || user.role === 'Operacional'
   if (isOperacional) {
-    return <Navigate to="/operacoes" replace />
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-center px-4">
+        <h2 className="text-2xl font-bold text-red-900 mb-4">Acesso Negado</h2>
+        <p className="text-gray-600 mb-6 max-w-md">
+          Você não tem permissão para acessar esta página.
+        </p>
+        <Button
+          onClick={() => (window.location.href = '/animais')}
+          className="bg-emerald-800 text-white hover:bg-emerald-900 transition-colors"
+        >
+          Voltar ao Início
+        </Button>
+      </div>
+    )
   }
 
   return <ErrorBoundary>{children}</ErrorBoundary>

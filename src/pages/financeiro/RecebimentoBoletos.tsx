@@ -1,127 +1,81 @@
 import { useState, useEffect } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import pb from '@/lib/pocketbase/client'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  getBoletosCompletos,
-  getHistoricoCobrancas,
-  obterInadimplencia,
-} from '@/services/financeiro_recebimentos'
-import ListagemBoletos from './recebimentos/ListagemBoletos'
-import PainelInadimplencia from './recebimentos/PainelInadimplencia'
-import ReguaCobranca from './recebimentos/ReguaCobranca'
-import PrevisaoBenchmarking from './recebimentos/PrevisaoBenchmarking'
-import { useRealtime } from '@/hooks/use-realtime'
-import { useToast } from '@/hooks/use-toast'
-import { BillingAlertsWidget } from '@/components/cobrancas/BillingAlertsWidget'
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+
+const formatCurrency = (val: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
 
 export default function RecebimentoBoletos() {
   const [boletos, setBoletos] = useState<any[]>([])
-  const [historico, setHistorico] = useState<any[]>([])
-  const [metrics, setMetrics] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const { toast } = useToast()
-
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      const { getConsolidatedFinancials } = await import('@/services/financeService')
-      const [bol, hist, finData] = await Promise.all([
-        getBoletosCompletos(),
-        getHistoricoCobrancas(),
-        getConsolidatedFinancials(),
-      ])
-      setBoletos(bol)
-      setHistorico(hist)
-      if (finData) {
-        setMetrics({
-          valorEmAberto: finData.delinquency,
-          previsao30Dias: finData.expected30d,
-          pieData: finData.pieData,
-          tableData: finData.overdueList,
-        })
-      }
-    } catch (err) {
-      toast({ title: 'Erro ao carregar dados', variant: 'destructive' })
-    } finally {
-      setLoading(false)
-    }
-  }
 
   useEffect(() => {
-    loadData()
+    pb.collection('boletos')
+      .getFullList({ expand: 'parcela_id.venda_id.cliente_id' })
+      .then(setBoletos)
   }, [])
 
-  useRealtime('boletos', () => loadData())
-  useRealtime('historico_cobrancas', () => loadData())
-  useRealtime('parcelas_venda', () => loadData())
-  useRealtime('recebimentos_vendas', () => loadData())
-
-  if (loading && !boletos.length) return <div className="p-8">Carregando...</div>
-
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-[#094016]">Controle de Recebimento</h1>
-        <p className="text-muted-foreground">
-          Gestão centralizada de recebíveis, inadimplência e previsão de fluxo de caixa.
-        </p>
-      </div>
-
-      <BillingAlertsWidget />
-
-      {!loading && boletos.length === 0 && (
-        <div className="bg-amber-50 text-amber-800 p-4 rounded-md border border-amber-200 shadow-sm flex items-center justify-between animate-fade-in">
-          <div>
-            <h3 className="font-semibold text-sm">Geração Automática Não Configurada</h3>
-            <p className="text-xs mt-1">
-              Atualmente, não há boletos registrados. Caso a geração automática esteja inativa, você
-              deve emitir as cobranças manualmente pelo painel de vendas ou ativar a integração
-              bancária.
-            </p>
-          </div>
-        </div>
-      )}
-
-      <Tabs defaultValue="listagem" className="w-full">
-        <TabsList className="grid grid-cols-1 md:grid-cols-4 w-full h-auto gap-2 bg-transparent">
-          <TabsTrigger
-            value="listagem"
-            className="py-2 bg-white data-[state=active]:bg-[#094016] data-[state=active]:text-white shadow-sm border"
-          >
-            Listagem e Gestão
-          </TabsTrigger>
-          <TabsTrigger
-            value="inadimplencia"
-            className="py-2 bg-white data-[state=active]:bg-[#094016] data-[state=active]:text-white shadow-sm border"
-          >
-            Inadimplência
-          </TabsTrigger>
-          <TabsTrigger
-            value="regua"
-            className="py-2 bg-white data-[state=active]:bg-[#094016] data-[state=active]:text-white shadow-sm border"
-          >
-            Régua de Cobrança
-          </TabsTrigger>
-          <TabsTrigger
-            value="previsao"
-            className="py-2 bg-white data-[state=active]:bg-[#094016] data-[state=active]:text-white shadow-sm border"
-          >
-            Previsão & Insights
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="listagem">
-          <ListagemBoletos boletos={boletos} onRefresh={loadData} />
-        </TabsContent>
-        <TabsContent value="inadimplencia">
-          <PainelInadimplencia boletos={boletos} externalMetrics={metrics} />
-        </TabsContent>
-        <TabsContent value="regua">
-          <ReguaCobranca historico={historico} boletos={boletos} />
-        </TabsContent>
-        <TabsContent value="previsao">
-          <PrevisaoBenchmarking boletos={boletos} />
-        </TabsContent>
-      </Tabs>
+    <div className="p-6 space-y-6">
+      <h1 className="text-3xl font-bold text-emerald-900">Recebimento de Títulos</h1>
+      <Card>
+        <CardContent className="pt-6">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Vencimento</TableHead>
+                <TableHead>Valor</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {boletos.map((b) => (
+                <TableRow key={b.id}>
+                  <TableCell>
+                    {b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id
+                      ?.nome_razao_social || 'Desconhecido'}
+                  </TableCell>
+                  <TableCell>
+                    {b.data_vencimento ? new Date(b.data_vencimento).toLocaleDateString() : '-'}
+                  </TableCell>
+                  <TableCell className="font-mono font-semibold">
+                    {formatCurrency(b.valor_boleto || 0)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        b.status_boleto === 'Pago'
+                          ? 'default'
+                          : b.status_boleto === 'Atrasado'
+                            ? 'destructive'
+                            : 'secondary'
+                      }
+                    >
+                      {b.status_boleto}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {boletos.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-6">
+                    Nenhum título encontrado.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   )
 }
