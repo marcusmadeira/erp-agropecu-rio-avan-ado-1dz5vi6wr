@@ -87,10 +87,16 @@ export default function Login() {
         title: 'Acesso Liberado',
         description: 'Bem-vindo ao sistema.',
       })
-      if (email === 'operacional@toriba.com.br') {
-        navigate('/animais', { replace: true })
+      if (email === 'gerente@toriba.com.br') {
+        navigate('/dashboard', { replace: true })
+      } else if (email === 'financeiro@toriba.com.br') {
+        navigate('/financeiro', { replace: true })
+      } else if (email === 'administrativo@toriba.com.br') {
+        navigate('/admin', { replace: true })
+      } else if (email === 'operacional@toriba.com.br') {
+        navigate('/operacoes', { replace: true })
       } else {
-        navigate('/', { replace: true })
+        navigate('/dashboard', { replace: true })
       }
     }
   }

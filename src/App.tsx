@@ -127,7 +127,7 @@ const AuthorizeRoute = ({ children }: { children: React.ReactNode }) => {
 
   const isOperacional = user.nivel_acesso === 'Operacional'
   if (isOperacional) {
-    return <Navigate to="/animais" replace />
+    return <Navigate to="/operacoes" replace />
   }
 
   return <ErrorBoundary>{children}</ErrorBoundary>
@@ -178,12 +178,37 @@ const AppRoutes = () => (
         </ProtectedRoute>
       }
     >
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <AuthorizeRoute>
             <Dashboard />
           </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <AuthorizeRoute>
+            <Auditoria />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/financeiro"
+        element={
+          <AuthorizeRoute>
+            <PainelCobranca />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/operacoes"
+        element={
+          <ProtectedRoute>
+            <Animais />
+          </ProtectedRoute>
         }
       />
       <Route
