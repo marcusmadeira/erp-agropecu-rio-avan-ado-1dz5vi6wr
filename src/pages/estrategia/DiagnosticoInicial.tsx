@@ -78,19 +78,19 @@ export default function DiagnosticoInicial() {
 
       const total_animais = animais.length
       const arrobas_produzidas = animais.reduce(
-        (acc, a) => acc + (a.arrobas_atuais || (a.peso_atual_kg || 0) / 15),
+        (acc, a) => acc + (Number(a.peso_atual_kg) || 0) / 15,
         0,
       )
 
       const custos = finData.realizedExpenses
       const receitas = finData.realizedRevenue
 
-      const tamanho_ha = pastos.reduce((acc, p) => acc + (p.area_hectares || 0), 0) || 1
+      const tamanho_ha = pastos.reduce((acc, p) => acc + (Number(p.area_hectares) || 0), 0) || 1
 
       const custo_arroba = arrobas_produzidas > 0 ? custos / arrobas_produzidas : 0
       const lotacao = total_animais / tamanho_ha
       const produtividade_ha = arrobas_produzidas / tamanho_ha
-      const margem_lucro = finData.margin
+      const margem_lucro = receitas > 0 ? ((receitas - custos) / receitas) * 100 : 0
       const roi = custos > 0 ? ((receitas - custos) / custos) * 100 : 0
 
       setRealtimeData({

@@ -32,10 +32,11 @@ export default function Inventario() {
           .catch(() => null),
       ])
 
-      setAnimais(animaisData)
+      setAnimais(animaisData || [])
       setPrecoArroba(precos?.items?.[0]?.preco_arroba || 300)
     } catch (error) {
       console.error('Erro ao carregar inventário:', error)
+      setAnimais([])
     }
   }
 
@@ -50,13 +51,10 @@ export default function Inventario() {
     let totalPeso = 0
     let totalArrobas = 0
     animais.forEach((a) => {
-      totalPeso += a.peso_atual_kg || 0
-      totalArrobas += a.arrobas_atuais || (a.peso_atual_kg || 0) / 15
+      const peso = Number(a.peso_atual_kg) || 0
+      totalPeso += peso
+      totalArrobas += peso / 15
     })
-
-    if (totalArrobas === 0 && animais.length > 0) {
-      totalArrobas = animais.length * 7
-    }
 
     return {
       totalPeso,

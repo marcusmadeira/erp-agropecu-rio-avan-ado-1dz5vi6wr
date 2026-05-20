@@ -38,42 +38,8 @@ export default function PainelCobranca() {
   const loadData = async () => {
     setLoading(true)
     try {
-      // Custom implementation to sync with central financial logic
-      const { getConsolidatedFinancials } = await import('@/services/financeService')
-      const { default: pb } = await import('@/lib/pocketbase/client')
-
-      const finData = await getConsolidatedFinancials()
-      const parcelasRecords = await pb.collection('parcelas_venda').getFullList({
-        filter: "status_parcela != 'Paga' && status_parcela != 'Cancelada'",
-        expand: 'venda_id.cliente_id',
-      })
-
-      const parcelasPendentes = parcelasRecords.map((p: any) => ({
-        ...p,
-        valor_parcela: p.valor_parcela,
-        status_parcela: p.status_parcela,
-        venda_id: p.venda_id,
-        expand: {
-          'venda_id.cliente_id': p.expand?.['venda_id.cliente_id'],
-        },
-      }))
-
-      const historicos = await pb
-        .collection('historico_cobrancas')
-        .getFullList()
-        .catch(() => [])
-
-      setData({
-        dashboard: {
-          recebido: finData.realizedRevenue,
-          aReceber: finData.pendingRevenue,
-          vencido: finData.delinquency,
-          vencendo7Dias: finData.expected30d, // simplified proxy
-        },
-        parcelas: parcelasPendentes,
-        itens: [],
-        historicos: historicos,
-      })
+      const cobrancaData = await getPainelCobrancaData()
+      setData(cobrancaData)
       setError(null)
     } catch (err: any) {
       setError(err.message)

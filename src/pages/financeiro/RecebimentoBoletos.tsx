@@ -68,6 +68,19 @@ export default function RecebimentoBoletos() {
 
       <BillingAlertsWidget />
 
+      {!loading && boletos.length === 0 && (
+        <div className="bg-amber-50 text-amber-800 p-4 rounded-md border border-amber-200 shadow-sm flex items-center justify-between animate-fade-in">
+          <div>
+            <h3 className="font-semibold text-sm">Geração Automática Não Configurada</h3>
+            <p className="text-xs mt-1">
+              Atualmente, não há boletos registrados. Caso a geração automática esteja inativa, você
+              deve emitir as cobranças manualmente pelo painel de vendas ou ativar a integração
+              bancária.
+            </p>
+          </div>
+        </div>
+      )}
+
       <Tabs defaultValue="listagem" className="w-full">
         <TabsList className="grid grid-cols-1 md:grid-cols-4 w-full h-auto gap-2 bg-transparent">
           <TabsTrigger

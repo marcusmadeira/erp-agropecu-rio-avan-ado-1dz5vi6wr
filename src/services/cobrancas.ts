@@ -1,10 +1,13 @@
 import pb from '@/lib/pocketbase/client'
 
 export const getPainelCobrancaData = async () => {
-  const parcelas = await pb.collection('parcelas_venda').getFullList({
-    expand: 'venda_id.cliente_id',
-    sort: 'data_vencimento',
-  })
+  const [parcelas, recebimentos] = await Promise.all([
+    pb.collection('parcelas_venda').getFullList({
+      expand: 'venda_id.cliente_id',
+      sort: 'data_vencimento',
+    }),
+    pb.collection('recebimentos_vendas').getFullList(),
+  ])
 
   const todayStr = new Date().toISOString().split('T')[0]
   const d7 = new Date()
@@ -18,21 +21,24 @@ export const getPainelCobrancaData = async () => {
     vencendo7Dias: 0,
   }
 
+  recebimentos.forEach((r) => {
+    dashboard.recebido += Number(r.valor_recebido) || 0
+  })
+
   const pendentesPanel: any[] = []
 
   parcelas.forEach((p) => {
-    if (p.status_parcela === 'Paga') {
-      dashboard.recebido += p.valor_parcela
-    } else if (p.status_parcela === 'Pendente' || p.status_parcela === 'Atrasada') {
+    const valorParcela = Number(p.valor_parcela) || 0
+    if (p.status_parcela === 'Pendente' || p.status_parcela === 'Atrasada') {
       if (
         p.status_parcela === 'Atrasada' ||
         (p.status_parcela === 'Pendente' && p.data_vencimento < todayStr)
       ) {
-        dashboard.vencido += p.valor_parcela
+        dashboard.vencido += valorParcela
       } else {
-        dashboard.aReceber += p.valor_parcela
+        dashboard.aReceber += valorParcela
         if (p.data_vencimento <= d7Str) {
-          dashboard.vencendo7Dias += p.valor_parcela
+          dashboard.vencendo7Dias += valorParcela
         }
       }
       pendentesPanel.push(p)
