@@ -116,6 +116,7 @@ export default function DiagnosticoInicial() {
   useRealtime('transacoes_financeiras', () => loadData())
   useRealtime('despesas', () => loadData())
   useRealtime('boletos', () => loadData())
+  useRealtime('recebimentos_vendas', () => loadData())
 
   const handleSaveSnapshot = async () => {
     setSaving(true)

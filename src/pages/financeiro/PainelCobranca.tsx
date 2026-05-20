@@ -43,19 +43,18 @@ export default function PainelCobranca() {
       const { default: pb } = await import('@/lib/pocketbase/client')
 
       const finData = await getConsolidatedFinancials()
-      const boletosPendentes = await pb.collection('boletos').getFullList({
-        filter: "status_boleto != 'Pago' && status_boleto != 'Cancelado'",
-        expand: 'venda_id.cliente_id,parcela_id.venda_id.cliente_id',
+      const parcelasRecords = await pb.collection('parcelas_venda').getFullList({
+        filter: "status_parcela != 'Paga' && status_parcela != 'Cancelada'",
+        expand: 'venda_id.cliente_id',
       })
 
-      const parcelasPendentes = boletosPendentes.map((b: any) => ({
-        ...b,
-        valor_parcela: b.valor_boleto,
-        status_parcela: b.status_boleto,
-        venda_id: b.venda_id || b.expand?.parcela_id?.venda_id,
+      const parcelasPendentes = parcelasRecords.map((p: any) => ({
+        ...p,
+        valor_parcela: p.valor_parcela,
+        status_parcela: p.status_parcela,
+        venda_id: p.venda_id,
         expand: {
-          'venda_id.cliente_id':
-            b.expand?.['venda_id.cliente_id'] || b.expand?.['parcela_id.venda_id.cliente_id'],
+          'venda_id.cliente_id': p.expand?.['venda_id.cliente_id'],
         },
       }))
 

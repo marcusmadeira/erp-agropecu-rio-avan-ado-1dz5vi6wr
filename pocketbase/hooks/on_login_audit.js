@@ -3,6 +3,11 @@ onRecordAuthRequest((e) => {
     const record = e.record
     if (!record) return e.next()
 
+    // Ignore auth-refresh to prevent redundant logs during session restoration
+    if (e.request.url.path.includes('/auth-refresh')) {
+      return e.next()
+    }
+
     const auditCol = $app.findCollectionByNameOrId('auditoria_movimentacoes')
     const auditRec = new Record(auditCol)
     auditRec.set('usuario_id', record.id)

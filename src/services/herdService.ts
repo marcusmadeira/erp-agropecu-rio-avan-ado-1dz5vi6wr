@@ -2,12 +2,13 @@ import pb from '@/lib/pocketbase/client'
 
 export const getActiveHerdMetrics = async () => {
   try {
-    const animais = await pb
-      .collection('animais')
-      .getFullList({ filter: "status != 'Vendido' && status != 'Morto' && status != 'Inativo'" })
+    const animais = await pb.collection('animais').getFullList({ filter: "status = 'Ativo'" })
     const total_animais = animais.length
     const total_peso_kg = animais.reduce((acc, a) => acc + (a.peso_atual_kg || 0), 0)
-    const total_arrobas = total_peso_kg / 15
+    const total_arrobas = animais.reduce(
+      (acc, a) => acc + (a.arrobas_atuais || (a.peso_atual_kg || 0) / 15),
+      0,
+    )
 
     // Preço da arroba
     let preco_arroba = 0

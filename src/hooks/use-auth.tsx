@@ -37,18 +37,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let mounted = true
 
     const validateSession = async () => {
-      if (pb.authStore.isValid && pb.authStore.token && pb.authStore.record?.id) {
+      if (pb.authStore.isValid && pb.authStore.token) {
         try {
-          // Simply fetch the user record to confirm it still exists and token is valid.
-          // This avoids calling authRefresh() which triggers the 'LOGIN' audit loop.
-          const record = await Promise.race([
-            pb.collection('users').getOne(pb.authStore.record.id),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000)),
+          const authData = await Promise.race([
+            pb.collection('users').authRefresh(),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('Timeout')), 10000),
+            ),
           ])
 
-          if (mounted && record) {
-            // Record exists, session is valid.
-            pb.authStore.save(pb.authStore.token, record)
+          if (mounted && authData?.record) {
+            pb.authStore.save(pb.authStore.token, authData.record)
           }
         } catch (err: any) {
           if (

@@ -137,15 +137,21 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
       data_vencimento: t.data_vencimento || t.data_competencia,
     })),
     ...boletosPagar.map((bp: any) => ({
+      id: bp.id,
       tipo_movimento: 'Despesa',
       valor_total: bp.valor,
       data_vencimento: bp.data_vencimento,
       classificacao_custo: bp.expand?.despesa_id?.classificacao_custo || 'FIXA',
+      status: bp.status,
+      expand: bp.expand,
     })),
     ...boletos.map((b: any) => ({
+      id: b.id,
       tipo_movimento: 'Receita',
       valor_total: b.valor_boleto,
       data_vencimento: b.data_vencimento,
+      status: b.status_boleto,
+      expand: b.expand,
     })),
   ]
 

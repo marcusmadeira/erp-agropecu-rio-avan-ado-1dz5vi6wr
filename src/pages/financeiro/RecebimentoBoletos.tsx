@@ -53,6 +53,7 @@ export default function RecebimentoBoletos() {
   useRealtime('boletos', () => loadData())
   useRealtime('historico_cobrancas', () => loadData())
   useRealtime('parcelas_venda', () => loadData())
+  useRealtime('recebimentos_vendas', () => loadData())
 
   if (loading && !boletos.length) return <div className="p-8">Carregando...</div>
 

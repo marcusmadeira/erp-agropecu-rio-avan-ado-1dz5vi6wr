@@ -60,10 +60,10 @@ export default function FinanceSummary({ transactions }: { transactions: Transac
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card className="shadow-subtle border-l-4 border-l-primary">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-bold text-secondary">Receitas Efetuadas</CardTitle>
+            <CardTitle className="text-sm font-bold text-secondary">Receita Total</CardTitle>
             <ArrowUpRight className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
@@ -74,7 +74,7 @@ export default function FinanceSummary({ transactions }: { transactions: Transac
         </Card>
         <Card className="shadow-subtle border-l-4 border-l-destructive">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-bold text-secondary">Despesas Efetuadas</CardTitle>
+            <CardTitle className="text-sm font-bold text-secondary">Despesa Paga</CardTitle>
             <ArrowDownRight className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
@@ -83,14 +83,25 @@ export default function FinanceSummary({ transactions }: { transactions: Transac
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-subtle border-l-4 border-l-secondary">
+        <Card className="shadow-subtle border-l-4 border-l-amber-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-bold text-secondary">Saldo no Período</CardTitle>
-            <Wallet className="h-4 w-4 text-secondary" />
+            <CardTitle className="text-sm font-bold text-secondary">Despesas a Pagar</CardTitle>
+            <Wallet className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold font-mono text-amber-600">
+              {formatCurrency(dashboardStats.pendingExpenses || 0)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-subtle border-l-4 border-l-emerald-500">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-bold text-secondary">Saldo Líquido</CardTitle>
+            <Wallet className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
             <div
-              className={`text-2xl font-bold font-mono ${saldo >= 0 ? 'text-secondary' : 'text-destructive'}`}
+              className={`text-2xl font-bold font-mono ${saldo >= 0 ? 'text-emerald-700' : 'text-destructive'}`}
             >
               {formatCurrency(saldo)}
             </div>

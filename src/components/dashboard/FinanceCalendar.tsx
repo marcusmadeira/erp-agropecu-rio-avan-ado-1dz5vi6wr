@@ -7,27 +7,47 @@ export default function FinanceCalendar({ transactions }: { transactions?: any[]
   const [boletos, setBoletos] = useState<any[]>([])
 
   useEffect(() => {
-    const fetchBoletos = async () => {
-      const today = new Date()
-      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
-        .toISOString()
-        .split('T')[0]
-      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0)
-        .toISOString()
-        .split('T')[0]
-
-      try {
-        const data = await pb.collection('boletos_pagar').getFullList({
-          filter: `data_vencimento >= "${firstDay} 00:00:00" && data_vencimento <= "${lastDay} 23:59:59"`,
-          expand: 'fornecedor_id,despesa_id',
-        })
-        setBoletos(data)
-      } catch (err) {
-        console.error(err)
+    if (transactions && transactions.length > 0) {
+      const filtered = transactions.filter(
+        (t) => t.tipo_movimento === 'Despesa' && t.data_vencimento,
+      )
+      setBoletos(
+        filtered.map((t) => ({
+          id: t.id,
+          data_vencimento: t.data_vencimento,
+          valor: t.valor_total || t.valor || 0,
+          status:
+            t.status_pagamento || t.status || (t.status_boleto === 'Pago' ? 'Pago' : 'Pendente'),
+          expand: t.expand,
+        })),
+      )
+    } else {
+      const fetchBoletos = async () => {
+        try {
+          const { getConsolidatedFinancials } = await import('@/services/financeService')
+          const { allTransactions } = await getConsolidatedFinancials()
+          const filtered = allTransactions.filter(
+            (t) => t.tipo_movimento === 'Despesa' && t.data_vencimento,
+          )
+          setBoletos(
+            filtered.map((t) => ({
+              id: t.id,
+              data_vencimento: t.data_vencimento,
+              valor: t.valor_total || t.valor || 0,
+              status:
+                t.status_pagamento ||
+                t.status ||
+                (t.status_boleto === 'Pago' ? 'Pago' : 'Pendente'),
+              expand: t.expand,
+            })),
+          )
+        } catch (err) {
+          console.error(err)
+        }
       }
+      fetchBoletos()
     }
-    fetchBoletos()
-  }, [])
+  }, [transactions])
 
   const totalPendente = boletos
     .filter((b) => b.status === 'Pendente' || b.status === 'Atrasado')
