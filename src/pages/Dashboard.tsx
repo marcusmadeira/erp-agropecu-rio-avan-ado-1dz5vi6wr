@@ -82,11 +82,14 @@ export default function Dashboard() {
         qs = `?data_inicio=${dStart}`
       }
 
-      const [rFinanceiro, rCalendario, rKpis, herdMetrics] = await Promise.all([
+      const [rFinanceiro, rCalendario, rKpis, animais] = await Promise.all([
         getConsolidatedFinancials(dStart, dEnd),
         pb.send(`/backend/v1/obter_despesas_calendario${qs}`, { method: 'GET' }).catch(() => []),
         pb.send(`/backend/v1/obter_kpis_saude${qs}`, { method: 'GET' }).catch(() => ({})),
-        getActiveHerdMetrics(),
+        pb
+          .collection('animais')
+          .getFullList({ filter: "status != 'Vendido' && status != 'Morto'" })
+          .catch(() => []),
       ])
 
       setResumoData({
@@ -106,7 +109,7 @@ export default function Dashboard() {
       setCalendarioData(rCalendario)
       setKpiData({
         ...rKpis,
-        totalAnimais: herdMetrics.animais_ativos,
+        totalAnimais: animais.length,
       })
     } catch (e) {
       console.error(e)

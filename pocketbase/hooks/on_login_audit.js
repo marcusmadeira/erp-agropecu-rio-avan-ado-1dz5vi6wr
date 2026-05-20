@@ -3,8 +3,8 @@ onRecordAuthRequest((e) => {
     const record = e.record
     if (!record) return e.next()
 
-    // Ignore auth-refresh to prevent redundant logs during session restoration
-    if (e.request.url.path.includes('/auth-refresh')) {
+    // Only log explicit logins to prevent redundant "AUTO LOGIN" / session churn spam
+    if (!e.request.url.path.includes('/auth-with-password')) {
       return e.next()
     }
 

@@ -61,18 +61,26 @@ export default function DiagnosticoInicial() {
       const hist = await getDiagnosticos()
       setHistorico(hist as Diagnostico[])
 
-      // Real-time calculation using shared services
-      const { getActiveHerdMetrics } = await import('@/services/herdService')
+      // Real-time calculation using direct aggregation to guarantee perfect sync with inventory
       const { getConsolidatedFinancials } = await import('@/services/financeService')
 
-      const [herdMetrics, finData, pastos] = await Promise.all([
-        getActiveHerdMetrics(),
+      const [finData, pastos, animais] = await Promise.all([
         getConsolidatedFinancials(),
-        pb.collection('pastos_e_piquetes').getFullList(),
+        pb
+          .collection('pastos_e_piquetes')
+          .getFullList()
+          .catch(() => []),
+        pb
+          .collection('animais')
+          .getFullList({ filter: "status != 'Vendido' && status != 'Morto'" })
+          .catch(() => []),
       ])
 
-      const total_animais = herdMetrics.animais_ativos
-      const arrobas_produzidas = herdMetrics.total_arrobas
+      const total_animais = animais.length
+      const arrobas_produzidas = animais.reduce(
+        (acc, a) => acc + (a.arrobas_atuais || (a.peso_atual_kg || 0) / 15),
+        0,
+      )
 
       const custos = finData.realizedExpenses
       const receitas = finData.realizedRevenue
