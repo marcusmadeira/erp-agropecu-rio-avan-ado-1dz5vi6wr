@@ -24,7 +24,7 @@ export default function Inventario() {
       const { getActiveHerdMetrics } = await import('@/services/herdService')
       const metrics = await getActiveHerdMetrics()
       const animaisData = await pb.collection('animais').getFullList({
-        filter: "status = 'Ativo'",
+        filter: "status != 'Vendido' && status != 'Morto'",
         expand: 'lote_atual_id',
       })
 

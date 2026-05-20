@@ -44,12 +44,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (pb.authStore.isValid && pb.authStore.token) {
         try {
-          let isExpired = true
+          let isExpired = false
           try {
             const tokenParts = pb.authStore.token.split('.')
             if (tokenParts.length === 3) {
               const payload = JSON.parse(atob(tokenParts[1].replace(/-/g, '+').replace(/_/g, '/')))
-              isExpired = payload.exp * 1000 < Date.now() + 3600000 // 1 hour buffer
+              // Avoid redundant token refreshes and audit spam by using a tight 5-minute buffer
+              isExpired = payload.exp * 1000 < Date.now() + 300000
             }
           } catch (e) {
             isExpired = true

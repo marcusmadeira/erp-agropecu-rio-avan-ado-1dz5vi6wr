@@ -49,6 +49,30 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
   let expected30d = 0
   const overdueList: any[] = []
 
+  // Aggregate Transacoes Financeiras (standalone cash flow entries)
+  transacoes.forEach((t: any) => {
+    if (dateFrom || dateTo) {
+      if (!isDateInRange(t.data_vencimento || t.data_competencia)) return
+    }
+    const val = Number(t.valor_total) || 0
+    if (t.tipo_movimento === 'Receita') {
+      if (t.status_pagamento === 'Recebido') realizedRevenue += val
+      else if (t.status_pagamento === 'Pendente') pendingRevenue += val
+      else if (t.status_pagamento === 'Atrasado') delinquency += val
+    } else if (t.tipo_movimento === 'Despesa') {
+      if (
+        t.status_pagamento === 'Recebido' ||
+        t.status_pagamento === 'Pago' ||
+        t.status_pagamento === 'Realizado' ||
+        t.status_pagamento === 'Efetivado'
+      ) {
+        realizedExpenses += val
+      } else if (t.status_pagamento === 'Pendente' || t.status_pagamento === 'Atrasado') {
+        pendingExpenses += val
+      }
+    }
+  })
+
   // Ensure strict deduplication of financial events
   const processedDespesaIds = new Set()
 
@@ -115,6 +139,8 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
     const val = Number(v.valor_total_venda) || 0
     if (v.status_venda === 'Confirmada' || v.status_venda === 'Entregue') {
       realizedRevenue += val
+    } else if (v.status_venda === 'Pendente') {
+      pendingRevenue += val
     }
   })
 
