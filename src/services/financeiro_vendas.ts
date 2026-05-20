@@ -21,12 +21,10 @@ export const updateParcela = (id: string, data: any) =>
 export const deleteParcela = (id: string) => pb.collection('parcelas_venda').delete(id)
 
 export const getBoletosDaVenda = (vendaId: string) =>
-  pb
-    .collection('boletos')
-    .getFullList({
-      filter: `venda_id = '${vendaId}' || parcela_id.venda_id = '${vendaId}'`,
-      sort: 'data_vencimento',
-    })
+  pb.collection('boletos').getFullList({
+    filter: `venda_id = '${vendaId}' || parcela_id.venda_id = '${vendaId}'`,
+    sort: 'data_vencimento',
+  })
 
 export const createBoleto = (data: any) => pb.collection('boletos').create(data)
 

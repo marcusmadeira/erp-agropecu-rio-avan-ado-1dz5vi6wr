@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react'
 import pb from '@/lib/pocketbase/client'
 
 interface AuthContextType {
@@ -26,10 +26,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
   const [serverError, setServerError] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
+  const initRef = useRef(false)
 
   const retryConnection = () => {
     setLoading(true)
     setServerError(false)
+    initRef.current = false
     setRetryCount((c) => c + 1)
   }
 
@@ -37,22 +39,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let mounted = true
 
     const validateSession = async () => {
+      if (initRef.current) return
+      initRef.current = true
+
       if (pb.authStore.isValid && pb.authStore.token) {
         try {
-          // Decode token to check expiration
           let isExpired = true
           try {
             const tokenParts = pb.authStore.token.split('.')
             if (tokenParts.length === 3) {
-              const payload = JSON.parse(atob(tokenParts[1]))
-              isExpired = payload.exp * 1000 < Date.now() + 5000 // 5 seconds buffer
+              const payload = JSON.parse(atob(tokenParts[1].replace(/-/g, '+').replace(/_/g, '/')))
+              isExpired = payload.exp * 1000 < Date.now() + 3600000 // 1 hour buffer
             }
           } catch (e) {
             isExpired = true
           }
 
           if (isExpired) {
-            // Only refresh if expired to prevent redundant "AUTO LOGIN" audit logs
             const authData = await Promise.race([
               pb.collection('users').authRefresh(),
               new Promise<never>((_, reject) =>
@@ -62,10 +65,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             if (mounted && authData?.record) {
               pb.authStore.save(pb.authStore.token, authData.record)
+              setUser(authData.record)
             }
           } else {
-            // Token is valid and not expired, skip refresh
-            setUser(pb.authStore.record)
+            if (mounted) setUser(pb.authStore.record)
           }
         } catch (err: any) {
           if (

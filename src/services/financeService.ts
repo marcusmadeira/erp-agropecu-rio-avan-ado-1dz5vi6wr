@@ -49,37 +49,7 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
   let expected30d = 0
   const overdueList: any[] = []
 
-  transacoes.forEach((t: any) => {
-    if (dateFrom || dateTo) {
-      if (!isDateInRange(t.data_vencimento || t.data_competencia)) return
-    }
-    const val = Number(t.valor_total) || 0
-    if (t.tipo_movimento === 'Receita') {
-      if (
-        t.status_pagamento === 'Recebido' ||
-        t.status_pagamento === 'Efetivado' ||
-        t.status_pagamento === 'Realizado'
-      )
-        realizedRevenue += val
-      else if (t.status_pagamento === 'Atrasado') delinquency += val
-      else {
-        pendingRevenue += val
-        if (new Date(t.data_vencimento) <= in30d) expected30d += val
-      }
-    } else {
-      if (
-        t.status_pagamento === 'Pago' ||
-        t.status_pagamento === 'Recebido' ||
-        t.status_pagamento === 'Efetivado' ||
-        t.status_pagamento === 'Realizado'
-      ) {
-        realizedExpenses += val
-      } else {
-        pendingExpenses += val
-      }
-    }
-  })
-
+  // Ensure strict deduplication of financial events
   const processedDespesaIds = new Set()
 
   boletosPagar.forEach((bp: any) => {
@@ -87,16 +57,16 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
       if (!isDateInRange(bp.data_vencimento)) return
     }
     const val = Number(bp.valor) || 0
-    if (bp.status === 'Pago') {
+    if (bp.status === 'Pago' || bp.status === 'Realizado' || bp.status === 'Efetivado') {
       realizedExpenses += val
-    } else {
+    } else if (bp.status !== 'Cancelado') {
       pendingExpenses += val
     }
     if (bp.despesa_id) processedDespesaIds.add(bp.despesa_id)
   })
 
   despesas.forEach((d: any) => {
-    if (processedDespesaIds.has(d.id)) return
+    if (processedDespesaIds.has(d.id)) return // Already counted via boleto
     if (dateFrom || dateTo) {
       if (!isDateInRange(d.data_despesa)) return
     }
@@ -104,26 +74,7 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
     realizedExpenses += val
   })
 
-  // Process Vendas for Revenue
-  vendas.forEach((v: any) => {
-    if (dateFrom || dateTo) {
-      if (!isDateInRange(v.data_venda)) return
-    }
-    const val = Number(v.valor_total_venda) || 0
-    // AVista sales that might not have a boleto linked yet
-    if (
-      v.forma_pagamento === 'AVista' &&
-      (v.status_venda === 'Confirmada' || v.status_venda === 'Entregue')
-    ) {
-      // Check if there's a boleto for this sale. If not, add to realized.
-      const hasBoleto = boletos.some(
-        (b: any) => b.venda_id === v.id || b.expand?.parcela_id?.venda_id === v.id,
-      )
-      if (!hasBoleto) {
-        realizedRevenue += val
-      }
-    }
-  })
+  const processedVendaIds = new Set()
 
   boletos.forEach((b: any) => {
     if (dateFrom || dateTo) {
@@ -150,6 +101,20 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
     } else if (b.status_boleto !== 'Cancelado') {
       pendingRevenue += val
       if (new Date(b.data_vencimento) <= in30d) expected30d += val
+    }
+
+    if (b.venda_id) processedVendaIds.add(b.venda_id)
+    if (b.expand?.parcela_id?.venda_id) processedVendaIds.add(b.expand.parcela_id.venda_id)
+  })
+
+  vendas.forEach((v: any) => {
+    if (processedVendaIds.has(v.id)) return // Already counted via boletos
+    if (dateFrom || dateTo) {
+      if (!isDateInRange(v.data_venda)) return
+    }
+    const val = Number(v.valor_total_venda) || 0
+    if (v.status_venda === 'Confirmada' || v.status_venda === 'Entregue') {
+      realizedRevenue += val
     }
   })
 

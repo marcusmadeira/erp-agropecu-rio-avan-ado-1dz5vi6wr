@@ -2,13 +2,11 @@ import pb from '@/lib/pocketbase/client'
 
 export const getBoletosCompletos = async () => {
   try {
-    const boletos = await pb
-      .collection('boletos')
-      .getFullList({
-        expand:
-          'parcela_id,parcela_id.venda_id,parcela_id.venda_id.cliente_id,venda_id,venda_id.cliente_id',
-        sort: '-data_vencimento',
-      })
+    const boletos = await pb.collection('boletos').getFullList({
+      expand:
+        'parcela_id,parcela_id.venda_id,parcela_id.venda_id.cliente_id,venda_id,venda_id.cliente_id',
+      sort: '-data_vencimento',
+    })
     if (boletos.length > 0) return boletos
     return pb.send('/backend/v1/boletos', { method: 'GET' }).catch(() => [])
   } catch {
