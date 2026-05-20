@@ -342,7 +342,7 @@ export default function Auditoria() {
                     data.items.map((log) => (
                       <TableRow key={log.id}>
                         <TableCell className="font-mono text-xs whitespace-nowrap text-slate-500">
-                          {format(parseISO(log.created), 'dd/MM/yy HH:mm:ss')}
+                          {log.created ? format(parseISO(log.created), 'dd/MM/yy HH:mm:ss') : 'N/A'}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">

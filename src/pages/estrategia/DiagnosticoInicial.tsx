@@ -210,7 +210,7 @@ export default function DiagnosticoInicial() {
                 <div>
                   <p className="text-sm text-muted-foreground">Total Arrobas</p>
                   <p className="text-2xl font-bold">
-                    {realtimeData.arrobas_produzidas.toFixed(1)} @
+                    {realtimeData.arrobas_produzidas.toFixed(2)} @
                   </p>
                 </div>
                 <Scale className="w-8 h-8 text-amber-500 opacity-50" />

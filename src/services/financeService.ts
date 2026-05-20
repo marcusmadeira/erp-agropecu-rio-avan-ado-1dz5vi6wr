@@ -58,7 +58,10 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
     if (t.tipo_movimento === 'Receita') {
       if (t.status_pagamento === 'Recebido') realizedRevenue += val
       else if (t.status_pagamento === 'Pendente') pendingRevenue += val
-      else if (t.status_pagamento === 'Atrasado') delinquency += val
+      else if (t.status_pagamento === 'Atrasado') {
+        pendingRevenue += val
+        delinquency += val
+      }
     } else if (t.tipo_movimento === 'Despesa') {
       if (
         t.status_pagamento === 'Recebido' ||
@@ -107,24 +110,26 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
     const val = Number(b.valor_boleto) || 0
     if (b.status_boleto === 'Pago' || b.status_boleto === 'Recebido') {
       realizedRevenue += val
-    } else if (b.status_boleto === 'Atrasado' || b.status_boleto === 'Vencido') {
-      delinquency += val
-
-      const client =
-        b.expand?.venda_id?.expand?.cliente_id ||
-        b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id
-      overdueList.push({
-        id: b.id,
-        boleto: b.numero_boleto || 'N/A',
-        clienteNome: client?.nome_razao_social || 'Desconhecido',
-        clientePhone: client?.contato_whatsapp || client?.contato_whatsapp_cobranca,
-        vencimento: b.data_vencimento,
-        diasAtraso: differenceInDays(today, new Date(b.data_vencimento)),
-        valor: val,
-      })
     } else if (b.status_boleto !== 'Cancelado') {
       pendingRevenue += val
       if (new Date(b.data_vencimento) <= in30d) expected30d += val
+
+      if (b.status_boleto === 'Atrasado' || b.status_boleto === 'Vencido') {
+        delinquency += val
+
+        const client =
+          b.expand?.venda_id?.expand?.cliente_id ||
+          b.expand?.parcela_id?.expand?.venda_id?.expand?.cliente_id
+        overdueList.push({
+          id: b.id,
+          boleto: b.numero_boleto || 'N/A',
+          clienteNome: client?.nome_razao_social || 'Desconhecido',
+          clientePhone: client?.contato_whatsapp || client?.contato_whatsapp_cobranca,
+          vencimento: b.data_vencimento,
+          diasAtraso: differenceInDays(today, new Date(b.data_vencimento)),
+          valor: val,
+        })
+      }
     }
 
     if (b.venda_id) processedVendaIds.add(b.venda_id)
@@ -190,7 +195,7 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
     overdueList: overdueList.sort((a, b) => b.diasAtraso - a.diasAtraso),
     pieData: [
       { name: 'Pago', value: realizedRevenue, color: '#16a34a' },
-      { name: 'A Receber', value: pendingRevenue, color: '#eab308' },
+      { name: 'A Receber (No Prazo)', value: pendingRevenue - delinquency, color: '#eab308' },
       { name: 'Atrasado', value: delinquency, color: '#dc2626' },
     ].filter((d) => d.value > 0),
     allTransactions,

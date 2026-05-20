@@ -14,6 +14,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+let globalInitDone = false
+
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) throw new Error('useAuth must be used within an AuthProvider')
@@ -26,12 +28,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
   const [serverError, setServerError] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
-  const initRef = useRef(false)
-
   const retryConnection = () => {
     setLoading(true)
     setServerError(false)
-    initRef.current = false
+    globalInitDone = false
     setRetryCount((c) => c + 1)
   }
 
@@ -39,8 +39,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let mounted = true
 
     const validateSession = async () => {
-      if (initRef.current) return
-      initRef.current = true
+      if (globalInitDone) {
+        if (mounted) setLoading(false)
+        return
+      }
+      globalInitDone = true
 
       if (pb.authStore.isValid && pb.authStore.token) {
         try {
@@ -48,7 +51,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           try {
             const tokenParts = pb.authStore.token.split('.')
             if (tokenParts.length === 3) {
-              const payload = JSON.parse(atob(tokenParts[1].replace(/-/g, '+').replace(/_/g, '/')))
+              let base64 = tokenParts[1].replace(/-/g, '+').replace(/_/g, '/')
+              while (base64.length % 4) {
+                base64 += '='
+              }
+              const jsonPayload = decodeURIComponent(
+                atob(base64)
+                  .split('')
+                  .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                  .join(''),
+              )
+              const payload = JSON.parse(jsonPayload)
               // Avoid redundant token refreshes and audit spam by using a tight 5-minute buffer
               isExpired = payload.exp * 1000 < Date.now() + 300000
             }
