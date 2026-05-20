@@ -16,33 +16,38 @@ import { format, parseISO, isValid } from 'date-fns'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 
+import { useEffect, useState } from 'react'
+import { getConsolidatedFinancials } from '@/services/financeService'
+
 export default function ManagerDashboard() {
   const { state } = useAppStore()
 
-  const currentMonth = new Date().getMonth()
-
-  const txsMes = state.transacoes.filter((t) => {
-    try {
-      if (!t.Data_Competencia) return false
-      return new Date(t.Data_Competencia).getMonth() === currentMonth
-    } catch (e) {
-      return false
-    }
+  const [stats, setStats] = useState<any>({
+    realizedRevenue: 0,
+    realizedExpenses: 0,
+    balance: 0,
+    allTransactions: [],
   })
 
-  const receitasMes = txsMes
-    .filter((t) => t.Tipo_Movimento === 'Receita' && t.Status_Pagamento === 'Efetivado')
-    .reduce((a, b) => a + b.Valor_Total, 0)
-  const despesasMes = txsMes
-    .filter((t) => t.Tipo_Movimento === 'Despesa' && t.Status_Pagamento === 'Efetivado')
-    .reduce((a, b) => a + b.Valor_Total, 0)
-  const saldoMes = receitasMes - despesasMes
+  useEffect(() => {
+    getConsolidatedFinancials().then(setStats).catch(console.error)
+  }, [])
 
-  const pendentes = state.transacoes
-    .filter((t) => t.Status_Pagamento === 'Pendente')
-    .sort((a, b) => {
-      const dateA = a.Data_Vencimento ? new Date(a.Data_Vencimento).getTime() : 0
-      const dateB = b.Data_Vencimento ? new Date(b.Data_Vencimento).getTime() : 0
+  const receitasMes = stats.realizedRevenue
+  const despesasMes = stats.realizedExpenses
+  const saldoMes = stats.balance
+
+  const pendentes = (stats.allTransactions || [])
+    .filter(
+      (t: any) =>
+        t.status === 'Pendente' ||
+        t.status_pagamento === 'Pendente' ||
+        t.status_boleto === 'Pendente' ||
+        t.status_parcela === 'Pendente',
+    )
+    .sort((a: any, b: any) => {
+      const dateA = a.data_vencimento ? new Date(a.data_vencimento).getTime() : 0
+      const dateB = b.data_vencimento ? new Date(b.data_vencimento).getTime() : 0
       return dateA - dateB
     })
     .slice(0, 5)
@@ -151,26 +156,32 @@ export default function ManagerDashboard() {
                 return (
                   <TableRow key={t.id}>
                     <TableCell className="font-mono text-xs">
-                      {safeFormatDate(t.Data_Vencimento)}
+                      {safeFormatDate(t.data_vencimento)}
                       {isOverdue && (
                         <Badge variant="destructive" className="ml-2 px-1 text-[10px]">
                           Atrasado
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="font-medium">{t.Descricao_Lancamento}</TableCell>
+                    <TableCell className="font-medium">
+                      {t.descricao_lancamento ||
+                        t.descricao ||
+                        `Parcela/Boleto ${t.numero_boleto || t.numero_parcela || ''}`}
+                    </TableCell>
                     <TableCell>
                       <span
-                        className={`font-semibold text-[10px] uppercase px-2 py-1 rounded ${t.Tipo_Movimento === 'Receita' ? 'text-emerald-700 bg-emerald-50' : 'text-rose-700 bg-rose-50'}`}
+                        className={`font-semibold text-[10px] uppercase px-2 py-1 rounded ${t.tipo_movimento === 'Receita' ? 'text-emerald-700 bg-emerald-50' : 'text-rose-700 bg-rose-50'}`}
                       >
-                        {t.Tipo_Movimento}
+                        {t.tipo_movimento}
                       </span>
                     </TableCell>
                     <TableCell
-                      className={`text-right font-mono font-bold ${t.Tipo_Movimento === 'Receita' ? 'text-emerald-700' : 'text-rose-700'}`}
+                      className={`text-right font-mono font-bold ${t.tipo_movimento === 'Receita' ? 'text-emerald-700' : 'text-rose-700'}`}
                     >
-                      {t.Tipo_Movimento === 'Receita' ? '+' : '-'}
-                      {formatCurrency(t.Valor_Total)}
+                      {t.tipo_movimento === 'Receita' ? '+' : '-'}
+                      {formatCurrency(
+                        t.valor_total || t.valor_boleto || t.valor_parcela || t.valor || 0,
+                      )}
                     </TableCell>
                   </TableRow>
                 )

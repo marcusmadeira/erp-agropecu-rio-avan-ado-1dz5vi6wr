@@ -39,15 +39,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const validateSession = async () => {
       if (pb.authStore.isValid && pb.authStore.token) {
         try {
-          const authData = await Promise.race([
-            pb.collection('users').authRefresh(),
-            new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('Timeout')), 10000),
-            ),
-          ])
+          // Decode token to check expiration
+          let isExpired = true
+          try {
+            const tokenParts = pb.authStore.token.split('.')
+            if (tokenParts.length === 3) {
+              const payload = JSON.parse(atob(tokenParts[1]))
+              isExpired = payload.exp * 1000 < Date.now() + 5000 // 5 seconds buffer
+            }
+          } catch (e) {
+            isExpired = true
+          }
 
-          if (mounted && authData?.record) {
-            pb.authStore.save(pb.authStore.token, authData.record)
+          if (isExpired) {
+            // Only refresh if expired to prevent redundant "AUTO LOGIN" audit logs
+            const authData = await Promise.race([
+              pb.collection('users').authRefresh(),
+              new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('Timeout')), 10000),
+              ),
+            ])
+
+            if (mounted && authData?.record) {
+              pb.authStore.save(pb.authStore.token, authData.record)
+            }
+          } else {
+            // Token is valid and not expired, skip refresh
+            setUser(pb.authStore.record)
           }
         } catch (err: any) {
           if (

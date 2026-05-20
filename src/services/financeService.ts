@@ -2,7 +2,7 @@ import pb from '@/lib/pocketbase/client'
 import { parseISO, startOfDay, endOfDay, differenceInDays } from 'date-fns'
 
 export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: string) => {
-  const [transacoes, despesas, boletos, boletosPagar] = await Promise.all([
+  const [transacoes, despesas, boletos, boletosPagar, vendas] = await Promise.all([
     pb
       .collection('transacoes_financeiras')
       .getFullList()
@@ -21,6 +21,10 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
     pb
       .collection('boletos_pagar')
       .getFullList({ expand: 'despesa_id' })
+      .catch(() => []),
+    pb
+      .collection('vendas')
+      .getFullList()
       .catch(() => []),
   ])
 
@@ -96,8 +100,29 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
     if (dateFrom || dateTo) {
       if (!isDateInRange(d.data_despesa)) return
     }
-    const val = Number(d.valor) || 0
+    const val = Number(d.valor_total || d.valor) || 0
     realizedExpenses += val
+  })
+
+  // Process Vendas for Revenue
+  vendas.forEach((v: any) => {
+    if (dateFrom || dateTo) {
+      if (!isDateInRange(v.data_venda)) return
+    }
+    const val = Number(v.valor_total_venda) || 0
+    // AVista sales that might not have a boleto linked yet
+    if (
+      v.forma_pagamento === 'AVista' &&
+      (v.status_venda === 'Confirmada' || v.status_venda === 'Entregue')
+    ) {
+      // Check if there's a boleto for this sale. If not, add to realized.
+      const hasBoleto = boletos.some(
+        (b: any) => b.venda_id === v.id || b.expand?.parcela_id?.venda_id === v.id,
+      )
+      if (!hasBoleto) {
+        realizedRevenue += val
+      }
+    }
   })
 
   boletos.forEach((b: any) => {
@@ -105,7 +130,7 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
       if (!isDateInRange(b.data_vencimento)) return
     }
     const val = Number(b.valor_boleto) || 0
-    if (b.status_boleto === 'Pago') {
+    if (b.status_boleto === 'Pago' || b.status_boleto === 'Recebido') {
       realizedRevenue += val
     } else if (b.status_boleto === 'Atrasado' || b.status_boleto === 'Vencido') {
       delinquency += val
@@ -133,8 +158,13 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
 
   const allTransactions = [
     ...transacoes.map((t: any) => ({
-      ...t,
+      id: t.id,
+      tipo_movimento: t.tipo_movimento,
+      valor_total: t.valor_total,
       data_vencimento: t.data_vencimento || t.data_competencia,
+      status: t.status_pagamento,
+      descricao_lancamento: t.descricao_lancamento,
+      expand: t.expand,
     })),
     ...boletosPagar.map((bp: any) => ({
       id: bp.id,
@@ -143,6 +173,7 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
       data_vencimento: bp.data_vencimento,
       classificacao_custo: bp.expand?.despesa_id?.classificacao_custo || 'FIXA',
       status: bp.status,
+      descricao_lancamento: `Pagamento ${bp.expand?.fornecedor_id?.nome_razao_social || 'Fornecedor'}`,
       expand: bp.expand,
     })),
     ...boletos.map((b: any) => ({
@@ -151,6 +182,7 @@ export const getConsolidatedFinancials = async (dateFrom?: string, dateTo?: stri
       valor_total: b.valor_boleto,
       data_vencimento: b.data_vencimento,
       status: b.status_boleto,
+      descricao_lancamento: `Recebimento ${b.expand?.venda_id?.expand?.cliente_id?.nome_razao_social || 'Cliente'}`,
       expand: b.expand,
     })),
   ]
