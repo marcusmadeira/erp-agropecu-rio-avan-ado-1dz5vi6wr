@@ -2,37 +2,32 @@ import pb from '@/lib/pocketbase/client'
 
 export const getConsolidatedFinancials = async (data_inicio?: string, data_fim?: string) => {
   try {
-    let filterReceitas = `status_venda != 'Cancelado'`
-    if (data_inicio) filterReceitas += ` && data_venda >= '${data_inicio}'`
-    if (data_fim) filterReceitas += ` && data_venda <= '${data_fim}'`
+    let filter = `1=1`
+    if (data_inicio) filter += ` && data_vencimento >= '${data_inicio}'`
+    if (data_fim) filter += ` && data_vencimento <= '${data_fim}'`
 
-    const vendas = await pb.collection('vendas').getFullList({ filter: filterReceitas })
-    const realizedRevenue = vendas.reduce((acc, v) => acc + (v.valor_total_venda || 0), 0)
+    const transacoes = await pb.collection('transacoes_financeiras').getFullList({ filter })
 
-    let filterDespesas = `1=1`
-    if (data_inicio) filterDespesas += ` && data_vencimento >= '${data_inicio}'`
-    if (data_fim) filterDespesas += ` && data_vencimento <= '${data_fim}'`
+    const realizedRevenue = transacoes
+      .filter((t) => t.tipo_movimento === 'Receita' && t.status_pagamento === 'Recebido')
+      .reduce((acc, t) => acc + (t.valor_total || 0), 0)
 
-    const boletosPagar = await pb
-      .collection('boletos_pagar')
-      .getFullList({ filter: filterDespesas, expand: 'despesa_id,fornecedor_id' })
+    const realizedExpenses = transacoes
+      .filter((t) => t.tipo_movimento === 'Despesa' && t.status_pagamento === 'Recebido')
+      .reduce((acc, t) => acc + (t.valor_total || 0), 0)
 
-    const realizedExpenses = boletosPagar
-      .filter((b) => b.status === 'Pago')
-      .reduce((acc, b) => acc + (b.valor || 0), 0)
-    const pendingExpenses = boletosPagar
-      .filter((b) => ['Pendente', 'Atrasado'].includes(b.status))
-      .reduce((acc, b) => acc + (b.valor || 0), 0)
+    const pendingExpenses = transacoes
+      .filter((t) => t.tipo_movimento === 'Despesa' && t.status_pagamento !== 'Recebido')
+      .reduce((acc, t) => acc + (t.valor_total || 0), 0)
 
     const balance = realizedRevenue - realizedExpenses
 
-    let filterBoletosReceber = `status_boleto != 'Cancelado'`
-    if (data_inicio) filterBoletosReceber += ` && data_vencimento >= '${data_inicio}'`
-    if (data_fim) filterBoletosReceber += ` && data_vencimento <= '${data_fim}'`
-
     const boletosReceber = await pb
       .collection('boletos')
-      .getFullList({ filter: filterBoletosReceber, expand: 'parcela_id.venda_id.cliente_id' })
+      .getFullList({
+        filter: `status_boleto != 'Cancelado'`,
+        expand: 'parcela_id.venda_id.cliente_id',
+      })
 
     const overdueList = boletosReceber
       .filter((b) => {
@@ -73,27 +68,15 @@ export const getConsolidatedFinancials = async (data_inicio?: string, data_fim?:
       })
       .reduce((acc, b) => acc + (b.valor_boleto || 0), 0)
 
-    const allTransactions: any[] = []
-    vendas.forEach((v) => {
-      allTransactions.push({
-        id: v.id,
-        data_vencimento: v.data_venda,
-        valor_total: v.valor_total_venda,
-        tipo_movimento: 'Receita',
-        descricao: `Venda ${v.tipo_gado || 'Geral'}`,
-      })
-    })
-    boletosPagar.forEach((b) => {
-      allTransactions.push({
-        id: b.id,
-        data_vencimento: b.data_vencimento,
-        valor_total: b.valor,
-        tipo_movimento: 'Despesa',
-        status: b.status,
-        descricao: b.expand?.despesa_id?.tipo_despesa || 'Despesa',
-        classificacao_custo: b.expand?.despesa_id?.classificacao_custo || 'FIXA',
-      })
-    })
+    const allTransactions = transacoes.map((t) => ({
+      id: t.id,
+      data_vencimento: t.data_vencimento,
+      valor_total: t.valor_total,
+      tipo_movimento: t.tipo_movimento,
+      status: t.status_pagamento,
+      descricao: t.descricao_lancamento,
+      classificacao_custo: t.classificacao_custo || 'FIXA',
+    }))
 
     return {
       realizedRevenue,

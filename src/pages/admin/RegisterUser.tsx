@@ -33,7 +33,10 @@ const formSchema = z.object({
     .regex(/^[a-zA-Z0-9_]+$/, 'Use apenas letras, números e underline'),
   email: z.string().email('Insira um e-mail válido'),
   password: z.string().min(8, 'A senha deve ter no mínimo 8 caracteres'),
-  role: z.enum(['Admin', 'Operacional'], { required_error: 'Selecione um nível de acesso' }),
+  nivel_acesso: z.enum(['Gerente', 'Financeiro', 'Operacional'], {
+    required_error: 'Selecione um nível de acesso',
+  }),
+  role: z.enum(['Admin', 'Operacional'], { required_error: 'Selecione uma role' }),
   status_usuario: z.enum(['Ativo', 'Inativo'], { required_error: 'Selecione um status' }),
 })
 
@@ -49,6 +52,7 @@ export default function RegisterUser() {
       username: '',
       email: '',
       password: '',
+      nivel_acesso: 'Operacional',
       role: 'Operacional',
       status_usuario: 'Ativo',
     },
@@ -62,6 +66,7 @@ export default function RegisterUser() {
       email: values.email,
       password: values.password,
       role: values.role,
+      nivel_acesso: values.nivel_acesso,
       status_usuario: values.status_usuario,
     })
     setIsLoading(false)
@@ -172,18 +177,25 @@ export default function RegisterUser() {
                     />
                     <FormField
                       control={form.control}
-                      name="role"
+                      name="nivel_acesso"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Nível de Acesso (Role)</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormLabel>Perfil de Acesso</FormLabel>
+                          <Select
+                            onValueChange={(val) => {
+                              field.onChange(val)
+                              form.setValue('role', val === 'Operacional' ? 'Operacional' : 'Admin')
+                            }}
+                            defaultValue={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Selecione..." />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Admin">Admin</SelectItem>
+                              <SelectItem value="Gerente">Gerente / Administração</SelectItem>
+                              <SelectItem value="Financeiro">Financeiro</SelectItem>
                               <SelectItem value="Operacional">Operacional</SelectItem>
                             </SelectContent>
                           </Select>

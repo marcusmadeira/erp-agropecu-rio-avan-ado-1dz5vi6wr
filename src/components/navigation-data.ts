@@ -47,7 +47,7 @@ export const navigationMenu = [
         roles: [1, 2, 3],
       },
       { title: 'Pesagem', url: '/pesagem', icon: Scale, roles: [1, 2, 3] },
-      { title: 'Inventário Geral', url: '/inventario', icon: ClipboardList, roles: [1, 2] },
+      { title: 'Inventário Geral', url: '/inventario', icon: ClipboardList, roles: [1, 2, 3] },
       { title: 'Estoque e Valor', url: '/estoque-rebanho', icon: DollarSign, roles: [1, 2] },
     ],
   },

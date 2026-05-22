@@ -283,9 +283,9 @@ const AppRoutes = () => (
       <Route
         path="/importacao"
         element={
-          <ProtectedRoute>
+          <AuthorizeRoute>
             <Importacao />
-          </ProtectedRoute>
+          </AuthorizeRoute>
         }
       />
       <Route
