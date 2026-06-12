@@ -22,12 +22,10 @@ export const getConsolidatedFinancials = async (data_inicio?: string, data_fim?:
 
     const balance = realizedRevenue - realizedExpenses
 
-    const boletosReceber = await pb
-      .collection('boletos')
-      .getFullList({
-        filter: `status_boleto != 'Cancelado'`,
-        expand: 'parcela_id.venda_id.cliente_id',
-      })
+    const boletosReceber = await pb.collection('boletos').getFullList({
+      filter: `status_boleto != 'Cancelado'`,
+      expand: 'parcela_id.venda_id.cliente_id',
+    })
 
     const overdueList = boletosReceber
       .filter((b) => {
