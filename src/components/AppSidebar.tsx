@@ -51,18 +51,22 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="h-16 flex items-center justify-center border-b bg-white">
+      <SidebarHeader className="h-16 flex items-center justify-center border-b border-[#10213d] bg-[#10213d]">
         <div className="flex items-center justify-center w-full px-4">
           {logoUrl ? (
-            <img src={logoUrl} alt="Toriba Agropecuária" className="h-10 w-auto object-contain" />
+            <img
+              src={logoUrl}
+              alt="Toriba Agropecuária"
+              className="h-10 w-auto object-contain brightness-0 invert"
+            />
           ) : (
-            <span className="text-primary text-center uppercase tracking-tighter font-extrabold text-sm w-full truncate">
-              TORIBA AGROPECUÁRIA
+            <span className="text-white font-serif text-2xl text-center tracking-wide w-full truncate">
+              Toriba Premium
             </span>
           )}
         </div>
       </SidebarHeader>
-      <SidebarContent className="bg-slate-950 text-slate-300">
+      <SidebarContent className="bg-[#10213d] text-slate-300 font-sans">
         {navigationMenu.map((group) => {
           const visibleItems = group.items.filter((item) => {
             if (!item.roles) return true
@@ -115,7 +119,7 @@ export function AppSidebar() {
           )
         })}
       </SidebarContent>
-      <SidebarFooter className="border-t border-slate-800 p-4 bg-slate-950 text-slate-300">
+      <SidebarFooter className="border-t border-[#1a2f4d] p-4 bg-[#10213d] text-slate-300">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white font-medium">
             {user?.name?.charAt(0)?.toUpperCase() || 'U'}

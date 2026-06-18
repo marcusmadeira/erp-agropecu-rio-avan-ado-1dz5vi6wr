@@ -43,8 +43,13 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   }
 }
 import { BackgroundSync } from './components/BackgroundSync'
+import './toriba-premium.css'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import SolicitarAcesso from './pages/SolicitarAcesso'
+import AguardandoAprovacao from './pages/AguardandoAprovacao'
+import Solicitacoes from './pages/admin/Solicitacoes'
+import Parceiros from './pages/parceiros/Parceiros'
 import RegisterUser from './pages/admin/RegisterUser'
 import ForgotPassword from './pages/ForgotPassword'
 import NotFound from './pages/NotFound'
@@ -116,6 +121,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (loading) return <LoadingScreen />
   if (serverError) return <ServiceUnavailable onRetry={retryConnection} />
   if (!isAuthenticated || !user) return <Navigate to="/login" replace />
+  if (user.status_usuario === 'Inativo' || user.status_usuario === 'Pendente')
+    return <Navigate to="/aguardando-aprovacao" replace />
   return <>{children}</>
 }
 
@@ -124,6 +131,8 @@ const AuthorizeRoute = ({ children }: { children: React.ReactNode }) => {
   if (loading) return <LoadingScreen />
   if (serverError) return <ServiceUnavailable onRetry={retryConnection} />
   if (!isAuthenticated || !user) return <Navigate to="/login" replace />
+  if (user.status_usuario === 'Inativo' || user.status_usuario === 'Pendente')
+    return <Navigate to="/aguardando-aprovacao" replace />
 
   const isOperacional = user.nivel_acesso === 'Operacional' || user.role === 'Operacional'
   if (isOperacional) {
@@ -165,14 +174,16 @@ const AppRoutes = () => (
       }
     />
 
+    <Route path="/signup" element={<Navigate to="/solicitar-acesso" replace />} />
     <Route
-      path="/signup"
+      path="/solicitar-acesso"
       element={
         <PublicRoute>
-          <Signup />
+          <SolicitarAcesso />
         </PublicRoute>
       }
     />
+    <Route path="/aguardando-aprovacao" element={<AguardandoAprovacao />} />
 
     <Route path="/forgot-password" element={<Navigate to="/recuperar-senha" replace />} />
     <Route path="/ofertas" element={<Navigate to="/" replace />} />
@@ -205,6 +216,22 @@ const AppRoutes = () => (
         element={
           <AuthorizeRoute>
             <Auditoria />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/sistema/solicitacoes"
+        element={
+          <AuthorizeRoute>
+            <Solicitacoes />
+          </AuthorizeRoute>
+        }
+      />
+      <Route
+        path="/parceiros"
+        element={
+          <AuthorizeRoute>
+            <Parceiros />
           </AuthorizeRoute>
         }
       />
